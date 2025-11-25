@@ -1,0 +1,37 @@
+{
+    "apps": [{
+            "package": "ru.yandex.yandexmaps",
+            "navigation_bar" : true,
+            "scale": 1.3,
+            "dpi": 160,
+            "padding": ["left", "up"],
+            "screen": ["main", "second"],
+            "presets": {"scale": [1.0, 1.5, 2.0],
+                        "dpi": [160, 240, 270],
+                        "padding": ["none", "left", "up"],
+                        "screen": ["main", "second"]}
+        }, {
+            "package": "ru.yandex.music",
+            "navigation_bar" : true,
+            "scale": 1.0,
+            "dpi": 160,
+            "padding": ["left", "up"],
+            "screen": ["main", "second"],
+            "presets": {"scale": [1.0, 1.5, 2.0],
+                        "dpi": [160, 240, 270],
+                        "padding": ["none", "left", "up"],
+                        "screen": ["main", "second"]}
+        }, {
+            "package": "com.android.car.settings",
+            "navigation_bar" : true,
+            "scale": 1.0,
+            "dpi": 160,
+            "padding": ["none"],
+            "screen": ["main", "second"],
+            "presets": {"scale": [1.0],
+                        "dpi": [160],
+                        "padding": ["none"],
+                        "screen": ["main", "second"]}
+        }
+    ]
+}
