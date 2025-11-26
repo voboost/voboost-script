@@ -15,7 +15,7 @@ function getAmendNumberHook() {
             return getAmendNumber(str);
         };
         console.log("[*] Метод getAmendNumber в bluetoothphone успешно перехвачен и модифицирован.");
-    } catch (e) {
+    } catch {
         console.log("[!] Класс bluetoothphone.Util недоступен в этом процессе");
     }
 }
@@ -25,9 +25,9 @@ function fixContactCacheInfos() {
         const PbapProfileManagerClass = Java.use("com.qinggan.bluetoothphone.logic.manager.PbapProfileManager");
         PbapProfileManagerClass.startSync.call(PbapProfileManagerClass);
 
-    } catch (e) {
-        console.log("[!] Ошибка при обработке кэша контактов:", e.message);
-        console.log(e.stack);
+    } catch (error) {
+        console.log("[!] Ошибка при обработке кэша контактов:", error.message);
+        console.log(error.stack);
     }
 }
 

@@ -3,8 +3,8 @@ import {
     APP_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-    parseAppConfig
-} from './utils.js';
+    parseAppConfig,
+} from "./utils.js";
 
 let AppLauncher = null;
 let AllAppAdapter = null;
@@ -45,11 +45,11 @@ function createIconCache() {
             let drawableBig = null;
             let drawableSmall = null;
             if (app.icon_big) {
-                drawableBig = BitmapDrawable.$new.overload('android.content.res.Resources', 'android.graphics.Bitmap')
+                drawableBig = BitmapDrawable.$new.overload("android.content.res.Resources", "android.graphics.Bitmap")
                     .call(BitmapDrawable, resources, app.icon_big);
             }
             if (app.icon_small) {
-                drawableSmall = BitmapDrawable.$new.overload('android.content.res.Resources', 'android.graphics.Bitmap')
+                drawableSmall = BitmapDrawable.$new.overload("android.content.res.Resources", "android.graphics.Bitmap")
                     .call(BitmapDrawable, resources, app.icon_small);
             }
             result[app.package] = [drawableBig, drawableSmall];
@@ -72,7 +72,7 @@ function addCustomApp(originalApps) {
     config.apps.forEach(configApp => {
 
         try {
-            if (!existingPackages.hasOwnProperty(configApp.package)) {
+            if (!Object.prototype.hasOwnProperty.call(existingPackages, configApp.package)) {
                 PackageManager.getPackageInfo(configApp.package, 0);
 
                 console.log("[+] Добавление в список AllApps: " + configApp.package);
@@ -83,8 +83,7 @@ function addCustomApp(originalApps) {
                 originalApps.add(bean);
                 existingPackages[configApp.package] = true;
             }
-        }
-        catch (e) {
+        } catch (e) {
             if (e.message?.includes("NameNotFoundException")) {
                 console.log("[-] Приложение не установлено: " + configApp.package);
             } else {
@@ -127,8 +126,7 @@ function patchNavigationIcons() {
                     if (customDrawables[customApp.package]) {
                         button.setBackground(customDrawables[customApp.package][1]);
                     }
-                }
-                catch (e) {
+                } catch (e) {
                     if (e.message?.includes("NameNotFoundException")) {
                         console.log("[-] Приложение не установлено: " + customApp.package);
                     } else {
@@ -140,7 +138,7 @@ function patchNavigationIcons() {
         },
         onComplete: function () {
             console.log("[*] Поиск NavigationBar завершён");
-        }
+        },
     });
 }
 
@@ -180,10 +178,10 @@ function getLanguageIndex() {
 function getAllAppsHook() {
     // --- Хук на AllAppDataManager.getAllApps ---
     try {
-        AllAppDataManager.getAllApps.overload('int').implementation = function (screenId) {
+        AllAppDataManager.getAllApps.overload("int").implementation = function (screenId) {
 
             console.log("[*] AllAppDataManager.getAllApps вызван для screenId: " + screenId);
-            const originalApps = AllAppDataManager.getAllApps.overload('int').call(AllAppDataManager, screenId);
+            const originalApps = AllAppDataManager.getAllApps.overload("int").call(AllAppDataManager, screenId);
 
             if (screenId > 0 || !config) return originalApps; // Используем кэш
             addCustomApp(originalApps);
@@ -199,10 +197,10 @@ function getAllAppsHook() {
 function onBindViewHolderHook() {
     // --- Хук на AllAppAdapter.onBindViewHolder (для иконок в AllAppsView) ---
     try {
-        AllAppAdapter.onBindViewHolder.overload('com.qinggan.launcher.base.adapter.AllAppAdapter$AppViewHolder', 'int')
+        AllAppAdapter.onBindViewHolder.overload("com.qinggan.launcher.base.adapter.AllAppAdapter$AppViewHolder", "int")
             .implementation = function (viewHolder, position) {
                 // Сначала вызываем оригинальную реализацию
-                this.onBindViewHolder.overload('com.qinggan.launcher.base.adapter.AllAppAdapter$AppViewHolder', 'int')
+                this.onBindViewHolder.overload("com.qinggan.launcher.base.adapter.AllAppAdapter$AppViewHolder", "int")
                     .call(this, viewHolder, position);
 
                 try {
@@ -213,7 +211,7 @@ function onBindViewHolderHook() {
                     const size = mAppBeans.size();
                     if (position < 0 || position >= size) return;
 
-                    const appBeanNative = mAppBeans.get.overload('int').call(mAppBeans, position);
+                    const appBeanNative = mAppBeans.get.overload("int").call(mAppBeans, position);
                     if (!appBeanNative) return;
 
                     const appBean = Java.cast(appBeanNative, AppBean);
@@ -221,24 +219,23 @@ function onBindViewHolderHook() {
 
                     if (!packageName || packageName === "") return;
 
-                    if (customDrawables.hasOwnProperty(packageName)) {
+                    if (Object.prototype.hasOwnProperty.call(customDrawables, packageName)) {
                         const iconView = viewHolder.iconView.value;
                         const textView = viewHolder.nameView.value;
                         const itemView = viewHolder.itemView.value;
 
                         const customApp = config.apps.find(app => app.package === packageName);
 
-                        iconView.setBackground.overload('android.graphics.drawable.Drawable')
+                        iconView.setBackground.overload("android.graphics.drawable.Drawable")
                             .call(iconView, customDrawables[packageName][0]);
 
                         const languageIndex = getLanguageIndex();
                         textView.setText(StringClass.$new(customApp.name[languageIndex]));
 
                         let customClickAppListener = null;
-                        if (clickAppListenerMap.hasOwnProperty(packageName)) {
+                        if (Object.prototype.hasOwnProperty.call(clickAppListenerMap, packageName)) {
                             customClickAppListener = clickAppListenerMap[packageName];
-                        }
-                        else {
+                        } else {
                             customClickAppListener = CustomClickListener.$new();
                             clickAppListenerMap[packageName] = customClickAppListener;
                         }
@@ -281,7 +278,7 @@ function init() {
     AppLauncher = Java.use("com.qinggan.launcher.base.utils.AppLauncher");
     AllAppAdapter = Java.use("com.qinggan.launcher.base.adapter.AllAppAdapter");
     StringClass = Java.use("java.lang.String");
-    ActivityThread = Java.use('android.app.ActivityThread');
+    ActivityThread = Java.use("android.app.ActivityThread");
     BitmapDrawable = Java.use("android.graphics.drawable.BitmapDrawable");
     NavigationBar = Java.use("com.qinggan.mainlauncher.navigation.NavigationBar");
     R_id = Java.use("com.qinggan.mainlauncher.R$id");
@@ -290,10 +287,10 @@ function init() {
     PackageManager = ActivityThread.currentApplication().getPackageManager();
     AllAppBarView = Java.use("com.qinggan.launcher.base.allapp.AllAppBarView");
 
-    const View$OnClickListener = Java.use('android.view.View$OnClickListener');
+    const View$OnClickListener = Java.use("android.view.View$OnClickListener");
 
     CustomClickListener = Java.registerClass({
-        name: 'com.qinggan.frida.CustomClickListener',
+        name: "com.qinggan.frida.CustomClickListener",
         implements: [View$OnClickListener],
         methods: {
             onClick: function (view) {
@@ -313,12 +310,12 @@ function init() {
                 } catch (e) {
                     console.log("[-] Ошибка в кастомном клике: " + e.message);
                 }
-            }
-        }
+            },
+        },
     });
 
     NavClickListener = Java.registerClass({
-        name: 'com.qinggan.frida.NavClickListener',
+        name: "com.qinggan.frida.NavClickListener",
         implements: [View$OnClickListener],
         methods: {
             onClick: function (view) {
@@ -331,8 +328,8 @@ function init() {
                 } catch (e) {
                     console.log("[-] NavClickListener ошибка: " + e.message);
                 }
-            }
-        }
+            },
+        },
     });
 }
 
