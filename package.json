@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "description": "Frida agent scripts for Voboost",
     "scripts": {
-        "build": "node lib/build.js",
-        "build:dev": "MINIFY=false node lib/build.js"
+        "build": "node lib/build.mjs",
+        "build:dev": "MINIFY=false node lib/build.mjs"
     },
     "dependencies": {
     },
