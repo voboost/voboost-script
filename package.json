@@ -2,15 +2,18 @@
     "name": "voboost-script",
     "version": "1.0.0",
     "description": "Frida agent scripts for Voboost",
+    "type": "module",
     "scripts": {
         "build": "node lib/build.mjs",
         "build:dev": "MINIFY=false node lib/build.mjs",
-        "lint": "eslint agents --fix --config config/config-eslint.mjs"
+        "lint": "eslint agents --fix --config config/config-eslint.mjs",
+        "test": "ava --config config/config-ava.mjs"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^29.0.0",
         "@rollup/plugin-node-resolve": "^16.0.3",
         "@rollup/plugin-terser": "^0.4.4",
+        "ava": "^6.4.1",
         "eslint": "^9.39.1",
         "frida-java-bridge": "7.0.10",
         "rollup": "^4.53.3"

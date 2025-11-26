@@ -12,6 +12,7 @@ export default [
             globals: {
                 console: 'readonly',
                 Java: 'readonly',
+                module: 'readonly',
             },
         },
 
