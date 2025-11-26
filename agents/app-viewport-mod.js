@@ -3,13 +3,12 @@ import {
     APP_VIEWPORT_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-} from './utils.js';
+} from "./utils.js";
 
 let SystemProperties = null;
 let Rect = null;
 let ActivityRecord = null;
 let Locale = null;
-let WindowManagerService = null;
 
 let config = null;
 let currentLocale = null;
@@ -18,12 +17,12 @@ let currentLocale = null;
 const PADDING_VALUES = {
     "left": 145,
     "up": 45,
-    "none": 0
+    "none": 0,
 };
 
 // 3. Функция получения текущего состояния экрана
 function getScreenLiftState() {
-    return SystemProperties.get('persist.qg.canbus.bcm_screenAutoLiftFdb') || "2";
+    return SystemProperties.get("persist.qg.canbus.bcm_screenAutoLiftFdb") || "2";
 }
 
 function createLocale(languageConfig) {
@@ -92,9 +91,8 @@ function onDisplayChangedHook() {
 
                 const displayId = displayContent.getDisplayId();
                 applyAppSettings(this, displayId);
-            }
-            catch (e) {
-                console.error('[launcher_navbar_mod] Error in hook:', e.message);
+            } catch (e) {
+                console.error("[launcher_navbar_mod] Error in hook:", e.message);
                 console.error(e.stack);
             }
         };
@@ -102,10 +100,9 @@ function onDisplayChangedHook() {
 
 function init() {
 
-    SystemProperties = Java.use('android.os.SystemProperties');
-    Rect = Java.use('android.graphics.Rect');
+    SystemProperties = Java.use("android.os.SystemProperties");
+    Rect = Java.use("android.graphics.Rect");
     ActivityRecord = Java.use("com.android.server.wm.ActivityRecord");
-    WindowManagerService = Java.use("com.android.server.wm.WindowManagerService");
     Locale = Java.use("java.util.Locale");
 }
 
@@ -122,4 +119,4 @@ function main() {
     onDisplayChangedHook();
 }
 
-Java.perform(function () { main() });
+Java.perform(function () { main(); });

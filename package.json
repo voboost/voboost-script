@@ -4,15 +4,15 @@
     "description": "Frida agent scripts for Voboost",
     "scripts": {
         "build": "node lib/build.mjs",
-        "build:dev": "MINIFY=false node lib/build.mjs"
-    },
-    "dependencies": {
+        "build:dev": "MINIFY=false node lib/build.mjs",
+        "lint": "eslint agents --fix --config config/config-eslint.mjs"
     },
     "devDependencies": {
-        "frida-java-bridge": "7.0.10",
-        "rollup": "^4.53.3",
-        "@rollup/plugin-node-resolve": "^16.0.3",
         "@rollup/plugin-commonjs": "^29.0.0",
-        "@rollup/plugin-terser": "^0.4.4"
+        "@rollup/plugin-node-resolve": "^16.0.3",
+        "@rollup/plugin-terser": "^0.4.4",
+        "eslint": "^9.39.1",
+        "frida-java-bridge": "7.0.10",
+        "rollup": "^4.53.3"
     }
 }

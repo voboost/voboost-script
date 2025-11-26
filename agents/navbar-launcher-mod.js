@@ -2,14 +2,14 @@ import {
     APP_VIEWPORT_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-} from './utils.js';
+} from "./utils.js";
 
 let config = null;
 
 function onReceiveHook() {
-    const LauncherModel = Java.use('com.qinggan.app.launcher.LauncherModel');
-    const AppUtils = Java.use('com.qinggan.launcher.base.utils.AppUtils');
-    const AccountConstantUtil = Java.use('com.qinggan.account.AccountConstantUtil');
+    const LauncherModel = Java.use("com.qinggan.app.launcher.LauncherModel");
+    const AppUtils = Java.use("com.qinggan.launcher.base.utils.AppUtils");
+    const AccountConstantUtil = Java.use("com.qinggan.account.AccountConstantUtil");
 
     // Хук обработки системного события смены активности
     LauncherModel.onReceive.implementation = function (context, intent) {
@@ -19,9 +19,9 @@ function onReceiveHook() {
         try {
             const action = intent.getAction();
 
-            if (action !== 'android.intent.action.TOP_ACTIVITY_CHANGED') return;
+            if (action !== "android.intent.action.TOP_ACTIVITY_CHANGED") return;
 
-            const displayId = intent.getIntExtra('displayId', -1);
+            const displayId = intent.getIntExtra("displayId", -1);
 
             const topAppInfo = AppUtils.getTopAppInfo(this.mContext.value, displayId, 4);
             const strArrSplit = topAppInfo.split(AccountConstantUtil.SEPARATOR.value);
@@ -35,15 +35,14 @@ function onReceiveHook() {
 
                 if (displayId == 0) {
                     this.handleUpdateMainNavigationBar(packageName, applicationName, app.navigation_bar);
-                }
-                else {
+                } else {
                     this.handleUpdateSecondNavigationBar(packageName, applicationName, app.navigation_bar);
                 }
                 break;
             }
 
         } catch (e) {
-            console.error('[launcher_navbar_mod] Error in hook:', e.message);
+            console.error("[launcher_navbar_mod] Error in hook:", e.message);
             console.error(e.stack);
         }
     };

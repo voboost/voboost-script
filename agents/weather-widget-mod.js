@@ -2,8 +2,8 @@ import {
     LANGUAGE_CONFIG_PATH,
     WEATHER_CONFIG_PATH,
     LoadTextFile,
-    parseConfig
-} from './utils.js';
+    parseConfig,
+} from "./utils.js";
 
 let RealCall = null;
 let OkHttpClient = null;
@@ -25,7 +25,7 @@ const windDirections = [
     { cn: "南风", en: "S", ru: "Ю", di: "4" },
     { cn: "西南风", en: "SW", ru: "ЮЗ", dir: "5" },
     { cn: "西风", en: "W", ru: "З", dir: "6" },
-    { cn: "西北风", en: "NW", ru: "СЗ", dir: "7" }
+    { cn: "西北风", en: "NW", ru: "СЗ", dir: "7" },
 ];
 
 const TEXTS_EN = {
@@ -60,14 +60,14 @@ const TEXTS_EN = {
     aqiHeavyPollution: { en: "Heavy pollution", ru: "Сильное загрязнение", cn: "重度污染" },
 
     // Статус
-    statusSuccess: { en: "Success.", ru: "Успешно.", cn: "请求成功." }
+    statusSuccess: { en: "Success.", ru: "Успешно.", cn: "请求成功." },
 };
 
 const windDirectionsDefault = { cn: "北风", en: "N", ru: "С", dir: "0" };
 
 const weatherMainToChinese = {
     "Clear": "晴", "Clouds": "多云", "Rain": "雨", "Drizzle": "毛毛雨",
-    "Thunderstorm": "雷暴", "Snow": "雪", "Mist": "薄雾", "Fog": "雾"
+    "Thunderstorm": "雷暴", "Snow": "雪", "Mist": "薄雾", "Fog": "雾",
 };
 
 function getUserLanguage() {
@@ -86,7 +86,7 @@ function getWindLocalizeName(windDirection) {
     return {
         cn: windDirection.cn,
         dir: windDirection.dir,
-        en: lan === "ru" ? windDirection.ru : windDirection.en
+        en: lan === "ru" ? windDirection.ru : windDirection.en,
     };
 }
 
@@ -117,16 +117,16 @@ function getWindPowerLevel(speed) {
             // Оставляем КИТАЙСКИЙ как в оригинале
             const map = {
                 "0": "软风", "1": "轻风", "2": "和缓", "3": "清风", "4": "强风",
-                "5": "劲风", "6": "大风", "7": "烈风", "8": "狂风", "9": "暴风"
+                "5": "劲风", "6": "大风", "7": "烈风", "8": "狂风", "9": "暴风",
             };
             return map[level] || "软风";
         })(),
-        en: getEnText(`wind${level}`) // ← только _en меняется
+        en: getEnText(`wind${level}`), // ← только _en меняется
     };
 }
 
 function formatDateISO(date) {
-    return date.toISOString().replace('T', ' ').substring(0, 19);
+    return date.toISOString().replace("T", " ").substring(0, 19);
 }
 
 function getSunTime(date, isSunrise) {
@@ -144,14 +144,14 @@ function clone(obj) {
 
 function parseUrlParams(urlStr) {
     const params = {};
-    if (!urlStr.includes('?')) return params;
-    const query = urlStr.split('?')[1].split('#')[0];
-    const pairs = query.split('&');
+    if (!urlStr.includes("?")) return params;
+    const query = urlStr.split("?")[1].split("#")[0];
+    const pairs = query.split("&");
     for (let i = 0; i < pairs.length; i++) {
-        const pair = pairs[i].split('=');
+        const pair = pairs[i].split("=");
         if (pair.length === 2) {
             const key = decodeURIComponent(pair[0]);
-            const val = decodeURIComponent(pair[1].replace(/\+/g, ' '));
+            const val = decodeURIComponent(pair[1].replace(/\+/g, " "));
             params[key] = val;
         }
     }
@@ -255,7 +255,7 @@ function calculateMoonPhase(date) {
 function getMoonTime(date, isRise) {
     const hour = isRise ? 18 : 6;
     return date.toISOString().substring(0, 10) + " " +
-        hour.toString().padStart(2, '0') + ":00:00";
+        hour.toString().padStart(2, "0") + ":00:00";
 }
 
 function calculateAQIFromHumidity(humidity) {
@@ -321,22 +321,22 @@ function getAlarmLevel(weatherData) {
 function getAlarmLevelCode(weatherData) {
     const level = getAlarmLevel(weatherData);
     switch (level) {
-        case "蓝色": return "1";
-        case "黄色": return "2";
-        case "橙色": return "3";
-        case "红色": return "4";
-        default: return "";
+    case "蓝色": return "1";
+    case "黄色": return "2";
+    case "橙色": return "3";
+    case "红色": return "4";
+    default: return "";
     }
 }
 
 function getAlarmLevelEn(weatherData) {
     const level = getAlarmLevel(weatherData);
     switch (level) {
-        case "蓝色": return "Blue";
-        case "黄色": return "Yellow";
-        case "橙色": return "Orange";
-        case "红色": return "Red";
-        default: return "";
+    case "蓝色": return "Blue";
+    case "黄色": return "Yellow";
+    case "橙色": return "Orange";
+    case "红色": return "Red";
+    default: return "";
     }
 }
 
@@ -352,16 +352,16 @@ function getAlarmType(weatherData) {
 function getAlarmTypeEn(weatherData) {
     const type = getAlarmType(weatherData);
     switch (type) {
-        case "大风": return "Wind";
-        case "温度": return "Temperature";
-        case "降雨": return "Rain";
-        case "雷电": return "Thunderstorm";
-        default: return "";
+    case "大风": return "Wind";
+    case "温度": return "Temperature";
+    case "降雨": return "Rain";
+    case "雷电": return "Thunderstorm";
+    default: return "";
     }
 }
 
 function getAlarmPublishTime() {
-    return new Date().toISOString().replace('T', ' ').substring(0, 19);
+    return new Date().toISOString().replace("T", " ").substring(0, 19);
 }
 
 function getAdminCodeFromCity(city) {
@@ -379,7 +379,7 @@ function getAlarmList(weatherData) {
         alarm_content: alarmContent,
         alarm_level: getAlarmLevel(weatherData),
         alarm_type: getAlarmType(weatherData),
-        publish_time: getAlarmPublishTime()
+        publish_time: getAlarmPublishTime(),
     }];
 }
 
@@ -393,7 +393,7 @@ function getDailyExtremeTimes(dailyMap) {
         let minNightDiff = 24;
 
         day.times.forEach((timeStr, index) => {
-            const hour = parseInt(timeStr.split(':')[0], 10);
+            const hour = parseInt(timeStr.split(":")[0], 10);
             const dayDiff = Math.abs(hour - 12);
             if (dayDiff < minDayDiff) {
                 minDayDiff = dayDiff;
@@ -415,7 +415,7 @@ function getDailyExtremeTimes(dailyMap) {
                 main: day.mains[bestDayIndex],
                 pop: day.pops[bestDayIndex],
                 visibility: day.visibilities[bestDayIndex],
-                clouds: day.cloudsAll[bestDayIndex]
+                clouds: day.cloudsAll[bestDayIndex],
             },
             night: {
                 temp: day.temps[bestNightIndex],
@@ -425,10 +425,13 @@ function getDailyExtremeTimes(dailyMap) {
                 main: day.mains[bestNightIndex],
                 pop: day.pops[bestNightIndex],
                 visibility: day.visibilities[bestNightIndex],
-                clouds: day.cloudsAll[bestNightIndex]
-            }
+                clouds: day.cloudsAll[bestNightIndex],
+            },
         };
-        console.log(`[+] ${dateStr}: день=${extremes[dateStr].day.time} (${extremes[dateStr].day.temp}°C), ночь=${extremes[dateStr].night.time} (${extremes[dateStr].night.temp}°C)`);
+        console.log(
+            `[+] ${dateStr}: день=${extremes[dateStr].day.time} (${extremes[dateStr].day.temp}°C), ` +
+            `ночь=${extremes[dateStr].night.time} (${extremes[dateStr].night.temp}°C)`,
+        );
     });
     return extremes;
 }
@@ -460,7 +463,7 @@ function buildWeatherJson(forecastJsonStr) {
                 mains: [],
                 pops: [],
                 visibilities: [],
-                cloudsAll: []
+                cloudsAll: [],
             };
         }
 
@@ -481,7 +484,7 @@ function buildWeatherJson(forecastJsonStr) {
             dailyMap[date].winds.push({
                 deg: wd.deg || 0,
                 speed: wd.speed || 0,
-                gust: wd.gust || 0
+                gust: wd.gust || 0,
             });
         }
     }
@@ -490,7 +493,7 @@ function buildWeatherJson(forecastJsonStr) {
     const dates = Object.keys(dailyMap).slice(0, 6);
     const dailyExtremes = getDailyExtremeTimes(dailyMap);
 
-    dates.forEach((dateStr, idx) => {
+    dates.forEach((dateStr) => {
         const date = new Date(dateStr);
         const extremes = dailyExtremes[dateStr];
 
@@ -547,7 +550,7 @@ function buildWeatherJson(forecastJsonStr) {
             wind_speed_night: extremes.night.wind.speed.toFixed(1),
             description: dayWeather.description || "",
             humidity: extremes.day.main.humidity?.toString() || "0",
-            pressure: extremes.day.main.pressure?.toString() || "1013"
+            pressure: extremes.day.main.pressure?.toString() || "1013",
         });
     });
 
@@ -558,19 +561,19 @@ function buildWeatherJson(forecastJsonStr) {
         clone(realDays[2]),
         clone(realDays[3]),
         clone(realDays[4]),
-        clone(realDays[5])
+        clone(realDays[5]),
     ];
 
     const lastDay = clone(realDays[5]);
     if (lastDay) {
-        const [datePart] = lastDay.predict_date.split(' ');
-        const [y, m, d] = datePart.split('-').map(Number);
+        const [datePart] = lastDay.predict_date.split(" ");
+        const [y, m, d] = datePart.split("-").map(Number);
         const newDate = new Date(y, m - 1, d);
         newDate.setDate(newDate.getDate() + 1);
 
         const nextY = newDate.getFullYear();
-        const nextM = String(newDate.getMonth() + 1).padStart(2, '0');
-        const nextD = String(newDate.getDate()).padStart(2, '0');
+        const nextM = String(newDate.getMonth() + 1).padStart(2, "0");
+        const nextD = String(newDate.getDate()).padStart(2, "0");
         const nextDateStr = `${nextY}-${nextM}-${nextD} 00:00:00`;
 
         lastDay.predict_date = nextDateStr;
@@ -599,7 +602,7 @@ function buildWeatherJson(forecastJsonStr) {
                 alarm_level_en: getAlarmLevelEn(currentItem),
                 alarm_type: getAlarmType(currentItem),
                 alarm_type_en: getAlarmTypeEn(currentItem),
-                publish_time: getAlarmPublishTime()
+                publish_time: getAlarmPublishTime(),
             },
             alarmList: getAlarmList(currentItem),
             live: {
@@ -612,16 +615,16 @@ function buildWeatherJson(forecastJsonStr) {
                 wind_direction: liveWether.day_wind_direct,
                 wind_speed: liveWether.wind_speed_day,
                 wind_power: liveWether.day_wind_power,
-                pressure: liveWether.pressure
+                pressure: liveWether.pressure,
             },
             forecast: forecastList,
             weatherAirQuality: {
                 aqi: aqiValue,
                 level: getAQILevel(aqiValue),
                 pm25: calculatePM25FromData(currentItem.main || {}),
-                aqi_value: aqiValue
-            }
-        }
+                aqi_value: aqiValue,
+            },
+        },
     });
 }
 
@@ -650,19 +653,19 @@ function buildAqiJson(aqiJsonStr, lat, lon) {
                     value: aqiLevel.toString(),
                     pm25: (comp.pm2_5 || 0).toString(),
                     primary: "PM2.5",
-                    pub_time: respTime
-                }
+                    pub_time: respTime,
+                },
             ],
             aqi_forecast: [
                 {
                     date: date,
                     publish_time: respTime,
-                    value: aqiLevel.toString()
-                }
+                    value: aqiLevel.toString(),
+                },
             ],
             aqi_history: [],
-            aqi_rank: []
-        }
+            aqi_rank: [],
+        },
     });
 }
 
@@ -697,8 +700,8 @@ function buildGpsInfoJson(nominatimJsonStr, lat, lon) {
             tel: "",
             crossList: [],
             roadlist: [],
-            poilist: []
-        }
+            poilist: [],
+        },
     });
 }
 
@@ -799,12 +802,10 @@ function enqueueHook() {
         if (url.includes("/cp/weather/weather-live-info")) {
             console.log("[+] Proxying weather (async):", url);
             weatherLiveInfo(this, originalRequest, callback);
-        }
-        else if (url.includes("/cp/weather/aqi-forecast-info")) {
+        } else if (url.includes("/cp/weather/aqi-forecast-info")) {
             console.log("[+] Proxying AQI request");
             aqiForecastInfo(this, originalRequest, callback);
-        }
-        else if (url.includes("/cp/geo/regeocode")) {
+        } else if (url.includes("/cp/geo/regeocode")) {
             console.log("[+] Proxying reverse geocode request");
             regeocode(this, originalRequest, callback);
         }
@@ -825,7 +826,7 @@ function init() {
     try {
         Protocol = Java.use("okhttp3.Protocol");
         ResponseProtocol = Protocol.get("http/1.1");
-    } catch (e) {
+    } catch {
         console.error("[-] Failed to get Protocol");
         return;
     }
