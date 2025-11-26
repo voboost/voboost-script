@@ -1,10 +1,10 @@
-const LANGUAGE_CONFIG_PATH = "/data/local/tmp/test/language-config.json";
-const PHONE_NUM_CONFIG_PATH = "/data/local/tmp/test/phone-num-config.json";
-const APP_CONFIG_PATH = "/data/local/tmp/test/apps-config.json";
-const WEATHER_CONFIG_PATH = "/data/local/tmp/test/weather-config.json";
-const APP_VIEWPORT_CONFIG_PATH = "/data/local/tmp/test/apps-viewport-config.json";
+export const LANGUAGE_CONFIG_PATH = "/data/local/tmp/test/language-config.json";
+export const PHONE_NUM_CONFIG_PATH = "/data/local/tmp/test/phone-num-config.json";
+export const APP_CONFIG_PATH = "/data/local/tmp/test/apps-config.json";
+export const WEATHER_CONFIG_PATH = "/data/local/tmp/test/weather-config.json";
+export const APP_VIEWPORT_CONFIG_PATH = "/data/local/tmp/test/apps-viewport-config.json";
 
-function LoadTextFile(file) {
+export function LoadTextFile(file) {
     const FileInputStream = Java.use("java.io.FileInputStream");
     const InputStreamReader = Java.use("java.io.InputStreamReader");
     const BufferedReader = Java.use("java.io.BufferedReader");
@@ -20,7 +20,7 @@ function LoadTextFile(file) {
     return content;
 }
 
-function parseConfig(content) {
+export function parseConfig(content) {
     try {
         const config = JSON.parse(content);
         console.log("[+] Конфиг успешно загружен");
@@ -31,7 +31,7 @@ function parseConfig(content) {
     }
 }
 
-function parseAppConfig(content) {
+export function parseAppConfig(content) {
     try {
         const Base64 = Java.use("android.util.Base64");
         const BitmapFactory = Java.use("android.graphics.BitmapFactory");
