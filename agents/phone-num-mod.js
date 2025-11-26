@@ -1,24 +1,11 @@
 /**
- * Removes Chinese country code (+86) prefix from phone numbers.
+ * Do nothing with phone number except trimming whitespaces.
  *
  * @param {string|number} number - Phone number to process (can be string or number)
- * @returns {string} Phone number without +86 prefix, trimmed of whitespace
- *
- * @example
- * removeChineseCountryCode("+8613812345678")  // Returns: "13812345678"
- * removeChineseCountryCode("13812345678")     // Returns: "13812345678"
- * removeChineseCountryCode(8613812345678)     // Returns: "13812345678"
+ * @returns {string} Phone number trimmed of whitespace
  */
-function removeChineseCountryCode(number) {
-    let result = number.toString().trim();
-
-    // Remove +86 prefix if present
-    if (result.startsWith("+86")) {
-        result = result.substring(3);
-        return result;
-    }
-
-    return result;
+function getAmendNumber(number) {
+    return number.toString().trim();
 }
 
 /**
@@ -35,9 +22,7 @@ function hookPhoneNumberFormatter() {
     try {
         const UtilClass = Java.use("com.qinggan.bluetoothphone.util.Util");
 
-        UtilClass.getAmendNumber.implementation = function (str) {
-            return removeChineseCountryCode(str);
-        };
+        UtilClass.getAmendNumber.implementation = getAmendNumber;
 
         console.log("[*] Successfully hooked and modified getAmendNumber method in bluetoothphone");
     } catch {
@@ -86,4 +71,4 @@ if (typeof Java !== "undefined") {
 }
 
 // Export for testing
-export { removeChineseCountryCode };
+export { getAmendNumber };
