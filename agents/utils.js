@@ -57,7 +57,7 @@ export function parseAppConfig(content) {
                     const bytes = Base64.decode(obj.icon_big, Base64.DEFAULT.value);
                     item.icon_big = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                     console.log("[+] Иконка загружена для: " + obj.package);
-                } catch (e) {
+                } catch {
                     console.log("[-] Ошибка декодирования иконки для " + obj.package);
                 }
             }
@@ -66,11 +66,10 @@ export function parseAppConfig(content) {
                     const bytes = Base64.decode(obj.icon_small, Base64.DEFAULT.value);
                     item.icon_small = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                     console.log("[+] Иконка загружена для: " + obj.package);
-                } catch (e) {
+                } catch {
                     console.log("[-] Ошибка декодирования иконки для " + obj.package);
                 }
-            }
-            else {
+            } else {
                 item.icon_small = item.icon_big;
             }
 

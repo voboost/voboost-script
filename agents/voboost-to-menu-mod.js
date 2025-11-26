@@ -1,8 +1,8 @@
 import {
     LANGUAGE_CONFIG_PATH,
     LoadTextFile,
-    parseConfig
-} from './utils.js';
+    parseConfig,
+} from "./utils.js";
 
 let ActivityAnimUtils = null;
 
@@ -13,7 +13,7 @@ let CustomOnClickListener = null;
 
 const appNameLocalization = {
     EN: "Voboost",
-    RU: "Voboost"
+    RU: "Voboost",
 };
 
 function getAppNameLocalization() {
@@ -33,14 +33,14 @@ function getAppNameLocalization() {
 
 function startApp() {
     try {
-        const ActivityThread = Java.use('android.app.ActivityThread');
+        const ActivityThread = Java.use("android.app.ActivityThread");
         const PackageManager = ActivityThread.currentApplication().getPackageManager();
         const context = ActivityThread.currentApplication().getApplicationContext();
         const intent = PackageManager.getLaunchIntentForPackage(APP_NAME);
         intent.addFlags(0x10000000); // FLAG_ACTIVITY_NEW_TASK
 
         ActivityAnimUtils.startActivityByAnim
-            .overload('android.content.Context', 'android.content.Intent')
+            .overload("android.content.Context", "android.content.Intent")
             .call(ActivityAnimUtils, context, intent);
 
         console.log(`[+] Ваше приложение: ${APP_NAME}  успешно запущено!`);
@@ -65,7 +65,7 @@ function createMenuItem(content) {
         }
 
         // Копируем RelativeLayout для кнопки
-        const RelativeLayout = Java.use('android.widget.RelativeLayout');
+        const RelativeLayout = Java.use("android.widget.RelativeLayout");
         const View = Java.use("android.view.View");
 
         const customButton = RelativeLayout.$new(content);
@@ -73,13 +73,13 @@ function createMenuItem(content) {
         // Копируем параметры layout из образца
         const LinearLayout$LayoutParams = Java.use("android.widget.LinearLayout$LayoutParams");
         const sampleLayoutParams = systemSettingsButton.getLayoutParams();
-        const layoutParams = LinearLayout$LayoutParams.$new.overload('android.widget.LinearLayout$LayoutParams')
+        const layoutParams = LinearLayout$LayoutParams.$new.overload("android.widget.LinearLayout$LayoutParams")
             .call(LinearLayout$LayoutParams, sampleLayoutParams);
 
         customButton.setLayoutParams(layoutParams);
 
         // Копируем текстовый элемент
-        const BoldTextView = Java.use('com.pateo.material.widgets.BoldTextView');
+        const BoldTextView = Java.use("com.pateo.material.widgets.BoldTextView");
         const textView = Java.use("android.widget.TextView");
         const R_id = Java.use("com.qinggan.app.vehiclesetting.R$id");
 
@@ -95,21 +95,21 @@ function createMenuItem(content) {
         buttonText.setMaxWidth(sampleTextView.getMaxWidth());
 
         // Устанавливаем свой текст
-        const JavaString = Java.use('java.lang.String');
+        const JavaString = Java.use("java.lang.String");
         const appName = getAppNameLocalization();
         buttonText.setText(JavaString.$new(appName));
 
         const sampleTextLayoutParams = sampleTextView.getLayoutParams();
         // Копируем параметры layout для текста
-        const RelativeLayout$LayoutParams = Java.use('android.widget.RelativeLayout$LayoutParams');
-        const textLayoutParams = RelativeLayout$LayoutParams.$new.overload('android.widget.RelativeLayout$LayoutParams')
+        const RelativeLayout$LayoutParams = Java.use("android.widget.RelativeLayout$LayoutParams");
+        const textLayoutParams = RelativeLayout$LayoutParams.$new.overload("android.widget.RelativeLayout$LayoutParams")
             .call(RelativeLayout$LayoutParams, sampleTextLayoutParams);
 
         buttonText.setLayoutParams(textLayoutParams);
         buttonText.setId(View.generateViewId());
 
         // Копируем иконку
-        const ImageView = Java.use('android.widget.ImageView');
+        const ImageView = Java.use("android.widget.ImageView");
         const sampleIconN = systemSettingsButton.findViewById(R_id.main_menu_item_system_setting_imgview.value);
         const buttonIcon = ImageView.$new(content);
 
@@ -120,7 +120,7 @@ function createMenuItem(content) {
 
         const sampleIconLayoutParams = sampleIcon.getLayoutParams();
         // Копируем параметры layout для иконки
-        const iconLayoutParams = RelativeLayout$LayoutParams.$new.overload('android.widget.RelativeLayout$LayoutParams')
+        const iconLayoutParams = RelativeLayout$LayoutParams.$new.overload("android.widget.RelativeLayout$LayoutParams")
             .call(RelativeLayout$LayoutParams, sampleIconLayoutParams);
 
         iconLayoutParams.addRule(1, buttonText.getId()); // RIGHT_OF buttonText
@@ -171,14 +171,14 @@ function onCreateHook() {
 
 function init() {
     ActivityAnimUtils = Java.use("com.pateo.material.anim.ActivityAnimUtils");
-    const View$OnClickListener = Java.use('android.view.View$OnClickListener');
+    const View$OnClickListener = Java.use("android.view.View$OnClickListener");
 
     CustomOnClickListener = Java.registerClass({
-        name: 'com.qinggan.frida.CustomClickListener',
+        name: "com.qinggan.frida.CustomClickListener",
         implements: [View$OnClickListener],
         methods: {
-            onClick: function (view) { startApp(); }
-        }
+            onClick: function () { startApp(); },
+        },
     });
 }
 
@@ -193,4 +193,4 @@ function main() {
     console.log("[+] Frida-скрипт успешно загружен для CarSettingActivity");
 }
 
-Java.perform(() => { main() });
+Java.perform(() => { main(); });

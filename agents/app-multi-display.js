@@ -2,13 +2,13 @@ import {
     APP_VIEWPORT_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-} from './utils.js';
+} from "./utils.js";
 
 let config = null;
 
 function isWhiteListAppHook() {
     try {
-        var MultiDisplayImpl = Java.use('com.qinggan.systemservice.multidisplay.MultiDisplayImpl');
+        var MultiDisplayImpl = Java.use("com.qinggan.systemservice.multidisplay.MultiDisplayImpl");
         MultiDisplayImpl.isWhiteListApp.implementation = function (packageName) {
 
             console.log("[*] приложение мультиэкранное? " + packageName);
@@ -19,9 +19,8 @@ function isWhiteListAppHook() {
 
             return this.isWhiteListApp.call(MultiDisplayImpl, packageName);
         };
-    }
-    catch (e) {
-        console.error('[app_multi_display] Error in hook:', e.message);
+    } catch (e) {
+        console.error("[app_multi_display] Error in hook:", e.message);
         console.error(e.stack);
     }
 }
