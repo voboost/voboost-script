@@ -13,6 +13,10 @@ export default [
                 console: 'readonly',
                 Java: 'readonly',
                 module: 'readonly',
+                setTimeout: 'readonly',
+                clearTimeout: 'readonly',
+                setInterval: 'readonly',
+                clearInterval: 'readonly',
             },
         },
 

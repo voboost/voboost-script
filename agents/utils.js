@@ -6,6 +6,7 @@ export const APP_VIEWPORT_CONFIG_PATH = "/data/local/tmp/test/apps-viewport-conf
 export const KEYBOARD_TEMPLATE_PATH = "/data/local/tmp/test/skb-qwerty-ru-no-voice.json";
 export const KEYBOARD_RU_CONFIG_PATH = "/data/local/tmp/test/keyboard-ru-config.json";
 export const KEYBOARD_LOCK_EN_CONFIG_PATH = "/data/local/tmp/test/keyboard-lock-en-config.json";
+export const MEDIA_SOURCE_CONFIG_PATH = "/data/local/tmp/test/media-source-config.json";
 
 export function LoadTextFile(file) {
     const FileInputStream = Java.use("java.io.FileInputStream");
