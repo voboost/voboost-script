@@ -56,7 +56,6 @@
             "balloon": false,
             "code": -1,
             "key_type": 0,
-            
             "width": 0.0823,
             "toggle_states": [
               {
@@ -176,27 +175,27 @@
             "toggle_states": [
               {
                 "code": 66,
-                "label": "Go",
+                "label": "Ввод",
                 "state_id": 7
               },
               {        
                 "code": 66,
-                "label": "Search",
+                "label": "Ввод",
                 "state_id": 8
               },
               {
                  "code": 66,
-                 "label": "Send",
+                 "label": "Ввод",
                  "state_id": 9
               },
               {
                 "code": 66,
-                "label": "Next",
+                "label": "Ввод",
                 "state_id": 10
               },
               {
                 "code": 66,
-                "label": "Done",
+                "label": "Ввод",
                 "state_id": 11
               }
             ] 
@@ -283,27 +282,27 @@
             "toggle_states": [
               {
                 "code": 66,
-                "label": "Go",
+                "label": "Ввод",
                 "state_id": 7
               },
               {        
                 "code": 66,
-                "label": "Search",
+                "label": "Ввод",
                 "state_id": 8
               },
               {
                  "code": 66,
-                 "label": "Send",
+                 "label": "Ввод",
                  "state_id": 9
               },
               {
                 "code": 66,
-                "label": "Next",
+                "label": "Ввод",
                 "state_id": 10
               },
               {
                 "code": 66,
-                "label": "Done",
+                "label": "Ввод",
                 "state_id": 11
               }
             ] 
@@ -388,27 +387,27 @@
             "toggle_states": [
               {
                 "code": 66,
-                "label": "Go",
+                "label": "Ввод",
                 "state_id": 7
               },
               {        
                 "code": 66,
-                "label": "Search",
+                "label": "Ввод",
                 "state_id": 8
               },
               {
                  "code": 66,
-                 "label": "Send",
+                 "label": "Ввод",
                  "state_id": 9
               },
               {
                 "code": 66,
-                "label": "Next",
+                "label": "Ввод",
                 "state_id": 10
               },
               {
                 "code": 66,
-                "label": "Done",
+                "label": "Ввод",
                 "state_id": 11
               }
             ] 
@@ -493,27 +492,27 @@
             "toggle_states": [
               {
                 "code": 66,
-                "label": "Go",
+                "label": "Ввод",
                 "state_id": 7
               },
               {        
                 "code": 66,
-                "label": "Search",
+                "label": "Ввод",
                 "state_id": 8
               },
               {
                  "code": 66,
-                 "label": "Send",
+                 "label": "Ввод",
                  "state_id": 9
               },
               {
                 "code": 66,
-                "label": "Next",
+                "label": "Ввод",
                 "state_id": 10
               },
               {
                 "code": 66,
-                "label": "Done",
+                "label": "Ввод",
                 "state_id": 11
               }
             ] 

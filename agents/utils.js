@@ -3,7 +3,9 @@ export const PHONE_NUM_CONFIG_PATH = "/data/local/tmp/test/phone-num-config.json
 export const APP_CONFIG_PATH = "/data/local/tmp/test/apps-config.json";
 export const WEATHER_CONFIG_PATH = "/data/local/tmp/test/weather-config.json";
 export const APP_VIEWPORT_CONFIG_PATH = "/data/local/tmp/test/apps-viewport-config.json";
-export const KEYBOARD_CONFIG_PATH = "/data/local/tmp/test/skb-qwerty-ru-no-voice.json";
+export const KEYBOARD_TEMPLATE_PATH = "/data/local/tmp/test/skb-qwerty-ru-no-voice.json";
+export const KEYBOARD_RU_CONFIG_PATH = "/data/local/tmp/test/keyboard-ru-config.json";
+export const KEYBOARD_LOCK_EN_CONFIG_PATH = "/data/local/tmp/test/keyboard-lock-en-config.json";
 
 export function LoadTextFile(file) {
     const FileInputStream = Java.use("java.io.FileInputStream");
