@@ -15,7 +15,7 @@ function doQuerySubscribeInfoHook() {
 function doQueryNOALearnInfoHook() {
     try {
         BaiduProviderUtil.doQueryNOALearnInfo.implementation = function (/* unused */) {
-            return ""; //TODO: find out the answer format
+            return "1";
         };
     } catch (e) {
         console.log("[-] Error in doQueryNOALearnInfo: " + e.message);
