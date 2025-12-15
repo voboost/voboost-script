@@ -1,11 +1,11 @@
 import { Logger } from "../lib/logger.js";
 
-const logger = new Logger("forced-ev-mod");
+const logger = new Logger("low-speed-sound-mod");
 
-const FORCED_EV_ON = 5;
+const LOW_SPEED_SOUND_DISABLE = 1;
 const VEHICLE_STATE_INVALID = -1;
 
-function activeForcedEv() {
+function disableLowSpeedSound() {
 
     const CanBusManager = Java.use("com.qinggan.canbus.CanBusManager");
     const VehicleState = Java.use("com.qinggan.canbus.VehicleState");
@@ -33,19 +33,18 @@ function activeForcedEv() {
                 setTimeout(() => activate(), delay);
             }
 
-            const currentState = canBusManager.getVehicleState(VehicleState.IVI_SOC_MODESET.value);
+            const currentState = canBusManager.getVehicleState(VehicleState.HUM_VSP_FUNCTION_SW.value);
 
-            if (currentState !== FORCED_EV_ON) {
+            if (currentState !== LOW_SPEED_SOUND_DISABLE) {
 
-                result = canBusManager.setVehicleState(VehicleState.IVI_SOC_MODESET.value, FORCED_EV_ON);
+                result = canBusManager.setVehicleState(VehicleState.HUM_VSP_FUNCTION_SW.value, LOW_SPEED_SOUND_DISABLE);
 
             } else {
 
                 return;
             }
-
         } catch (e) {
-            logger.error(`Error in activeForcedEv: ${e.message}`);
+            logger.error(`Error in disableLowSpeedSound: ${e.message}`);
             logger.error(e.stack);
         }
 
@@ -60,9 +59,9 @@ function activeForcedEv() {
 
 function main() {
 
-    activeForcedEv();
+    disableLowSpeedSound();
 
-    logger.info("Forced EV mode activated");
+    logger.info("Low speed sound mode activated");
 }
 
 Java.perform(function () { main(); });
