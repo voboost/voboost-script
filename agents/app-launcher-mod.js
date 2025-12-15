@@ -1,10 +1,14 @@
+import { Logger } from "../lib/logger.js";
+
 import {
     LANGUAGE_CONFIG_PATH,
     APP_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
     parseAppConfig,
-} from "./utils.js";
+} from "../lib/utils.js";
+
+const logger = new Logger("app-launcher-mod");
 
 let AppLauncher = null;
 let AllAppAdapter = null;
@@ -32,7 +36,7 @@ function startApp(packageName) {
     intent.addFlags(0x10000000); // FLAG_ACTIVITY_NEW_TASK
 
     AppLauncher.startApp(context, intent, 0);
-    console.log("[+] Запущено через AppLauncher.startApp: " + packageName);
+    logger.info(`App launched: ${packageName}`);
 }
 
 function createIconCache() {
@@ -53,9 +57,9 @@ function createIconCache() {
                     .call(BitmapDrawable, resources, app.icon_small);
             }
             result[app.package] = [drawableBig, drawableSmall];
-
         });
-        console.log("[+] Bitmaps созданы");
+
+        logger.debug("Bitmaps created");
         return result;
     }
     return result;
@@ -75,7 +79,7 @@ function addCustomApp(originalApps) {
             if (!Object.prototype.hasOwnProperty.call(existingPackages, configApp.package)) {
                 PackageManager.getPackageInfo(configApp.package, 0);
 
-                console.log("[+] Добавление в список AllApps: " + configApp.package);
+                logger.debug(`Adding to AllApps: ${configApp.package}`);
 
                 const bean = AppBean.$new(2131230851, 2131820622, configApp.package);
                 bean.setSubType(configApp.package_sub_type);
@@ -85,9 +89,9 @@ function addCustomApp(originalApps) {
             }
         } catch (e) {
             if (e.message?.includes("NameNotFoundException")) {
-                console.log("[-] Приложение не установлено: " + configApp.package);
+                logger.debug(`App not installed: ${configApp.package}`);
             } else {
-                console.log("[-] Ошибка: " + e.message);
+                logger.error(`Error: ${e.message}`);
             }
         }
     });
@@ -96,7 +100,7 @@ function addCustomApp(originalApps) {
 function patchNavigationIcons() {
     Java.choose(NavigationBar.$className, {
         onMatch: function (instance) {
-            console.log("[*] Найден экземпляр NavigationBar, mScreenId =", instance.mScreenId.value);
+            logger.debug(`Found NavigationBar instance, mScreenId = ${instance.mScreenId.value}`);
 
             if (instance.mScreenId.value !== 0) return;
 
@@ -116,7 +120,7 @@ function patchNavigationIcons() {
 
                 try {
                     PackageManager.getPackageInfo(customApp.package, 0);
-                    console.log("[+] Замена иконки для пакета:", packageName, "→", customApp.package);
+                    logger.debug(`Replacing icon for package: ${packageName} → ${customApp.package}`);
 
                     button.setOnClickListener(NavClickListener.$new());
 
@@ -128,16 +132,16 @@ function patchNavigationIcons() {
                     }
                 } catch (e) {
                     if (e.message?.includes("NameNotFoundException")) {
-                        console.log("[-] Приложение не установлено: " + customApp.package);
+                        logger.debug(`App not installed: ${customApp.package}`);
                     } else {
-                        console.log("[-] Ошибка: " + e.message);
+                        logger.error(`Error: ${e.message}`);
                     }
                 }
 
             });
         },
         onComplete: function () {
-            console.log("[*] Поиск NavigationBar завершён");
+            logger.debug("NavigationBar search completed");
         },
     });
 }
@@ -161,9 +165,9 @@ function updateMainApps() {
                 }
             }
 
-            console.log("[+] mMainAllApps обновлён");
+            logger.debug("mMainAllApps updated");
         } catch (e) {
-            console.log("[-] Ошибка обновления списка: " + e.message);
+            logger.error(`Error updating list: ${e.message}`);
         }
     });
 }
@@ -180,7 +184,7 @@ function getAllAppsHook() {
     try {
         AllAppDataManager.getAllApps.overload("int").implementation = function (screenId) {
 
-            console.log("[*] AllAppDataManager.getAllApps вызван для screenId: " + screenId);
+            logger.debug(`AllAppDataManager.getAllApps called for screenId: ${screenId}`);
             const originalApps = AllAppDataManager.getAllApps.overload("int").call(AllAppDataManager, screenId);
 
             if (screenId > 0 || !config) return originalApps; // Используем кэш
@@ -188,9 +192,9 @@ function getAllAppsHook() {
 
             return originalApps;
         };
-        console.log("[*] Frida: Хук на getAllAppsImpl установлен.");
+        logger.debug("getAllApps hook installed");
     } catch (e) {
-        console.log("[-] Ошибка при установке хука getAllAppsImpl: " + e.message);
+        logger.error(`Error installing getAllApps hook: ${e.message}`);
     }
 }
 
@@ -243,14 +247,14 @@ function onBindViewHolderHook() {
                         itemView.setOnClickListener(customClickAppListener);
                     }
                 } catch (e) {
-                    console.log("[-] Ошибка в onBindViewHolder: " + e.message);
-                    console.log(e.stack);
+                    logger.error(`Error in onBindViewHolder: ${e.message}`);
+                    logger.error(e.stack);
                 }
             };
 
-        console.log("[*] Frida: Хук на AllAppAdapter.onBindViewHolder установлен.");
+        logger.debug("onBindViewHolder hook installed");
     } catch (e) {
-        console.log("[-] Ошибка при установке хука AllAppAdapter.onBindViewHolder: " + e.message);
+        logger.error(`Error installing onBindViewHolder hook: ${e.message}`);
     }
 }
 
@@ -259,7 +263,7 @@ function updateThemeHook() {
     try {
         // --- Хук на initScreenUpViews (для замены иконок и тегов при инициализации) ---
         NavigationBar.updateTheme.implementation = function () {
-            console.log("[*] NavigationBar.updateTheme() вызван");
+            logger.debug("NavigationBar.updateTheme() called");
 
             // Сначала оригинальное поведение
             this.updateTheme.call(this);
@@ -270,7 +274,7 @@ function updateThemeHook() {
 
     } catch (e) {
 
-        console.log("[-] Ошибка при установке хуков NavigationBar: " + e.message);
+        logger.error(`Error installing NavigationBar hooks: ${e.message}`);
     }
 }
 
@@ -298,17 +302,16 @@ function init() {
                     // Получаем AppBean из тега
                     const appBeanNative = view.getTag();
                     const appBean = Java.cast(appBeanNative, AppBean);
-                    console.log("[+] Клик по: ");
 
                     if (appBean) {
                         const packageName = appBean.getPackageName();
-                        console.log("[+] Клик по: " + packageName);
+                        logger.debug(`Click on: ${packageName}`);
 
                         startApp(packageName);
 
                     }
                 } catch (e) {
-                    console.log("[-] Ошибка в кастомном клике: " + e.message);
+                    logger.error(`Error in custom click: ${e.message}`);
                 }
             },
         },
@@ -326,7 +329,7 @@ function init() {
                     const packageName = tagPkg.toString();
                     startApp(packageName);
                 } catch (e) {
-                    console.log("[-] NavClickListener ошибка: " + e.message);
+                    logger.error(`NavClickListener error: ${e.message}`);
                 }
             },
         },
@@ -352,7 +355,7 @@ function main() {
     //изминение стандартного списка приложений
     updateMainApps();
 
-    console.log("[+] Все хуки Frida успешно установлены (конфиг загружен при старте).");
+    logger.info("App launcher hooks installed");
 }
 
 Java.perform(() => { main(); });

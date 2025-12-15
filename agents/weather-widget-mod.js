@@ -14,12 +14,14 @@
  * @module weather-widget-mod
  */
 
+import { Logger } from "../lib/logger.js";
+
 import {
     LANGUAGE_CONFIG_PATH,
     WEATHER_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-} from "./utils.js";
+} from "../lib/utils.js";
 
 import {
     ALARM_LEVEL,
@@ -30,6 +32,8 @@ import {
 } from "./weather-widget-const.js";
 
 import { I18N } from "./weather-widget-i18n.js";
+
+const logger = new Logger("weather-widget-mod");
 
 let RealCall = null;
 let OkHttpClient = null;
@@ -318,7 +322,7 @@ function convertWeatherIdToLauncherCode(owId) {
         return "03";
     }
 
-    console.log("[-] Weather code not defined: " + owId);
+    logger.debug(`Weather code not defined: ${owId}`);
     return "00";
 }
 
@@ -621,8 +625,8 @@ function getDailyExtremeTimes(dailyMap) {
             },
         };
 
-        console.log(
-            `[+] ${dateStr}: day=${extremes[dateStr].day.time} (${extremes[dateStr].day.temp}°C), ` +
+        logger.debug(
+            `${dateStr}: day=${extremes[dateStr].day.time} (${extremes[dateStr].day.temp}°C), ` +
             `night=${extremes[dateStr].night.time} (${extremes[dateStr].night.temp}°C)`,
         );
     });
@@ -927,7 +931,7 @@ function handleWeatherLiveRequest(call, originalRequest, callback) {
             return;
         }
     } catch (e) {
-        console.error("[-] Async weather proxy error:", e.message);
+        logger.error(`Async weather proxy error: ${e.message}`);
     }
 }
 
@@ -954,7 +958,7 @@ function handleAqiForecastRequest(call, originalRequest, callback) {
             callback.onResponse(call, fakeResponse);
         }
     } catch (e) {
-        console.error("[-] AQI proxy error:", e.message);
+        logger.error(`AQI proxy error: ${e.message}`);
     }
 }
 
@@ -981,7 +985,7 @@ function handleGeocodeRequest(call, originalRequest, callback) {
             callback.onResponse(call, fakeResponse);
         }
     } catch (e) {
-        console.error("[-] Geocode proxy error:", e.message);
+        logger.error(`Geocode proxy error: ${e.message}`);
     }
 }
 
@@ -991,15 +995,15 @@ function installRequestInterceptor() {
         const url = originalRequest.url().toString();
 
         if (url.includes("/cp/weather/weather-live-info")) {
-            console.log("[+] Proxying weather (async):", url);
+            logger.info(`Proxying weather (async): ${url}`);
 
             handleWeatherLiveRequest(this, originalRequest, callback);
         } else if (url.includes("/cp/weather/aqi-forecast-info")) {
-            console.log("[+] Proxying AQI request");
+            logger.info("Proxying AQI request");
 
             handleAqiForecastRequest(this, originalRequest, callback);
         } else if (url.includes("/cp/geo/regeocode")) {
-            console.log("[+] Proxying reverse geocode request");
+            logger.info("Proxying reverse geocode request");
 
             handleGeocodeRequest(this, originalRequest, callback);
         }
@@ -1020,7 +1024,7 @@ function init() {
         Protocol = Java.use("okhttp3.Protocol");
         ResponseProtocol = Protocol.get("http/1.1");
     } catch {
-        console.error("[-] Failed to get Protocol");
+        logger.error("Failed to get Protocol");
 
         return;
     }
@@ -1033,7 +1037,7 @@ function main() {
     languageConfig = parseConfig(LoadTextFile(LANGUAGE_CONFIG_PATH));
     installRequestInterceptor();
 
-    console.log("[*] Weather + Forecast proxy installed (8-day, sync & async)");
+    logger.info("Weather + Forecast proxy installed (8-day, sync & async)");
 }
 
 // Only run in Frida context

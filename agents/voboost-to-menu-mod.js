@@ -1,8 +1,12 @@
+import { Logger } from "../lib/logger.js";
+
 import {
     LANGUAGE_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-} from "./utils.js";
+} from "../lib/utils.js";
+
+const logger = new Logger("voboost-to-menu-mod");
 
 let ActivityAnimUtils = null;
 
@@ -43,15 +47,15 @@ function startApp() {
             .overload("android.content.Context", "android.content.Intent")
             .call(ActivityAnimUtils, context, intent);
 
-        console.log(`[+] Ваше приложение: ${APP_NAME}  успешно запущено!`);
+        logger.info(`App launched: ${APP_NAME}`);
     } catch (e) {
-        console.log("[!] Ошибка при запуске приложения:", e.toString());
+        logger.error(`Error starting app: ${e.toString()}`);
     }
 }
 
 function createMenuItem(content) {
     try {
-        console.log("[+] Создание кастомной кнопки через копирование системных настроек");
+        logger.debug("Creating custom button");
 
         // Получаем контейнер LinearLayout внутри OverScrollView
         const menuContainer = content.carSettingBinding.value.menuContainer.value;
@@ -60,7 +64,7 @@ function createMenuItem(content) {
         // Находим существующую кнопку системных настроек через binding
         const systemSettingsButton = content.carSettingBinding.value.mainMenuItemSystemSetting.value;
         if (!systemSettingsButton) {
-            console.log("[!] Кнопка системных настроек не найдена");
+            logger.error("System settings button not found");
             return;
         }
 
@@ -147,15 +151,15 @@ function createMenuItem(content) {
 
         if (insertIndex !== -1) {
             linearLayoutGroup.addView(customButton, insertIndex);
-            console.log("[+] Кастомная кнопка добавлена перед системными настройками");
+            logger.info("Custom button added to menu");
         } else {
             linearLayoutGroup.addView(customButton);
-            console.log("[+] Кастомная кнопка добавлена в конец списка");
+            logger.info("Custom button added to menu");
         }
 
     } catch (e) {
-        console.log("[-] Ошибка при создании кастомной кнопки:", e.toString());
-        console.log("[-] Stack trace:", e.stack);
+        logger.error(`Error creating custom button: ${e.toString()}`);
+        logger.error(e.stack);
     }
 }
 
@@ -190,7 +194,7 @@ function main() {
     languageConfig = parseConfig(languageContent);
 
     onCreateHook();
-    console.log("[+] Frida-скрипт успешно загружен для CarSettingActivity");
+    logger.info("Menu mod hooks installed");
 }
 
 Java.perform(() => { main(); });

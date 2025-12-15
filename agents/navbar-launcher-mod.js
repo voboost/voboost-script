@@ -1,8 +1,12 @@
+import { Logger } from "../lib/logger.js";
+
 import {
     APP_VIEWPORT_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-} from "./utils.js";
+} from "../lib/utils.js";
+
+const logger = new Logger("navbar-launcher-mod");
 
 let config = null;
 
@@ -42,8 +46,8 @@ function onReceiveHook() {
             }
 
         } catch (e) {
-            console.error("[launcher_navbar_mod] Error in hook:", e.message);
-            console.error(e.stack);
+            logger.error(`Error in hook: ${e.message}`);
+            logger.error(e.stack);
         }
     };
 }
@@ -53,7 +57,7 @@ function main() {
     config = parseConfig(appViewPortContent);
 
     onReceiveHook();
-    console.log("[SUCCESS] Hooked LauncherModel.onReceive for navbar control");
+    logger.info("Navbar launcher hook installed");
 }
 
 Java.perform(function () { main(); });

@@ -1,6 +1,7 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
+import { logLevelPlugin } from '../lib/build-log-level-plugin.mjs';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -17,7 +18,7 @@ if (!fs.existsSync(agentsDir)) {
 }
 
 const files = fs.readdirSync(agentsDir)
-  .filter(f => f.endsWith('.js') && f !== 'utils.js')
+  .filter(f => f.endsWith('.js'))
   .sort();
 
 const configs = files.map(file => {
@@ -35,6 +36,7 @@ const configs = files.map(file => {
     plugins: [
       resolve({ preferBuiltins: false }),
       commonjs(),
+      logLevelPlugin(),
       terser({
         compress: {
           passes: 3,
@@ -70,6 +72,7 @@ const configs = files.map(file => {
     onwarn: (warning, warn) => {
       if (warning.code === 'CIRCULAR_DEPENDENCY') return;
       if (warning.code === 'EVAL') return;
+      if (warning.code === 'MISSING_NAME_OPTION_FOR_IIFE_EXPORT') return;
       warn(warning);
     }
   };

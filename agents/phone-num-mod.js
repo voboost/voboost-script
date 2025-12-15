@@ -1,3 +1,7 @@
+import { Logger } from "../lib/logger.js";
+
+const logger = new Logger("phone-num-mod");
+
 /**
  * Do nothing with phone number except trimming whitespaces.
  *
@@ -24,9 +28,9 @@ function hookPhoneNumberFormatter() {
 
         UtilClass.getAmendNumber.implementation = getAmendNumber;
 
-        console.log("[*] Successfully hooked and modified getAmendNumber method in bluetoothphone");
+        logger.info("Phone number hook installed");
     } catch {
-        console.log("[!] bluetoothphone.Util class not available in this process");
+        logger.debug("bluetoothphone.Util class not available");
     }
 }
 
@@ -46,8 +50,8 @@ function syncContactCache() {
 
         PbapProfileManagerClass.startSync.call(PbapProfileManagerClass);
     } catch (error) {
-        console.log("[!] Error processing contact cache:", error.message);
-        console.log(error.stack);
+        logger.error(`Error processing contact cache: ${error.message}`);
+        logger.error(error.stack);
     }
 }
 
@@ -59,7 +63,7 @@ function syncContactCache() {
  * Java.perform(() => { main(); });
  */
 function main() {
-    console.log("[*] Starting phone number correction hooks");
+    logger.info("Starting phone number correction");
 
     hookPhoneNumberFormatter();
     syncContactCache();

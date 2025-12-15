@@ -1,9 +1,13 @@
+import { Logger } from "../lib/logger.js";
+
 import {
     LANGUAGE_CONFIG_PATH,
     APP_VIEWPORT_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-} from "./utils.js";
+} from "../lib/utils.js";
+
+const logger = new Logger("app-viewport-mod");
 
 let SystemProperties = null;
 let Rect = null;
@@ -74,10 +78,10 @@ function applyAppSettings(activityRecord, displayId) {
         configAR.setLocale(currentLocale);
         activityRecord.onConfigurationChanged(configAR);
 
-        console.log(`✅ Applied settings to ${packageName} on ${currentDisplay}, screen state: ${screenLift}`);
+        logger.info(`Applied settings to ${packageName} on ${currentDisplay}`);
     } catch (e) {
-        console.log(`❌ Error applying settings: ${e.message}`);
-        console.log(e.stack);
+        logger.error(`Error applying settings: ${e.message}`);
+        logger.error(e.stack);
     }
 }
 
@@ -92,8 +96,8 @@ function onDisplayChangedHook() {
                 const displayId = displayContent.getDisplayId();
                 applyAppSettings(this, displayId);
             } catch (e) {
-                console.error("[launcher_navbar_mod] Error in hook:", e.message);
-                console.error(e.stack);
+                logger.error(`Error in hook: ${e.message}`);
+                logger.error(e.stack);
             }
         };
 }
@@ -117,6 +121,9 @@ function main() {
     currentLocale = createLocale(languageConfig);
 
     onDisplayChangedHook();
+
+    logger.info("Viewport mod hooks installed");
 }
 
 Java.perform(function () { main(); });
+
