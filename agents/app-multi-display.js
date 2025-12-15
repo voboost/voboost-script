@@ -11,11 +11,15 @@
  * @module app-multi-display
  */
 
+import { Logger } from "../lib/logger.js";
+
 import {
     APP_VIEWPORT_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-} from "./utils.js";
+} from "../lib/utils.js";
+
+const logger = new Logger("app-multi-display");
 
 let config = null;
 
@@ -68,7 +72,7 @@ function hookMultiDisplayWhitelist() {
         var MultiDisplayImpl = Java.use("com.qinggan.systemservice.multidisplay.MultiDisplayImpl");
 
         MultiDisplayImpl.isWhiteListApp.implementation = function (packageName) {
-            console.log("[*] Checking multi-display status for: " + packageName);
+            logger.debug(`Checking multi-display status for: ${packageName}`);
             const result = isMultiDisplayApp(packageName, config.apps);
 
             if (result !== null) {
@@ -78,8 +82,8 @@ function hookMultiDisplayWhitelist() {
             return this.isWhiteListApp.call(MultiDisplayImpl, packageName);
         };
     } catch (e) {
-        console.error("[app-multi-display] Error in hook:", e.message);
-        console.error(e.stack);
+        logger.error(`Error in hook: ${e.message}`);
+        logger.error(e.stack);
     }
 }
 
@@ -92,6 +96,8 @@ function main() {
 
     config = parseConfig(appViewPortContent);
     hookMultiDisplayWhitelist();
+
+    logger.info("Multi-display hook installed");
 }
 
 // Only run in Frida context

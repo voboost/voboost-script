@@ -90,3 +90,110 @@ $env:PATH += ";$env:LOCALAPPDATA\Packages\PythonSoftwareFoundation.Python.3.13_q
 6. Чтобы вернуть работу **Tweaks**, переименовать файлы обратно и выполнить:
    adb shell "am start -n ru.kachalin.voyahtweaks/.android.activity.main.MainActivity"
 7. После этого можно перезагрузить мультимедийный модуль.
+
+### Логирование (Logging)
+
+Логирование выполняется через класс [`Logger`](lib/logger.js:12), который автоматически встраивается в каждый скрипт при сборке через Rollup.
+
+#### Реализация
+
+Логгер находится в [`lib/logger.js`](lib/logger.js:1) и экспортирует класс `Logger` с методами:
+- [`error(message)`](lib/logger.js:43) - логирование ошибок с тегом `[-]`
+- [`info(message)`](lib/logger.js:51) - логирование важных событий с тегом `[+]`
+- [`debug(message)`](lib/logger.js:59) - логирование технических деталей с тегом `[*]`
+
+Все методы автоматически добавляют временную метку в формате `YYYY-MM-DD HH:mm:ss.SSS`, совместимом с Kotlin логгером.
+
+#### Использование
+
+```javascript
+// Импортируем Logger из lib/logger.js
+import { Logger } from './logger.js';
+
+// Создаём экземпляр логгера с именем модуля
+const logger = new Logger('my-agent-name');
+
+// Используем методы логирования
+logger.info("Important event happened");
+logger.debug("Technical detail for troubleshooting");
+logger.error("Something went wrong: " + e.message);
+```
+
+#### Запуск через ru.voboost приложение
+
+Приложение ru.voboost запускает Frida скрипты через `FridaManager` и захватывает вывод консоли:
+
+```kotlin
+// В ru.voboost приложении
+val params = JSONObject().apply {
+    put("apiKey", "your-api-key")
+}
+
+fridaManager.injectScript(
+    targetProcess = "com.qinggan.app.launcher",
+    scriptPath = "/data/local/tmp/test/weather-widget-mod-agent.js",
+    params = params
+)
+```
+
+Логи из `console.log()` автоматически сохраняются в `/data/data/ru.voboost/files/voboost-YYYY-MM-DD.log`
+
+#### Ручной запуск через frida (для отладки)
+
+```bash
+# Запуск одного агента
+frida -U -n com.qinggan.app.launcher \
+  -l bundles/weather-widget-mod-agent.js
+
+# Запуск нескольких агентов
+frida -U -n com.qinggan.app.launcher \
+  -l bundles/weather-widget-mod-agent.js \
+  -l bundles/app-launcher-mod-agent.js
+```
+
+При ручном запуске логи выводятся в консоль frida.
+
+#### Уровни логирования
+
+| Уровень   | Тег   | Когда использовать                                            | Примеры                                                 |
+|-----------|-------|---------------------------------------------------------------|---------------------------------------------------------|
+| **info**  | `[+]` | Важные события, которые интересны пользователю/администратору | Запуск агента, действия пользователя, значимые операции |
+| **debug** | `[*]` | Технические детали для отладки                                | Вызовы методов, промежуточные значения, проверки        |
+| **error** | `[-]` | Ошибки и исключения                                           | Исключения, критические сбои                            |
+
+#### Когда использовать INFO
+
+- Запуск/остановка агента: `"Agent started"`, `"Hooks installed"`
+- Действия пользователя: `"App launched: com.example"`, `"Setting changed"`
+- Значимые операции: `"Config loaded"`, `"Request proxied"`, `"Icon replaced"`
+
+#### Когда использовать DEBUG
+
+- Вызовы методов: `"getAllApps called for screenId: 0"`
+- Итерации и промежуточные значения: `"Processing day: 2024-12-14"`
+- Проверки валидации: `"Checking multi-display for: com.example"`
+- Ожидаемые случаи (не ошибки): `"App not installed: com.example"` (пропуск, не сбой)
+
+#### Когда использовать ERROR
+
+- Исключения в try/catch: `"Error in hook: " + e.message`
+- Критические сбои: `"Failed to load config"`
+- Неожиданные состояния: `"System settings button not found"`
+
+#### Файлы логов
+
+- **Расположение:** `/data/data/ru.voboost/files/`
+- **Формат имени:** `voboost-YYYY-MM-DD.log`
+- **Ротация:** Ежедневно
+- **Хранение:** 7 дней
+
+#### Формат логов
+
+Все логи имеют единый формат с временными метками:
+```
+2024-12-14 14:30:45.123 [+] source: message
+2024-12-14 14:30:45.456 [*] source: debug info
+2024-12-14 14:30:45.789 [-] source: error message
+```
+
+Временные метки генерируются в JS коде и совпадают с форматом Kotlin логгера.

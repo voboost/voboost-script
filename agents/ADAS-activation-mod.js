@@ -1,3 +1,7 @@
+import { Logger } from "../lib/logger.js";
+
+const logger = new Logger("ADAS-activation-mod");
+
 let BaiduProviderUtil = null;
 
 function doQuerySubscribeInfoHook() {
@@ -7,8 +11,8 @@ function doQuerySubscribeInfoHook() {
             return "{\"expireStatus\":\"0\",\"isMqtt\":false,\"remainDays\":\"30\",\"subscriptionStatus\":\"1\"}";
         };
     } catch (e) {
-        console.log("[-] Error in doQuerySubscribeInfo: " + e.message);
-        console.log(e.stack);
+        logger.error(`Error in doQuerySubscribeInfo: ${e.message}`);
+        logger.error(e.stack);
     }
 }
 
@@ -18,8 +22,8 @@ function doQueryNOALearnInfoHook() {
             return "1";
         };
     } catch (e) {
-        console.log("[-] Error in doQueryNOALearnInfo: " + e.message);
-        console.log(e.stack);
+        logger.error(`Error in doQueryNOALearnInfo: ${e.message}`);
+        logger.error(e.stack);
     }
 }
 
@@ -32,6 +36,8 @@ function main() {
 
     doQuerySubscribeInfoHook();
     doQueryNOALearnInfoHook();
+
+    logger.info("ADAS activation hooks installed");
 }
 
 Java.perform(() => { main(); });

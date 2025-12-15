@@ -1,9 +1,13 @@
+import { Logger } from "../lib/logger.js";
+
 import {
     KEYBOARD_TEMPLATE_PATH,
     KEYBOARD_RU_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-} from "./utils.js";
+} from "../lib/utils.js";
+
+const logger = new Logger("keyboard-ru-mod");
 
 const KEYBOARD_CACHE_ID = 999999;
 const EN_INPUT_METHOD_NAME = "english_input_method";
@@ -73,7 +77,7 @@ function createDrawableIons(configContent) {
             drawableMap[iconName] = iconDrawable;
         }
     } catch (e) {
-        console.error("[-] Error loading icon config:", e.message);
+        logger.error(`Error loading icon config: ${e.message}`);
         return null;
     }
 
@@ -117,7 +121,7 @@ function resolveResId(resRef, context) {
         // Parse "@type/name"
         const match = resRef.match(/^@(\w+)\/(.+)$/);
         if (!match) {
-            console.warn(`[!] Invalid resource reference: ${resRef}`);
+            logger.info(`Invalid resource reference: ${resRef}`);
             return 0;
         }
 
@@ -125,11 +129,11 @@ function resolveResId(resRef, context) {
         const id = resources.getIdentifier(name, type, pkgName);
 
         if (id === 0) {
-            console.warn(`[!] Resource not found: ${resRef} (${type}/${name}) in package ${pkgName}`);
+            logger.info(`Resource not found: ${resRef} (${type}/${name}) in package ${pkgName}`);
         }
         return id;
     } catch (e) {
-        console.error(`[!] Error resolving resource ${resRef}:`, e);
+        logger.error(`Error resolving resource ${resRef}: ${e}`);
         return 0;
     }
 }
@@ -149,7 +153,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
         const skbTemplate = skbPool.getSkbTemplate(skbTemplateResId, context);
 
         if (!skbTemplate) {
-            console.error(`[!] SkbTemplate not found for ${attrs.skb_template} (ID: ${skbTemplateResId})`);
+            logger.error(`SkbTemplate not found for ${attrs.skb_template} (ID: ${skbTemplateResId})`);
             return null;
         }
 
@@ -188,7 +192,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                     softKey = skbTemplate.getDefaultKey(keyJson.id);
 
                     if (!softKey) {
-                        console.warn(`[!] getDefaultKey(${keyJson.id}) returned null`);
+                        logger.info(`getDefaultKey(${keyJson.id}) returned null`);
                         continue;
                     }
                 } else if (keyJson.toggle_states) { // 2. Key with toggle states
@@ -393,7 +397,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                 if ((keyPositionX - currentX) < attrs.key_xmargin * 2.0 ||
                     (keyPositionY - currentY) < attrs.key_ymargin * 2.0) {
 
-                    console.warn(`[!] Key too small: ${keyJson.label || keyJson.id || "unknown"}`);
+                    logger.info(`Key too small: ${keyJson.label || keyJson.id || "unknown"}`);
                     continue;
                 }
 
@@ -410,7 +414,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                 currentX = keyPositionX;
 
                 if (!softKeyboard.addSoftKey(currentSoftKey)) {
-                    console.error(`[!] Failed to add key: ${keyJson.label || keyJson.id || "unknown"}`);
+                    logger.error(`Failed to add key: ${keyJson.label || keyJson.id || "unknown"}`);
                 }
             }
 
@@ -429,7 +433,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
 
     } catch (e) {
 
-        console.error("[!] Keyboard build error:", e);
+        logger.error(`Keyboard build error: ${e}`);
         return null;
     }
 }
@@ -515,8 +519,8 @@ function getKeyboardHook() {
 
                     // return softKeyboard;
                 } catch (e) {
-                    console.warn(e);
-                    console.warn(e.stack);
+                    logger.info(e);
+                    logger.info(e.stack);
                 }
             }
 
@@ -860,6 +864,9 @@ function main() {
 
     disableVoice();
     resetCachedSkb();
+
+    logger.info("Russian keyboard hooks installed");
 }
 
 Java.perform(function () { main(); });
+

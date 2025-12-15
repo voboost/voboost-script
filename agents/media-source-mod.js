@@ -1,9 +1,13 @@
+import { Logger } from "../lib/logger.js";
+
 import {
     LANGUAGE_CONFIG_PATH,
     MEDIA_SOURCE_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-} from "./utils.js";
+} from "../lib/utils.js";
+
+const logger = new Logger("media-source-mod");
 
 let MediaBeanInter = null;
 let MediaTabHolder = null;
@@ -123,8 +127,8 @@ function reconnectMedia() {
 
             } catch (e) {
 
-                console.error("reconnectMedia Error: " + e);
-                console.error(e.stack);
+                logger.error(`reconnectMedia Error: ${e}`);
+                logger.error(e.stack);
             }
         },
         onComplete: function () { },
@@ -155,8 +159,8 @@ function waitForConnection(instance) {
             setTimeout(() => checkConnected(), delay);
         } catch (e) {
 
-            console.error("checkConnected Error: " + e);
-            console.error(e.stack);
+            logger.error(`checkConnected Error: ${e}`);
+            logger.error(e.stack);
         }
     };
 
@@ -183,8 +187,8 @@ function changeTabIcon() {
                 imageView.setImageDrawable.overload("android.graphics.drawable.Drawable").call(imageView, drawable.icon);
 
             } catch (e) {
-                console.error(`bindViewHook Error: ${e.message}`);
-                console.error(e.stack);
+                logger.error(`bindViewHook Error: ${e.message}`);
+                logger.error(e.stack);
             }
         },
         onComplete: function () { },
@@ -214,8 +218,8 @@ function bindViewHook() {
             imageView.setImageDrawable.overload("android.graphics.drawable.Drawable").call(imageView, drawable.icon);
 
         } catch (e) {
-            console.error(`bindViewHook Error: ${e.message}`);
-            console.error(e.stack);
+            logger.error(`bindViewHook Error: ${e.message}`);
+            logger.error(e.stack);
         }
     };
 }
@@ -244,8 +248,8 @@ function updateTitleUIHook() {
             imageView.setImageDrawable.overload("android.graphics.drawable.Drawable").call(imageView, drawable.icon);
 
         } catch (e) {
-            console.error(`updateTitleUIHook Error: ${e.message}`);
-            console.error(e.stack);
+            logger.error(`updateTitleUIHook Error: ${e.message}`);
+            logger.error(e.stack);
         }
     };
 }
@@ -277,13 +281,13 @@ function openMediaPageHook() {
 
             const context = Java.cast(ContextUtils.context.value, ContextClass);
             const intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
-            intent.addFlags(0x10000000); 
+            intent.addFlags(0x10000000);
 
             AppLauncher.startApp(context, intent, 0);
 
         } catch (e) {
-            console.error(`openMediaPageHook Error: ${e.message}`);
-            console.error(e.stack);
+            logger.error(`openMediaPageHook Error: ${e.message}`);
+            logger.error(e.stack);
         }
     };
 }
@@ -315,8 +319,8 @@ function getStartIntentHook() {
             return intent;
 
         } catch (e) {
-            console.error(`getStartIntentHook Error ${e.message}`);
-            console.error(e.stack);
+            logger.error(`getStartIntentHook Error: ${e.message}`);
+            logger.error(e.stack);
         }
         return null;
     };
@@ -349,8 +353,8 @@ function isMediaFocusHook() {
 
             } catch (e) {
 
-                console.error(`isMediaFocusHook Error: ${e.message}`);
-                console.error(e.stack);
+                logger.error(`isMediaFocusHook Error: ${e.message}`);
+                logger.error(e.stack);
             }
 
             return this.isMediaFocus
@@ -401,7 +405,7 @@ function main() {
     getStartIntentHook();
     isMediaFocusHook();
 
-    console.log("[Frida] Интеграция media source mod активирована");
+    logger.info("Media source mod activated");
 }
 
 Java.perform(() => { main(); });

@@ -1,3 +1,6 @@
+import { Logger } from "../lib/logger.js";
+
+const logger = new Logger("forced-ev-mod");
 
 function activeForcedEv() {
 
@@ -50,7 +53,7 @@ function main() {
 
     activeForcedEv();
 
-    console.log("[Frida] active forced EV");
+    logger.info("Forced EV mode activated");
 }
 
 Java.perform(function () { main(); });
