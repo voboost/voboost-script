@@ -1,0 +1,272 @@
+import { Logger } from "../lib/logger.js";
+
+import {
+    LANGUAGE_CONFIG_PATH,
+    MEDIA_SOURCE_CONFIG_PATH,
+    LoadTextFile,
+    parseConfig,
+} from "../lib/utils.js";
+
+const logger = new Logger("media-source-mod");
+
+let ContextUtils = null;
+let ContextClass = null;
+let MediaEnum = null;
+
+let mediaServices = null;
+
+let iconDrawables = null;
+
+let config = null;
+let languageConfig = null;
+let mediaEnums = null;
+
+function changeMediaEnum() {
+
+    try {
+        for (let serviceName of mediaServices) {
+
+            if (!Object.prototype.hasOwnProperty.call(config.media, serviceName)) continue;
+
+            const media = config.media[serviceName];
+
+            if (media.pageName === undefined || media.pageName === "") continue;
+
+            const mediaEnum = mediaEnums[serviceName];
+
+            mediaEnum.service.pageName.value = media.pageName;
+
+            if (media.servicePageName !== undefined && media.servicePageName !== "") {
+
+                mediaEnum.service.servicePageName.value = media.servicePageName;
+            }
+
+            if (media.serviceName !== undefined && media.serviceName !== "") {
+
+                mediaEnum.service.serviceName.value = media.serviceName;
+            }
+
+            if (media.clientId !== undefined && media.clientId !== "") {
+
+                mediaEnum.service.clientId.value = media.clientId;
+            }
+
+            mediaEnum.enable = true;
+        }
+    } catch (e) {
+
+        logger.error(`changeMediaEnum Error: ${e.message}`);
+        logger.error(e.stack);
+    }
+}
+
+function createIconDrawable() {
+
+    const Base64 = Java.use("android.util.Base64");
+    const BitmapFactory = Java.use("android.graphics.BitmapFactory");
+    const BitmapDrawable = Java.use("android.graphics.drawable.BitmapDrawable");
+
+    try {
+        const drawable = {};
+
+        const context = Java.cast(ContextUtils.context.value, ContextClass);
+
+        for (let serviceName of mediaServices) {
+
+            if (!Object.prototype.hasOwnProperty.call(config.media, serviceName)) continue;
+
+            const media = config.media[serviceName];
+
+            if (media.pageName === undefined || media.pageName === "") continue;
+            if (media.icon_large === undefined || media.icon_large === "") continue;
+
+            const bytes = Base64.decode(media.icon_large, Base64.DEFAULT.value);
+            const iconBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            const iconDrawable = BitmapDrawable.$new(context.getResources(), iconBitmap);
+
+            let nameText = "";
+            if (media.name !== undefined && media.name !== "") {
+                if (Object.prototype.hasOwnProperty.call(media.name, languageConfig.language)) {
+                    nameText = media.name[languageConfig.language];
+                }
+            }
+
+            drawable[serviceName] = { icon: iconDrawable, name: nameText };
+        }
+    } catch (e) {
+
+        logger.error(`createIconDrawable Error: ${e.message}`);
+        logger.error(e.stack);
+    }
+
+    return drawable;
+}
+
+function bindViewHook() {
+
+    const MediaSrcHolder = Java.use("com.qingang.asgard.media.general.src.MediaSrcAdapter$MediaSrcHolder");
+
+    MediaSrcHolder.bindView.implementation = function (i) {
+
+        this.bindView.call(this, i);
+
+        try {
+            const mediaEnum = Java.cast(this.srcMediaBean.value.getMediaEnum(), MediaEnum);
+            const mediaEnumName = mediaEnum.toString();
+
+            if (!Object.prototype.hasOwnProperty.call(iconDrawables, mediaEnumName)) {
+                return;
+            }
+
+            const drawable = iconDrawables[mediaEnumName];
+            const textView = this.binding.value.tvName.value;
+            const imageView = this.binding.value.ivMain.value;
+
+            textView.setText.overload("java.lang.CharSequence").call(textView, drawable.name);
+            imageView.setImageDrawable.overload("android.graphics.drawable.Drawable").call(imageView, drawable.icon);
+
+        } catch (e) {
+
+            logger.error(`bindViewHook Error: ${e.message}`);
+            logger.error(e.stack);
+        }
+    };
+}
+
+function isMediaFocusHook() {
+
+    const AudioPolicyHelper = Java.use("com.qinggan.media.helper.AudioPolicyHelper");
+
+    AudioPolicyHelper.isMediaFocus
+        .overload(MediaEnum.$className, "com.qinggan.audiopolicy.AudioPolicyInfo")
+        .implementation = function (mediaEnum, audioPolicyInfo) {
+
+            if (mediaEnum === null || audioPolicyInfo === null) {
+                return this.isMediaFocus
+                    .overload(MediaEnum.$className, "com.qinggan.audiopolicy.AudioPolicyInfo")
+                    .call(this, mediaEnum, audioPolicyInfo);
+            }
+            try {
+                const mediaName = mediaEnum.toString();
+
+                if (!Object.prototype.hasOwnProperty.call(mediaEnums, mediaName)) {
+
+                    return this.isMediaFocus
+                        .overload(MediaEnum.$className, "com.qinggan.audiopolicy.AudioPolicyInfo")
+                        .call(this, mediaEnum, audioPolicyInfo);
+                }
+
+                const mediaService = mediaEnums[mediaName];
+
+                if (!mediaService.enable) {
+
+                    return this.isMediaFocus
+                        .overload(MediaEnum.$className, "com.qinggan.audiopolicy.AudioPolicyInfo")
+                        .call(this, mediaEnum, audioPolicyInfo);
+                }
+
+                const currentPackage = audioPolicyInfo.getPackageName();
+                const mediaPackage = mediaService.service.pageName.value;
+                return currentPackage === mediaPackage;
+
+            } catch (e) {
+
+                logger.error(`isMediaFocusHook Error: ${e.message}`);
+                logger.error(e.stack);
+            }
+
+            return this.isMediaFocus
+                .overload(MediaEnum.$className, "com.qinggan.audiopolicy.AudioPolicyInfo")
+                .call(this, mediaEnum, audioPolicyInfo);
+        };
+}
+
+function openPageHook() {
+
+    const SrcMediaActivity = Java.use("com.qingang.asgard.media.general.src.SrcMediaActivity");
+    const MediaJumpUtils = Java.use("com.qinggan.media.helper.app.MediaJumpUtils");
+    const Intent = Java.use("android.content.Intent");
+    const Integer = Java.use('java.lang.Integer');
+
+    SrcMediaActivity.openPage
+        .overload("com.qingang.asgard.media.general.src.MediaResEnum")
+        .implementation = function (mediaResEnum) {
+            try {
+                const mediaEnum = Java.cast(mediaResEnum.mediaEnum.value, MediaEnum);
+                const mediaEnumName = mediaEnum.toString();
+
+                if (!Object.prototype.hasOwnProperty.call(mediaEnums, mediaEnumName)) {
+
+                    this.openPage.overload("com.qingang.asgard.media.general.src.MediaResEnum").call(this, mediaResEnum);
+                    return;
+                }
+
+                const mediaService = mediaEnums[mediaEnumName];
+                if (!mediaService) {
+
+                    this.openPage.overload("com.qingang.asgard.media.general.src.MediaResEnum").call(this, mediaResEnum);
+                    return;
+                }
+
+                const packageName = mediaService.service.pageName.value;
+                const handler = this.handler.value;
+                handler.removeMessages.overload("int").call(handler, 1);
+
+                const context = Java.cast(ContextUtils.context.value, ContextClass);
+                const intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
+                intent.addFlags(0x10000000);
+
+                const starAppNamesParams = Java.array('java.lang.Class', [ContextClass.class, Intent.class, Integer.TYPE.value]);
+                const starAppMethod = MediaJumpUtils.class.getDeclaredMethod("starApp", starAppNamesParams);
+
+                starAppMethod.setAccessible(true);
+
+                const starAppParams = Java.array('java.lang.Object', [context, intent, Integer.valueOf(0)]);
+                starAppMethod.invoke(null, starAppParams);
+            }
+            catch (e) {
+                logger.error(`openPageHook Error: ${e.message}`);
+                logger.error(e.stack);
+            }
+        };
+}
+
+function init() {
+
+    MediaEnum = Java.use("com.qinggan.media.helper.MediaEnum");
+    ContextUtils = Java.use("com.qinggan.app.service.utils.ContextUtils");
+    ContextClass = Java.use("android.content.Context");
+
+    mediaServices = ["WECAR_FLOW", "XMLA_MUSIC", "RADIO_YUNTING"];
+
+    mediaEnums = {
+        WECAR_FLOW: { service: MediaEnum.WECAR_FLOW.value, active: false },
+        XMLA_MUSIC: { service: MediaEnum.XMLA_MUSIC.value, active: false },
+        RADIO_YUNTING: { service: MediaEnum.RADIO_YUNTING.value, active: false },
+    };
+
+    const languageContent = LoadTextFile(LANGUAGE_CONFIG_PATH);
+    languageConfig = parseConfig(languageContent);
+
+    const mediaContent = LoadTextFile(MEDIA_SOURCE_CONFIG_PATH);
+    config = parseConfig(mediaContent);
+
+    iconDrawables = createIconDrawable();
+}
+
+function main() {
+
+    init();
+
+    changeMediaEnum();
+
+    config = null;
+
+    bindViewHook();
+    openPageHook();
+    isMediaFocusHook();
+
+    logger.log("Media window mod activated");
+}
+
+Java.perform(() => { main(); });
