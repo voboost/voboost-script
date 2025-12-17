@@ -1,6 +1,5 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import terser from '@rollup/plugin-terser';
 import { logLevelPlugin } from '../lib/build-log-level-plugin.mjs';
 import fs from 'fs';
 import path from 'path';
@@ -21,47 +20,18 @@ const files = fs.readdirSync(agentsDir)
   .filter(f => f.endsWith('.js'))
   .sort();
 
-const configs = files.map(file => {
+// Check if minification should be disabled
+const shouldMinify = process.env.MINIFY !== 'false';
+
+const configs = files.flatMap(file => {
   const name = path.basename(file, '.js');
   const inputPath = path.resolve(agentsDir, file);
 
-  return {
+  const baseConfig = {
     input: inputPath,
-    output: {
-      file: path.resolve(OUTPUT_DIR, `${name}.js`),
-      format: 'iife',
-      compact: true,
-      sourcemap: false,
-    },
     plugins: [
       resolve({ preferBuiltins: false }),
-      commonjs(),
-      logLevelPlugin(),
-      terser({
-        compress: {
-          passes: 3,
-          drop_console: false,
-          drop_debugger: true,
-          conditionals: true,
-          dead_code: true,
-          evaluate: true,
-          booleans: true,
-          loops: true,
-          unused: true,
-          hoist_funs: true,
-          hoist_props: true,
-          if_return: true,
-          join_vars: true,
-          collapse_vars: true,
-          reduce_vars: true,
-          warnings: false,
-          negate_iife: true,
-          keep_fargs: true,
-          side_effects: true
-        },
-        mangle: { reserved: ['Java'] },
-        format: { comments: false, beautify: false, ecma: 2015 }
-      })
+      commonjs()
     ],
     treeshake: {
       moduleSideEffects: true,
@@ -76,6 +46,38 @@ const configs = files.map(file => {
       warn(warning);
     }
   };
+
+  const outputs = [];
+
+  // Unminified debug output (always generated)
+  outputs.push({
+    ...baseConfig,
+    output: {
+      file: path.resolve(OUTPUT_DIR, `${name}.js`),
+      format: 'iife',
+      compact: false,
+      sourcemap: false,
+    }
+  });
+
+  // Minified outputs with log-level variants (only if minification is enabled)
+  if (shouldMinify) {
+    outputs.push({
+      ...baseConfig,
+      output: {
+        file: path.resolve(OUTPUT_DIR, `${name}_minified.js`),
+        format: 'iife',
+        compact: true,
+        sourcemap: false,
+      },
+      plugins: [
+        ...baseConfig.plugins,
+        logLevelPlugin()
+      ]
+    });
+  }
+
+  return outputs;
 });
 
 export default configs;
