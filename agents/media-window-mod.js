@@ -66,8 +66,9 @@ function createIconDrawable() {
     const BitmapFactory = Java.use("android.graphics.BitmapFactory");
     const BitmapDrawable = Java.use("android.graphics.drawable.BitmapDrawable");
 
+    const drawable = {};
+
     try {
-        const drawable = {};
 
         const context = Java.cast(ContextUtils.context.value, ContextClass);
 
@@ -78,9 +79,9 @@ function createIconDrawable() {
             const media = config.media[serviceName];
 
             if (media.pageName === undefined || media.pageName === "") continue;
-            if (media.icon_large === undefined || media.icon_large === "") continue;
+            if (media.iconLarge === undefined || media.iconLarge === "") continue;
 
-            const bytes = Base64.decode(media.icon_large, Base64.DEFAULT.value);
+            const bytes = Base64.decode(media.iconLarge, Base64.DEFAULT.value);
             const iconBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
             const iconDrawable = BitmapDrawable.$new(context.getResources(), iconBitmap);
 
@@ -266,7 +267,7 @@ function main() {
     openPageHook();
     isMediaFocusHook();
 
-    logger.log("Media window mod activated");
+    logger.info("Media window mod activated");
 }
 
 Java.perform(() => { main(); });
