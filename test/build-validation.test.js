@@ -47,10 +47,10 @@ for (const file of builtFiles) {
 
 // Test that log-level variants exist for minified files
 test('log-level variants exist for minified files', t => {
-    // Get base agent names (without _minified suffix)
+    // Get base agent names
     const baseNames = new Set();
     for (const file of builtFiles) {
-        const match = file.match(/^(.+)_minified_[0-3](none|error|info|debug)\.js$/);
+        const match = file.match(/^(.+)_[0-3](none|error|info|debug)\.js$/);
         if (match) {
             baseNames.add(match[1]);
         }
@@ -59,10 +59,10 @@ test('log-level variants exist for minified files', t => {
     // Check that each base has all 4 minified variants
     for (const baseName of baseNames) {
         const variants = [
-            `${baseName}_minified_0none.js`,
-            `${baseName}_minified_1error.js`,
-            `${baseName}_minified_2info.js`,
-            `${baseName}_minified_3debug.js`
+            `${baseName}_0none.js`,
+            `${baseName}_1error.js`,
+            `${baseName}_2info.js`,
+            `${baseName}_3debug.js`
         ];
 
         for (const variant of variants) {
@@ -75,7 +75,6 @@ test('log-level variants exist for minified files', t => {
 // Test that unminified files exist
 test('unminified debug files exist', t => {
     const unminifiedFiles = builtFiles.filter(f =>
-        !f.includes('_minified') &&
         !f.match(/_[0-3](none|error|info|debug)\.js$/)
     );
     t.true(unminifiedFiles.length > 0, 'At least one unminified file should exist');
@@ -84,13 +83,12 @@ test('unminified debug files exist', t => {
 // Test that minified files are smaller than unminified
 test('minified files are smaller than unminified', t => {
     const unminifiedFiles = builtFiles.filter(f =>
-        !f.includes('_minified') &&
         !f.match(/_[0-3](none|error|info|debug)\.js$/)
     );
 
     for (const unminifiedFile of unminifiedFiles) {
         const baseName = unminifiedFile.replace('.js', '');
-        const minifiedFile = `${baseName}_minified_3debug.js`;
+        const minifiedFile = `${baseName}_3debug.js`;
 
         if (builtFiles.includes(minifiedFile)) {
             const unminifiedSize = fs.statSync(path.join(BUILD_DIR, unminifiedFile)).size;
@@ -107,15 +105,15 @@ test('none variant has no logging code', t => {
     // Get base agent names
     const baseNames = new Set();
     for (const file of builtFiles) {
-        const match = file.match(/^(.+)_minified_[0-3](none|error|info|debug)\.js$/);
+        const match = file.match(/^(.+)_0none\.js$/);
         if (match) {
             baseNames.add(match[1]);
         }
     }
 
     for (const baseName of baseNames) {
-        const noneFile = `${baseName}_minified_0none.js`;
-        const debugFile = `${baseName}_minified_3debug.js`;
+        const noneFile = `${baseName}_0none.js`;
+        const debugFile = `${baseName}_3debug.js`;
 
         if (builtFiles.includes(noneFile) && builtFiles.includes(debugFile)) {
             const noneSize = fs.statSync(path.join(BUILD_DIR, noneFile)).size;
