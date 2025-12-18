@@ -1,6 +1,6 @@
-import { Logger } from "../lib/logger.js";
+import { Logger } from '../lib/logger.js';
 
-const logger = new Logger("phone-num-mod");
+const logger = new Logger('phone-num-mod');
 
 /**
  * Do nothing with phone number except trimming whitespaces.
@@ -24,13 +24,13 @@ function getAmendNumber(number) {
  */
 function hookPhoneNumberFormatter() {
     try {
-        const UtilClass = Java.use("com.qinggan.bluetoothphone.util.Util");
+        const UtilClass = Java.use('com.qinggan.bluetoothphone.util.Util');
 
         UtilClass.getAmendNumber.implementation = getAmendNumber;
 
-        logger.info("Phone number hook installed");
+        logger.info('Phone number hook installed');
     } catch {
-        logger.debug("bluetoothphone.Util class not available");
+        logger.debug('bluetoothphone.Util class not available');
     }
 }
 
@@ -46,7 +46,9 @@ function hookPhoneNumberFormatter() {
  */
 function syncContactCache() {
     try {
-        const PbapProfileManagerClass = Java.use("com.qinggan.bluetoothphone.logic.manager.PbapProfileManager");
+        const PbapProfileManagerClass = Java.use(
+            'com.qinggan.bluetoothphone.logic.manager.PbapProfileManager'
+        );
 
         PbapProfileManagerClass.startSync.call(PbapProfileManagerClass);
     } catch (error) {
@@ -63,15 +65,17 @@ function syncContactCache() {
  * Java.perform(() => { main(); });
  */
 function main() {
-    logger.info("Starting phone number correction");
+    logger.info('Starting phone number correction');
 
     hookPhoneNumberFormatter();
     syncContactCache();
 }
 
 // Only run in Frida context
-if (typeof Java !== "undefined") {
-    Java.perform(() => { main(); });
+if (typeof Java !== 'undefined') {
+    Java.perform(() => {
+        main();
+    });
 }
 
 // Export for testing

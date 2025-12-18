@@ -2,33 +2,25 @@ import test from 'ava';
 import { isMultiDisplayApp } from '../agents/app-multi-display.js';
 
 test('returns true for app with multiple screens', (t) => {
-    const apps = [
-        { package: 'com.example.multiscreen', screen: ['main', 'third'] },
-    ];
+    const apps = [{ package: 'com.example.multiscreen', screen: ['main', 'third'] }];
     const result = isMultiDisplayApp('com.example.multiscreen', apps);
     t.is(result, true);
 });
 
 test('returns false for app with single screen', (t) => {
-    const apps = [
-        { package: 'com.example.single', screen: ['main'] },
-    ];
+    const apps = [{ package: 'com.example.single', screen: ['main'] }];
     const result = isMultiDisplayApp('com.example.single', apps);
     t.is(result, false);
 });
 
 test('returns null for package not in configuration', (t) => {
-    const apps = [
-        { package: 'com.example.app', screen: ['main', 'third'] },
-    ];
+    const apps = [{ package: 'com.example.app', screen: ['main', 'third'] }];
     const result = isMultiDisplayApp('com.unknown.package', apps);
     t.is(result, null);
 });
 
 test('returns true for app with two screens', (t) => {
-    const apps = [
-        { package: 'com.example.dual', screen: ['main', 'third'] },
-    ];
+    const apps = [{ package: 'com.example.dual', screen: ['main', 'third'] }];
     const result = isMultiDisplayApp('com.example.dual', apps);
     t.is(result, true);
 });
@@ -59,25 +51,19 @@ test('returns false for first matching single-screen app', (t) => {
 });
 
 test('handles app with empty screen array', (t) => {
-    const apps = [
-        { package: 'com.example.noscreen', screen: [] },
-    ];
+    const apps = [{ package: 'com.example.noscreen', screen: [] }];
     const result = isMultiDisplayApp('com.example.noscreen', apps);
     t.is(result, false);
 });
 
 test('performs exact package name matching', (t) => {
-    const apps = [
-        { package: 'com.example.app', screen: ['main', 'third'] },
-    ];
+    const apps = [{ package: 'com.example.app', screen: ['main', 'third'] }];
     const result = isMultiDisplayApp('com.example.app.extra', apps);
     t.is(result, null);
 });
 
 test('handles package names with special characters', (t) => {
-    const apps = [
-        { package: 'com.example.app-test_v2', screen: ['main', 'third'] },
-    ];
+    const apps = [{ package: 'com.example.app-test_v2', screen: ['main', 'third'] }];
     const result = isMultiDisplayApp('com.example.app-test_v2', apps);
     t.is(result, true);
 });

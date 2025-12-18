@@ -1,27 +1,23 @@
-import { Logger } from "../lib/logger.js";
+import { Logger } from '../lib/logger.js';
 
-import {
-    LANGUAGE_CONFIG_PATH,
-    LoadTextFile,
-    parseConfig,
-} from "../lib/utils.js";
+import { LANGUAGE_CONFIG_PATH, LoadTextFile, parseConfig } from '../lib/utils.js';
 
-const logger = new Logger("voboost-to-menu-mod");
+const logger = new Logger('voboost-to-menu-mod');
 
 let ActivityAnimUtils = null;
 
-const APP_NAME = "ru.yandex.music";//"com.yourpackage.YourSettingsActivity";
+const APP_NAME = 'ru.yandex.music'; //"com.yourpackage.YourSettingsActivity";
 
 let languageConfig = null;
 let CustomOnClickListener = null;
 
 const appNameLocalization = {
-    EN: "Voboost",
-    RU: "Voboost",
+    EN: 'Voboost',
+    RU: 'Voboost',
 };
 
 function getAppNameLocalization() {
-    let currentLang = "EN";
+    let currentLang = 'EN';
     let appName = appNameLocalization.EN;
 
     if (languageConfig && languageConfig.language) {
@@ -37,14 +33,14 @@ function getAppNameLocalization() {
 
 function startApp() {
     try {
-        const ActivityThread = Java.use("android.app.ActivityThread");
+        const ActivityThread = Java.use('android.app.ActivityThread');
         const PackageManager = ActivityThread.currentApplication().getPackageManager();
         const context = ActivityThread.currentApplication().getApplicationContext();
         const intent = PackageManager.getLaunchIntentForPackage(APP_NAME);
         intent.addFlags(0x10000000); // FLAG_ACTIVITY_NEW_TASK
 
         ActivityAnimUtils.startActivityByAnim
-            .overload("android.content.Context", "android.content.Intent")
+            .overload('android.content.Context', 'android.content.Intent')
             .call(ActivityAnimUtils, context, intent);
 
         logger.info(`App launched: ${APP_NAME}`);
@@ -55,39 +51,43 @@ function startApp() {
 
 function createMenuItem(content) {
     try {
-        logger.debug("Creating custom button");
+        logger.debug('Creating custom button');
 
         // Получаем контейнер LinearLayout внутри OverScrollView
         const menuContainer = content.carSettingBinding.value.menuContainer.value;
         const linearLayout = menuContainer.getChildAt(0);
 
         // Находим существующую кнопку системных настроек через binding
-        const systemSettingsButton = content.carSettingBinding.value.mainMenuItemSystemSetting.value;
+        const systemSettingsButton =
+            content.carSettingBinding.value.mainMenuItemSystemSetting.value;
         if (!systemSettingsButton) {
-            logger.error("System settings button not found");
+            logger.error('System settings button not found');
             return;
         }
 
         // Копируем RelativeLayout для кнопки
-        const RelativeLayout = Java.use("android.widget.RelativeLayout");
-        const View = Java.use("android.view.View");
+        const RelativeLayout = Java.use('android.widget.RelativeLayout');
+        const View = Java.use('android.view.View');
 
         const customButton = RelativeLayout.$new(content);
         customButton.setId(View.generateViewId());
         // Копируем параметры layout из образца
-        const LinearLayout$LayoutParams = Java.use("android.widget.LinearLayout$LayoutParams");
+        const LinearLayout$LayoutParams = Java.use('android.widget.LinearLayout$LayoutParams');
         const sampleLayoutParams = systemSettingsButton.getLayoutParams();
-        const layoutParams = LinearLayout$LayoutParams.$new.overload("android.widget.LinearLayout$LayoutParams")
+        const layoutParams = LinearLayout$LayoutParams.$new
+            .overload('android.widget.LinearLayout$LayoutParams')
             .call(LinearLayout$LayoutParams, sampleLayoutParams);
 
         customButton.setLayoutParams(layoutParams);
 
         // Копируем текстовый элемент
-        const BoldTextView = Java.use("com.pateo.material.widgets.BoldTextView");
-        const textView = Java.use("android.widget.TextView");
-        const R_id = Java.use("com.qinggan.app.vehiclesetting.R$id");
+        const BoldTextView = Java.use('com.pateo.material.widgets.BoldTextView');
+        const textView = Java.use('android.widget.TextView');
+        const R_id = Java.use('com.qinggan.app.vehiclesetting.R$id');
 
-        const sampleTextViewNative = systemSettingsButton.findViewById(R_id.main_menu_item_system_setting_textview.value);
+        const sampleTextViewNative = systemSettingsButton.findViewById(
+            R_id.main_menu_item_system_setting_textview.value
+        );
         const buttonTextNamive = BoldTextView.$new(content);
         const buttonText = Java.cast(buttonTextNamive, textView);
         const sampleTextView = Java.cast(sampleTextViewNative, textView);
@@ -99,22 +99,25 @@ function createMenuItem(content) {
         buttonText.setMaxWidth(sampleTextView.getMaxWidth());
 
         // Устанавливаем свой текст
-        const JavaString = Java.use("java.lang.String");
+        const JavaString = Java.use('java.lang.String');
         const appName = getAppNameLocalization();
         buttonText.setText(JavaString.$new(appName));
 
         const sampleTextLayoutParams = sampleTextView.getLayoutParams();
         // Копируем параметры layout для текста
-        const RelativeLayout$LayoutParams = Java.use("android.widget.RelativeLayout$LayoutParams");
-        const textLayoutParams = RelativeLayout$LayoutParams.$new.overload("android.widget.RelativeLayout$LayoutParams")
+        const RelativeLayout$LayoutParams = Java.use('android.widget.RelativeLayout$LayoutParams');
+        const textLayoutParams = RelativeLayout$LayoutParams.$new
+            .overload('android.widget.RelativeLayout$LayoutParams')
             .call(RelativeLayout$LayoutParams, sampleTextLayoutParams);
 
         buttonText.setLayoutParams(textLayoutParams);
         buttonText.setId(View.generateViewId());
 
         // Копируем иконку
-        const ImageView = Java.use("android.widget.ImageView");
-        const sampleIconN = systemSettingsButton.findViewById(R_id.main_menu_item_system_setting_imgview.value);
+        const ImageView = Java.use('android.widget.ImageView');
+        const sampleIconN = systemSettingsButton.findViewById(
+            R_id.main_menu_item_system_setting_imgview.value
+        );
         const buttonIcon = ImageView.$new(content);
 
         const sampleIcon = Java.cast(sampleIconN, View);
@@ -124,7 +127,8 @@ function createMenuItem(content) {
 
         const sampleIconLayoutParams = sampleIcon.getLayoutParams();
         // Копируем параметры layout для иконки
-        const iconLayoutParams = RelativeLayout$LayoutParams.$new.overload("android.widget.RelativeLayout$LayoutParams")
+        const iconLayoutParams = RelativeLayout$LayoutParams.$new
+            .overload('android.widget.RelativeLayout$LayoutParams')
             .call(RelativeLayout$LayoutParams, sampleIconLayoutParams);
 
         iconLayoutParams.addRule(1, buttonText.getId()); // RIGHT_OF buttonText
@@ -140,7 +144,7 @@ function createMenuItem(content) {
         const systemSettingsId = R_id.main_menu_item_system_setting.value;
         let insertIndex = -1;
 
-        const linearLayoutGroup = Java.cast(linearLayout, Java.use("android.view.ViewGroup"));
+        const linearLayoutGroup = Java.cast(linearLayout, Java.use('android.view.ViewGroup'));
 
         for (let i = 0; i < linearLayoutGroup.getChildCount(); i++) {
             if (linearLayoutGroup.getChildAt(i).getId() === systemSettingsId) {
@@ -151,12 +155,11 @@ function createMenuItem(content) {
 
         if (insertIndex !== -1) {
             linearLayoutGroup.addView(customButton, insertIndex);
-            logger.info("Custom button added to menu");
+            logger.info('Custom button added to menu');
         } else {
             linearLayoutGroup.addView(customButton);
-            logger.info("Custom button added to menu");
+            logger.info('Custom button added to menu');
         }
-
     } catch (e) {
         logger.error(`Error creating custom button: ${e.toString()}`);
         logger.error(e.stack);
@@ -164,7 +167,7 @@ function createMenuItem(content) {
 }
 
 function onCreateHook() {
-    const CarSettingActivity = Java.use("com.qinggan.app.vehiclesetting.CarSettingActivity");
+    const CarSettingActivity = Java.use('com.qinggan.app.vehiclesetting.CarSettingActivity');
     CarSettingActivity.onCreate.implementation = function (savedInstanceState) {
         // Выполняем оригинальный onCreate
         const result = this.onCreate.call(this, savedInstanceState);
@@ -174,14 +177,16 @@ function onCreateHook() {
 }
 
 function init() {
-    ActivityAnimUtils = Java.use("com.pateo.material.anim.ActivityAnimUtils");
-    const View$OnClickListener = Java.use("android.view.View$OnClickListener");
+    ActivityAnimUtils = Java.use('com.pateo.material.anim.ActivityAnimUtils');
+    const View$OnClickListener = Java.use('android.view.View$OnClickListener');
 
     CustomOnClickListener = Java.registerClass({
-        name: "com.qinggan.frida.CustomClickListener",
+        name: 'com.qinggan.frida.CustomClickListener',
         implements: [View$OnClickListener],
         methods: {
-            onClick: function () { startApp(); },
+            onClick: function () {
+                startApp();
+            },
         },
     });
 }
@@ -194,7 +199,9 @@ function main() {
     languageConfig = parseConfig(languageContent);
 
     onCreateHook();
-    logger.info("Menu mod hooks installed");
+    logger.info('Menu mod hooks installed');
 }
 
-Java.perform(() => { main(); });
+Java.perform(() => {
+    main();
+});

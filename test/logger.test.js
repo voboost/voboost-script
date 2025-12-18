@@ -251,7 +251,7 @@ test('Logger works with typical agent usage pattern', (t) => {
     logger.info('Hooks installed');
 
     t.is(consoleLogCalls.length, 5);
-    t.true(consoleLogCalls.every(log => log.includes('weather-widget-mod')));
+    t.true(consoleLogCalls.every((log) => log.includes('weather-widget-mod')));
 
     restoreConsole();
 });

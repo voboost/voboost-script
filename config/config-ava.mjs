@@ -13,7 +13,5 @@ export default {
     // Only show test failures
     reporter: 'verbose',
 
-    files: [
-        'test/**/*.test.js',
-    ]
+    files: ['test/**/*.test.js'],
 };

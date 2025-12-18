@@ -20,8 +20,9 @@ if (!fs.existsSync(BUILD_DIR)) {
 }
 
 // Get all JavaScript files in build directory
-const builtFiles = fs.readdirSync(BUILD_DIR)
-    .filter(f => f.endsWith('.js'))
+const builtFiles = fs
+    .readdirSync(BUILD_DIR)
+    .filter((f) => f.endsWith('.js'))
     .sort();
 
 if (builtFiles.length === 0) {
@@ -31,7 +32,7 @@ if (builtFiles.length === 0) {
 
 // Test each built file for valid JavaScript syntax
 for (const file of builtFiles) {
-    test(`${file} has valid JavaScript syntax`, t => {
+    test(`${file} has valid JavaScript syntax`, (t) => {
         const filePath = path.join(BUILD_DIR, file);
         const code = fs.readFileSync(filePath, 'utf8');
 
@@ -46,7 +47,7 @@ for (const file of builtFiles) {
 }
 
 // Test that log-level variants exist for minified files
-test('log-level variants exist for minified files', t => {
+test('log-level variants exist for minified files', (t) => {
     // Get base agent names
     const baseNames = new Set();
     for (const file of builtFiles) {
@@ -62,7 +63,7 @@ test('log-level variants exist for minified files', t => {
             `${baseName}_0none.js`,
             `${baseName}_1error.js`,
             `${baseName}_2info.js`,
-            `${baseName}_3debug.js`
+            `${baseName}_3debug.js`,
         ];
 
         for (const variant of variants) {
@@ -73,17 +74,17 @@ test('log-level variants exist for minified files', t => {
 });
 
 // Test that unminified files exist
-test('unminified debug files exist', t => {
-    const unminifiedFiles = builtFiles.filter(f =>
-        !f.match(/_[0-3](none|error|info|debug)\.js$/)
+test('unminified debug files exist', (t) => {
+    const unminifiedFiles = builtFiles.filter(
+        (f) => !f.match(/_[0-3](none|error|info|debug)\.js$/)
     );
     t.true(unminifiedFiles.length > 0, 'At least one unminified file should exist');
 });
 
 // Test that minified files are smaller than unminified
-test('minified files are smaller than unminified', t => {
-    const unminifiedFiles = builtFiles.filter(f =>
-        !f.match(/_[0-3](none|error|info|debug)\.js$/)
+test('minified files are smaller than unminified', (t) => {
+    const unminifiedFiles = builtFiles.filter(
+        (f) => !f.match(/_[0-3](none|error|info|debug)\.js$/)
     );
 
     for (const unminifiedFile of unminifiedFiles) {
@@ -94,14 +95,16 @@ test('minified files are smaller than unminified', t => {
             const unminifiedSize = fs.statSync(path.join(BUILD_DIR, unminifiedFile)).size;
             const minifiedSize = fs.statSync(path.join(BUILD_DIR, minifiedFile)).size;
 
-            t.true(minifiedSize < unminifiedSize,
-                `${minifiedFile} (${minifiedSize} bytes) should be smaller than ${unminifiedFile} (${unminifiedSize} bytes)`);
+            t.true(
+                minifiedSize < unminifiedSize,
+                `${minifiedFile} (${minifiedSize} bytes) should be smaller than ${unminifiedFile} (${unminifiedSize} bytes)`
+            );
         }
     }
 });
 
 // Test that none variant is smallest (has least logging code)
-test('none variant has no logging code', t => {
+test('none variant has no logging code', (t) => {
     // Get base agent names
     const baseNames = new Set();
     for (const file of builtFiles) {
@@ -120,8 +123,10 @@ test('none variant has no logging code', t => {
             const debugSize = fs.statSync(path.join(BUILD_DIR, debugFile)).size;
 
             // None variant should be smaller or equal to debug variant
-            t.true(noneSize <= debugSize,
-                `${noneFile} (${noneSize} bytes) should be <= ${debugFile} (${debugSize} bytes)`);
+            t.true(
+                noneSize <= debugSize,
+                `${noneFile} (${noneSize} bytes) should be <= ${debugFile} (${debugSize} bytes)`
+            );
         }
     }
 });

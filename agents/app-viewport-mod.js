@@ -1,13 +1,13 @@
-import { Logger } from "../lib/logger.js";
+import { Logger } from '../lib/logger.js';
 
 import {
     LANGUAGE_CONFIG_PATH,
     APP_VIEWPORT_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-} from "../lib/utils.js";
+} from '../lib/utils.js';
 
-const logger = new Logger("app-viewport-mod");
+const logger = new Logger('app-viewport-mod');
 
 let SystemProperties = null;
 let Rect = null;
@@ -19,47 +19,50 @@ let currentLocale = null;
 
 // 2. Константы для отступов
 const PADDING_VALUES = {
-    "left": 145,
-    "up": 45,
-    "none": 0,
+    left: 145,
+    up: 45,
+    none: 0,
 };
 
 // 3. Функция получения текущего состояния экрана
 function getScreenLiftState() {
-    return SystemProperties.get("persist.qg.canbus.bcm_screenAutoLiftFdb") || "2";
+    return SystemProperties.get('persist.qg.canbus.bcm_screenAutoLiftFdb') || '2';
 }
 
 function createLocale(languageConfig) {
-    if (languageConfig.language === "RU") return Locale.$new("ru", "RU");
-    if (languageConfig.language === "EU") return Locale.$new("en", "US");
-    return Locale.$new("en", "US");
+    if (languageConfig.language === 'RU') return Locale.$new('ru', 'RU');
+    if (languageConfig.language === 'EU') return Locale.$new('en', 'US');
+    return Locale.$new('en', 'US');
 }
 
 // 4. Основная функция применения настроек к приложению
 function applyAppSettings(activityRecord, displayId) {
     try {
         const packageName = activityRecord.packageName.value;
-        const currentDisplay = displayId === 0 ? "main" : "second";
+        const currentDisplay = displayId === 0 ? 'main' : 'second';
         const screenLift = getScreenLiftState();
 
         // Поиск настроек для приложения
-        const appConfig = config.apps.find(app => app.package === packageName);
+        const appConfig = config.apps.find((app) => app.package === packageName);
         if (!appConfig) return; // Пропускаем приложения не из конфига
 
         // Проверка разрешенных экранов
         if (!appConfig.screen.includes(currentDisplay)) return;
 
         // Вычисление границ с учетом состояния экрана
-        let left = 0, top = 0, right = 1920, bottom = 1080;
+        let left = 0,
+            top = 0,
+            right = 1920,
+            bottom = 1080;
 
         // Применение отступов из конфига
-        if (appConfig.padding.includes("left")) left = PADDING_VALUES.left;
-        if (appConfig.padding.includes("up")) top = PADDING_VALUES.up;
+        if (appConfig.padding.includes('left')) left = PADDING_VALUES.left;
+        if (appConfig.padding.includes('up')) top = PADDING_VALUES.up;
 
         // Корректировка высоты в зависимости от состояния экрана
-        if (screenLift === "1") {
+        if (screenLift === '1') {
             bottom = 530; // Экран опущен
-        } else if (screenLift === "2") {
+        } else if (screenLift === '2') {
             bottom = 720; // Экран поднят
         }
 
@@ -86,28 +89,27 @@ function applyAppSettings(activityRecord, displayId) {
 }
 
 function onDisplayChangedHook() {
+    ActivityRecord.onDisplayChanged.overload(
+        'com.android.server.wm.DisplayContent'
+    ).implementation = function (displayContent) {
+        try {
+            // Вызов оригинального метода
+            this.onDisplayChanged.call(this, displayContent);
 
-    ActivityRecord.onDisplayChanged.overload("com.android.server.wm.DisplayContent")
-        .implementation = function (displayContent) {
-            try {
-                // Вызов оригинального метода
-                this.onDisplayChanged.call(this, displayContent);
-
-                const displayId = displayContent.getDisplayId();
-                applyAppSettings(this, displayId);
-            } catch (e) {
-                logger.error(`Error in hook: ${e.message}`);
-                logger.error(e.stack);
-            }
-        };
+            const displayId = displayContent.getDisplayId();
+            applyAppSettings(this, displayId);
+        } catch (e) {
+            logger.error(`Error in hook: ${e.message}`);
+            logger.error(e.stack);
+        }
+    };
 }
 
 function init() {
-
-    SystemProperties = Java.use("android.os.SystemProperties");
-    Rect = Java.use("android.graphics.Rect");
-    ActivityRecord = Java.use("com.android.server.wm.ActivityRecord");
-    Locale = Java.use("java.util.Locale");
+    SystemProperties = Java.use('android.os.SystemProperties');
+    Rect = Java.use('android.graphics.Rect');
+    ActivityRecord = Java.use('com.android.server.wm.ActivityRecord');
+    Locale = Java.use('java.util.Locale');
 }
 
 function main() {
@@ -122,8 +124,9 @@ function main() {
 
     onDisplayChangedHook();
 
-    logger.info("Viewport mod hooks installed");
+    logger.info('Viewport mod hooks installed');
 }
 
-Java.perform(function () { main(); });
-
+Java.perform(function () {
+    main();
+});

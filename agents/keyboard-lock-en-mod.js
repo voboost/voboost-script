@@ -1,25 +1,21 @@
-import { Logger } from "../lib/logger.js";
+import { Logger } from '../lib/logger.js';
 
-import {
-    KEYBOARD_LOCK_EN_CONFIG_PATH,
-    LoadTextFile,
-} from "../lib/utils.js";
+import { KEYBOARD_LOCK_EN_CONFIG_PATH, LoadTextFile } from '../lib/utils.js';
 
-const logger = new Logger("keyboard-lock-en-mod");
+const logger = new Logger('keyboard-lock-en-mod');
 
 let ActivityThread = null;
 let dravableIcons = null;
 
-const EN_INPUT_METHOD_NAME = "english_input_method";
-const EN_INPUT_METHOD_WHITE_NAME = "english_input_method_white";
+const EN_INPUT_METHOD_NAME = 'english_input_method';
+const EN_INPUT_METHOD_WHITE_NAME = 'english_input_method_white';
 
 const iconConfigNames = [EN_INPUT_METHOD_NAME, EN_INPUT_METHOD_WHITE_NAME];
 
 function createDrawableIons(configContent) {
-
-    const Base64 = Java.use("android.util.Base64");
-    const BitmapFactory = Java.use("android.graphics.BitmapFactory");
-    const BitmapDrawable = Java.use("android.graphics.drawable.BitmapDrawable");
+    const Base64 = Java.use('android.util.Base64');
+    const BitmapFactory = Java.use('android.graphics.BitmapFactory');
+    const BitmapDrawable = Java.use('android.graphics.drawable.BitmapDrawable');
     const context = ActivityThread.currentApplication().getApplicationContext();
 
     const drawableMap = {};
@@ -28,12 +24,11 @@ function createDrawableIons(configContent) {
         const drawable = config.drawable;
 
         for (let iconName of iconConfigNames) {
-
             if (!Object.prototype.hasOwnProperty.call(drawable, iconName)) continue;
 
             const iconData = drawable[iconName];
 
-            if (iconData === "") continue;
+            if (iconData === '') continue;
 
             const bytes = Base64.decode(iconData, Base64.DEFAULT.value);
             const iconBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
@@ -50,24 +45,21 @@ function createDrawableIons(configContent) {
 }
 
 function disableVoice() {
-
-    const QGInputConfig = Java.use("com.qinggan.app.qgime.QGInputConfig");
+    const QGInputConfig = Java.use('com.qinggan.app.qgime.QGInputConfig');
     QGInputConfig.DISABLE_VOICE.value = true;
 
     logger.debug(`Voice disabled: ${QGInputConfig.DISABLE_VOICE.value}`);
 }
 
 function resetCachedSkb() {
-
-    const SkbPool = Java.use("com.qinggan.app.qgime.SkbPool");
+    const SkbPool = Java.use('com.qinggan.app.qgime.SkbPool');
     const SkbPoolInstance = SkbPool.getInstance();
 
     SkbPoolInstance.resetCachedSkb();
 }
 
 function saveInputModeHook() {
-
-    const InputModeSwitcher = Java.use("com.qinggan.app.qgime.InputModeSwitcher");
+    const InputModeSwitcher = Java.use('com.qinggan.app.qgime.InputModeSwitcher');
 
     const enModeLover = InputModeSwitcher.MODE_SKB_ENGLISH_LOWER.value;
     const enModeUpper = InputModeSwitcher.MODE_SKB_ENGLISH_UPPER.value;
@@ -77,14 +69,14 @@ function saveInputModeHook() {
     const enModeSymbol2 = InputModeSwitcher.MODE_SKB_SYMBOL2_EN.value;
 
     InputModeSwitcher.saveInputMode.implementation = function (mode) {
-
-        if (mode !== enModeLover &&
+        if (
+            mode !== enModeLover &&
             mode !== enModeUpper &&
             mode !== enModeFirst &&
             mode !== enModeHkb &&
             mode !== enModeSymbol1 &&
-            mode !== enModeSymbol2) {
-
+            mode !== enModeSymbol2
+        ) {
             mode = enModeFirst;
         }
 
@@ -93,15 +85,14 @@ function saveInputModeHook() {
 }
 
 function loadKeyboardHook() {
-
-    const XmlKeyboardLoader = Java.use("com.qinggan.app.qgime.XmlKeyboardLoader");
-    const ToggleState = Java.use("com.qinggan.app.qgime.SoftKeyToggle$ToggleState");
-    const KeyRow = Java.use("com.qinggan.app.qgime.SoftKeyboard$KeyRow");
-    const ThemeManager = Java.use("com.qinggan.theme.ThemeManager");
-    const SoftKeyboard = Java.use("com.qinggan.app.qgime.SoftKeyboard");
-    const R_xml = Java.use("com.qinggan.app.qgime.R$xml");
-    const SoftKeyToggle = Java.use("com.qinggan.app.qgime.SoftKeyToggle");
-    const List = Java.use("java.util.List");
+    const XmlKeyboardLoader = Java.use('com.qinggan.app.qgime.XmlKeyboardLoader');
+    const ToggleState = Java.use('com.qinggan.app.qgime.SoftKeyToggle$ToggleState');
+    const KeyRow = Java.use('com.qinggan.app.qgime.SoftKeyboard$KeyRow');
+    const ThemeManager = Java.use('com.qinggan.theme.ThemeManager');
+    const SoftKeyboard = Java.use('com.qinggan.app.qgime.SoftKeyboard');
+    const R_xml = Java.use('com.qinggan.app.qgime.R$xml');
+    const SoftKeyToggle = Java.use('com.qinggan.app.qgime.SoftKeyToggle');
+    const List = Java.use('java.util.List');
 
     const WHITE_THEME = ThemeManager.DEFAULT_THEME_TITLE2.value;
 
@@ -110,45 +101,40 @@ function loadKeyboardHook() {
     const ThemeManagerInstance = ThemeManager.getInstance(context);
     const currentThemeTitle = ThemeManagerInstance.getCurrentThemeTitle();
 
-    var keyRowsField = SoftKeyboard.class.getDeclaredField("mKeyRows");
+    var keyRowsField = SoftKeyboard.class.getDeclaredField('mKeyRows');
     keyRowsField.setAccessible(true);
 
-    var softKeysField = KeyRow.class.getDeclaredField("mSoftKeys");
+    var softKeysField = KeyRow.class.getDeclaredField('mSoftKeys');
     softKeysField.setAccessible(true);
 
-    var toggleStateField = SoftKeyToggle.class.getDeclaredField("mToggleState");
+    var toggleStateField = SoftKeyToggle.class.getDeclaredField('mToggleState');
     toggleStateField.setAccessible(true);
 
-    const mKeyIconField = ToggleState.class.getDeclaredField("mKeyIcon");
+    const mKeyIconField = ToggleState.class.getDeclaredField('mKeyIcon');
     mKeyIconField.setAccessible(true);
 
-    const mNextStateField = ToggleState.class.getDeclaredField("mNextState");
+    const mNextStateField = ToggleState.class.getDeclaredField('mNextState');
     mNextStateField.setAccessible(true);
 
     XmlKeyboardLoader.loadKeyboard.implementation = function (xmlId, width, height) {
-
         const softKeyboard = this.loadKeyboard.call(this, xmlId, width, height);
 
-        if (xmlId != R_xml.skb_qwerty.value &&
-            xmlId != R_xml.skb_qwerty_no_voice.value) {
-
+        if (xmlId != R_xml.skb_qwerty.value && xmlId != R_xml.skb_qwerty_no_voice.value) {
             return softKeyboard;
         }
 
         const keyRows = Java.cast(keyRowsField.get(softKeyboard), List);
 
         for (let rowIndex = 0; rowIndex < keyRows.size(); rowIndex++) {
-
             const keyRow = keyRows.get(rowIndex);
             const softKeys = Java.cast(softKeysField.get(keyRow), List);
 
             for (let keyIndex = 0; keyIndex < softKeys.size(); keyIndex++) {
-
                 const softKey = softKeys.get(keyIndex);
 
                 const softKeyClassName = softKey.getClass().getName();
 
-                if (softKeyClassName !== "com.qinggan.app.qgime.SoftKeyToggle") continue;
+                if (softKeyClassName !== 'com.qinggan.app.qgime.SoftKeyToggle') continue;
 
                 const softKeyToggle = Java.cast(softKey, SoftKeyToggle);
 
@@ -159,16 +145,16 @@ function loadKeyboardHook() {
                 let keyIcon = null;
 
                 if (WHITE_THEME === currentThemeTitle) {
-
-                    if (Object.prototype.hasOwnProperty.call(dravableIcons, EN_INPUT_METHOD_WHITE_NAME)) {
-
+                    if (
+                        Object.prototype.hasOwnProperty.call(
+                            dravableIcons,
+                            EN_INPUT_METHOD_WHITE_NAME
+                        )
+                    ) {
                         keyIcon = dravableIcons[EN_INPUT_METHOD_WHITE_NAME];
                     }
-
                 } else {
-
                     if (Object.prototype.hasOwnProperty.call(dravableIcons, EN_INPUT_METHOD_NAME)) {
-
                         keyIcon = dravableIcons[EN_INPUT_METHOD_NAME];
                     }
                 }
@@ -191,15 +177,13 @@ function loadKeyboardHook() {
 }
 
 function init() {
-
-    ActivityThread = Java.use("android.app.ActivityThread");
+    ActivityThread = Java.use('android.app.ActivityThread');
 
     const configContent = LoadTextFile(KEYBOARD_LOCK_EN_CONFIG_PATH);
     dravableIcons = createDrawableIons(configContent);
 }
 
 function main() {
-
     init();
 
     saveInputModeHook();
@@ -208,7 +192,9 @@ function main() {
     disableVoice();
     resetCachedSkb();
 
-    logger.info("Keyboard lock EN hooks installed");
+    logger.info('Keyboard lock EN hooks installed');
 }
 
-Java.perform(function () { main(); });
+Java.perform(function () {
+    main();
+});
