@@ -5,11 +5,11 @@
     "type": "module",
     "scripts": {
         "build": "node lib/build.mjs",
-        "build:dev": "MINIFY=false node lib/build.mjs",
-        "lint": "eslint agents --fix --config config/config-eslint.mjs",
+        "lint": "eslint agents lib test --fix --config config/config-eslint.mjs && prettier --write 'agents/**/*.js' 'lib/**/*.{js,mjs}' 'test/**/*.js' 'config/**/*.mjs' --config ../voboost-codestyle/config-prettier.mjs",
         "test": "ava --config config/config-ava.mjs"
     },
     "devDependencies": {
+        "@eslint/js": "^9.39.2",
         "@rollup/plugin-commonjs": "^29.0.0",
         "@rollup/plugin-node-resolve": "^16.0.3",
         "@rollup/plugin-terser": "^0.4.4",
@@ -18,7 +18,10 @@
         "astring": "^1.9.0",
         "ava": "^6.4.1",
         "eslint": "^9.39.1",
+        "eslint-config-prettier": "^10.0.1",
         "frida-java-bridge": "7.0.10",
+        "globals": "^16.0.0",
+        "prettier": "^3.4.2",
         "rollup": "^4.53.3"
     }
 }

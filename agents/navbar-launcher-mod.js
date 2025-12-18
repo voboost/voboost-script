@@ -1,19 +1,15 @@
-import { Logger } from "../lib/logger.js";
+import { Logger } from '../lib/logger.js';
 
-import {
-    APP_VIEWPORT_CONFIG_PATH,
-    LoadTextFile,
-    parseConfig,
-} from "../lib/utils.js";
+import { APP_VIEWPORT_CONFIG_PATH, LoadTextFile, parseConfig } from '../lib/utils.js';
 
-const logger = new Logger("navbar-launcher-mod");
+const logger = new Logger('navbar-launcher-mod');
 
 let config = null;
 
 function onReceiveHook() {
-    const LauncherModel = Java.use("com.qinggan.app.launcher.LauncherModel");
-    const AppUtils = Java.use("com.qinggan.launcher.base.utils.AppUtils");
-    const AccountConstantUtil = Java.use("com.qinggan.account.AccountConstantUtil");
+    const LauncherModel = Java.use('com.qinggan.app.launcher.LauncherModel');
+    const AppUtils = Java.use('com.qinggan.launcher.base.utils.AppUtils');
+    const AccountConstantUtil = Java.use('com.qinggan.account.AccountConstantUtil');
 
     // Хук обработки системного события смены активности
     LauncherModel.onReceive.implementation = function (context, intent) {
@@ -23,9 +19,9 @@ function onReceiveHook() {
         try {
             const action = intent.getAction();
 
-            if (action !== "android.intent.action.TOP_ACTIVITY_CHANGED") return;
+            if (action !== 'android.intent.action.TOP_ACTIVITY_CHANGED') return;
 
-            const displayId = intent.getIntExtra("displayId", -1);
+            const displayId = intent.getIntExtra('displayId', -1);
 
             const topAppInfo = AppUtils.getTopAppInfo(this.mContext.value, displayId, 4);
             const strArrSplit = topAppInfo.split(AccountConstantUtil.SEPARATOR.value);
@@ -34,17 +30,23 @@ function onReceiveHook() {
             const applicationName = strArrSplit[1];
             // Проверяем, нужно ли принудительно показать панель
             for (let app of config.apps) {
-
                 if (packageName.toString() !== app.package) continue;
 
                 if (displayId == 0) {
-                    this.handleUpdateMainNavigationBar(packageName, applicationName, app.navigation_bar);
+                    this.handleUpdateMainNavigationBar(
+                        packageName,
+                        applicationName,
+                        app.navigation_bar
+                    );
                 } else {
-                    this.handleUpdateSecondNavigationBar(packageName, applicationName, app.navigation_bar);
+                    this.handleUpdateSecondNavigationBar(
+                        packageName,
+                        applicationName,
+                        app.navigation_bar
+                    );
                 }
                 break;
             }
-
         } catch (e) {
             logger.error(`Error in hook: ${e.message}`);
             logger.error(e.stack);
@@ -57,7 +59,9 @@ function main() {
     config = parseConfig(appViewPortContent);
 
     onReceiveHook();
-    logger.info("Navbar launcher hook installed");
+    logger.info('Navbar launcher hook installed');
 }
 
-Java.perform(function () { main(); });
+Java.perform(function () {
+    main();
+});

@@ -197,3 +197,23 @@ frida -U -n com.qinggan.app.launcher \
 ```
 
 Временные метки генерируются в JS коде и совпадают с форматом Kotlin логгера.
+
+---
+
+## Code Style
+
+This project follows the unified Voboost code style from [voboost-codestyle](../voboost-codestyle).
+
+### Linting and Formatting
+
+```bash
+npm run lint    # Fix all JS/MJS files with ESLint + Prettier
+```
+
+### Rules
+- Line length: 100 characters
+- Indentation: 4 spaces
+- Quotes: Single quotes
+- Console: Only allowed in Logger files
+
+See [voboost-codestyle README](../voboost-codestyle/README.md) for full documentation.

@@ -1,13 +1,13 @@
-import { Logger } from "../lib/logger.js";
+import { Logger } from '../lib/logger.js';
 
 import {
     LANGUAGE_CONFIG_PATH,
     MEDIA_SOURCE_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-} from "../lib/utils.js";
+} from '../lib/utils.js';
 
-const logger = new Logger("media-source-mod");
+const logger = new Logger('media-source-mod');
 
 let ContextUtils = null;
 let ContextClass = null;
@@ -22,71 +22,62 @@ let languageConfig = null;
 let mediaEnums = null;
 
 function changeMediaEnum() {
-
     try {
         for (let serviceName of mediaServices) {
-
             if (!Object.prototype.hasOwnProperty.call(config.media, serviceName)) continue;
 
             const media = config.media[serviceName];
 
-            if (media.pageName === undefined || media.pageName === "") continue;
+            if (media.pageName === undefined || media.pageName === '') continue;
 
             const mediaEnum = mediaEnums[serviceName];
 
             mediaEnum.service.pageName.value = media.pageName;
 
-            if (media.servicePageName !== undefined && media.servicePageName !== "") {
-
+            if (media.servicePageName !== undefined && media.servicePageName !== '') {
                 mediaEnum.service.servicePageName.value = media.servicePageName;
             }
 
-            if (media.serviceName !== undefined && media.serviceName !== "") {
-
+            if (media.serviceName !== undefined && media.serviceName !== '') {
                 mediaEnum.service.serviceName.value = media.serviceName;
             }
 
-            if (media.clientId !== undefined && media.clientId !== "") {
-
+            if (media.clientId !== undefined && media.clientId !== '') {
                 mediaEnum.service.clientId.value = media.clientId;
             }
 
             mediaEnum.enable = true;
         }
     } catch (e) {
-
         logger.error(`changeMediaEnum Error: ${e.message}`);
         logger.error(e.stack);
     }
 }
 
 function createIconDrawable() {
-
-    const Base64 = Java.use("android.util.Base64");
-    const BitmapFactory = Java.use("android.graphics.BitmapFactory");
-    const BitmapDrawable = Java.use("android.graphics.drawable.BitmapDrawable");
+    const Base64 = Java.use('android.util.Base64');
+    const BitmapFactory = Java.use('android.graphics.BitmapFactory');
+    const BitmapDrawable = Java.use('android.graphics.drawable.BitmapDrawable');
 
     const drawable = {};
 
     try {
-
         const context = Java.cast(ContextUtils.context.value, ContextClass);
 
         for (let serviceName of mediaServices) {
-
             if (!Object.prototype.hasOwnProperty.call(config.media, serviceName)) continue;
 
             const media = config.media[serviceName];
 
-            if (media.pageName === undefined || media.pageName === "") continue;
-            if (media.iconLarge === undefined || media.iconLarge === "") continue;
+            if (media.pageName === undefined || media.pageName === '') continue;
+            if (media.iconLarge === undefined || media.iconLarge === '') continue;
 
             const bytes = Base64.decode(media.iconLarge, Base64.DEFAULT.value);
             const iconBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
             const iconDrawable = BitmapDrawable.$new(context.getResources(), iconBitmap);
 
-            let nameText = "";
-            if (media.name !== undefined && media.name !== "") {
+            let nameText = '';
+            if (media.name !== undefined && media.name !== '') {
                 if (Object.prototype.hasOwnProperty.call(media.name, languageConfig.language)) {
                     nameText = media.name[languageConfig.language];
                 }
@@ -95,7 +86,6 @@ function createIconDrawable() {
             drawable[serviceName] = { icon: iconDrawable, name: nameText };
         }
     } catch (e) {
-
         logger.error(`createIconDrawable Error: ${e.message}`);
         logger.error(e.stack);
     }
@@ -104,11 +94,11 @@ function createIconDrawable() {
 }
 
 function bindViewHook() {
-
-    const MediaSrcHolder = Java.use("com.qingang.asgard.media.general.src.MediaSrcAdapter$MediaSrcHolder");
+    const MediaSrcHolder = Java.use(
+        'com.qingang.asgard.media.general.src.MediaSrcAdapter$MediaSrcHolder'
+    );
 
     MediaSrcHolder.bindView.implementation = function (i) {
-
         this.bindView.call(this, i);
 
         try {
@@ -123,11 +113,11 @@ function bindViewHook() {
             const textView = this.binding.value.tvName.value;
             const imageView = this.binding.value.ivMain.value;
 
-            textView.setText.overload("java.lang.CharSequence").call(textView, drawable.name);
-            imageView.setImageDrawable.overload("android.graphics.drawable.Drawable").call(imageView, drawable.icon);
-
+            textView.setText.overload('java.lang.CharSequence').call(textView, drawable.name);
+            imageView.setImageDrawable
+                .overload('android.graphics.drawable.Drawable')
+                .call(imageView, drawable.icon);
         } catch (e) {
-
             logger.error(`bindViewHook Error: ${e.message}`);
             logger.error(e.stack);
         }
@@ -135,110 +125,115 @@ function bindViewHook() {
 }
 
 function isMediaFocusHook() {
+    const AudioPolicyHelper = Java.use('com.qinggan.media.helper.AudioPolicyHelper');
 
-    const AudioPolicyHelper = Java.use("com.qinggan.media.helper.AudioPolicyHelper");
+    AudioPolicyHelper.isMediaFocus.overload(
+        MediaEnum.$className,
+        'com.qinggan.audiopolicy.AudioPolicyInfo'
+    ).implementation = function (mediaEnum, audioPolicyInfo) {
+        if (mediaEnum === null || audioPolicyInfo === null) {
+            return this.isMediaFocus
+                .overload(MediaEnum.$className, 'com.qinggan.audiopolicy.AudioPolicyInfo')
+                .call(this, mediaEnum, audioPolicyInfo);
+        }
+        try {
+            const mediaName = mediaEnum.toString();
 
-    AudioPolicyHelper.isMediaFocus
-        .overload(MediaEnum.$className, "com.qinggan.audiopolicy.AudioPolicyInfo")
-        .implementation = function (mediaEnum, audioPolicyInfo) {
-
-            if (mediaEnum === null || audioPolicyInfo === null) {
+            if (!Object.prototype.hasOwnProperty.call(mediaEnums, mediaName)) {
                 return this.isMediaFocus
-                    .overload(MediaEnum.$className, "com.qinggan.audiopolicy.AudioPolicyInfo")
+                    .overload(MediaEnum.$className, 'com.qinggan.audiopolicy.AudioPolicyInfo')
                     .call(this, mediaEnum, audioPolicyInfo);
             }
-            try {
-                const mediaName = mediaEnum.toString();
 
-                if (!Object.prototype.hasOwnProperty.call(mediaEnums, mediaName)) {
+            const mediaService = mediaEnums[mediaName];
 
-                    return this.isMediaFocus
-                        .overload(MediaEnum.$className, "com.qinggan.audiopolicy.AudioPolicyInfo")
-                        .call(this, mediaEnum, audioPolicyInfo);
-                }
-
-                const mediaService = mediaEnums[mediaName];
-
-                if (!mediaService.enable) {
-
-                    return this.isMediaFocus
-                        .overload(MediaEnum.$className, "com.qinggan.audiopolicy.AudioPolicyInfo")
-                        .call(this, mediaEnum, audioPolicyInfo);
-                }
-
-                const currentPackage = audioPolicyInfo.getPackageName();
-                const mediaPackage = mediaService.service.pageName.value;
-                return currentPackage === mediaPackage;
-
-            } catch (e) {
-
-                logger.error(`isMediaFocusHook Error: ${e.message}`);
-                logger.error(e.stack);
+            if (!mediaService.enable) {
+                return this.isMediaFocus
+                    .overload(MediaEnum.$className, 'com.qinggan.audiopolicy.AudioPolicyInfo')
+                    .call(this, mediaEnum, audioPolicyInfo);
             }
 
-            return this.isMediaFocus
-                .overload(MediaEnum.$className, "com.qinggan.audiopolicy.AudioPolicyInfo")
-                .call(this, mediaEnum, audioPolicyInfo);
-        };
+            const currentPackage = audioPolicyInfo.getPackageName();
+            const mediaPackage = mediaService.service.pageName.value;
+            return currentPackage === mediaPackage;
+        } catch (e) {
+            logger.error(`isMediaFocusHook Error: ${e.message}`);
+            logger.error(e.stack);
+        }
+
+        return this.isMediaFocus
+            .overload(MediaEnum.$className, 'com.qinggan.audiopolicy.AudioPolicyInfo')
+            .call(this, mediaEnum, audioPolicyInfo);
+    };
 }
 
 function openPageHook() {
-
-    const SrcMediaActivity = Java.use("com.qingang.asgard.media.general.src.SrcMediaActivity");
-    const MediaJumpUtils = Java.use("com.qinggan.media.helper.app.MediaJumpUtils");
-    const Intent = Java.use("android.content.Intent");
+    const SrcMediaActivity = Java.use('com.qingang.asgard.media.general.src.SrcMediaActivity');
+    const MediaJumpUtils = Java.use('com.qinggan.media.helper.app.MediaJumpUtils');
+    const Intent = Java.use('android.content.Intent');
     const Integer = Java.use('java.lang.Integer');
 
-    SrcMediaActivity.openPage
-        .overload("com.qingang.asgard.media.general.src.MediaResEnum")
-        .implementation = function (mediaResEnum) {
-            try {
-                const mediaEnum = Java.cast(mediaResEnum.mediaEnum.value, MediaEnum);
-                const mediaEnumName = mediaEnum.toString();
+    SrcMediaActivity.openPage.overload(
+        'com.qingang.asgard.media.general.src.MediaResEnum'
+    ).implementation = function (mediaResEnum) {
+        try {
+            const mediaEnum = Java.cast(mediaResEnum.mediaEnum.value, MediaEnum);
+            const mediaEnumName = mediaEnum.toString();
 
-                if (!Object.prototype.hasOwnProperty.call(mediaEnums, mediaEnumName)) {
-
-                    this.openPage.overload("com.qingang.asgard.media.general.src.MediaResEnum").call(this, mediaResEnum);
-                    return;
-                }
-
-                const mediaService = mediaEnums[mediaEnumName];
-                if (!mediaService) {
-
-                    this.openPage.overload("com.qingang.asgard.media.general.src.MediaResEnum").call(this, mediaResEnum);
-                    return;
-                }
-
-                const packageName = mediaService.service.pageName.value;
-                const handler = this.handler.value;
-                handler.removeMessages.overload("int").call(handler, 1);
-
-                const context = Java.cast(ContextUtils.context.value, ContextClass);
-                const intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
-                intent.addFlags(0x10000000);
-
-                const starAppNamesParams = Java.array('java.lang.Class', [ContextClass.class, Intent.class, Integer.TYPE.value]);
-                const starAppMethod = MediaJumpUtils.class.getDeclaredMethod("starApp", starAppNamesParams);
-
-                starAppMethod.setAccessible(true);
-
-                const starAppParams = Java.array('java.lang.Object', [context, intent, Integer.valueOf(0)]);
-                starAppMethod.invoke(null, starAppParams);
+            if (!Object.prototype.hasOwnProperty.call(mediaEnums, mediaEnumName)) {
+                this.openPage
+                    .overload('com.qingang.asgard.media.general.src.MediaResEnum')
+                    .call(this, mediaResEnum);
+                return;
             }
-            catch (e) {
-                logger.error(`openPageHook Error: ${e.message}`);
-                logger.error(e.stack);
+
+            const mediaService = mediaEnums[mediaEnumName];
+            if (!mediaService) {
+                this.openPage
+                    .overload('com.qingang.asgard.media.general.src.MediaResEnum')
+                    .call(this, mediaResEnum);
+                return;
             }
-        };
+
+            const packageName = mediaService.service.pageName.value;
+            const handler = this.handler.value;
+            handler.removeMessages.overload('int').call(handler, 1);
+
+            const context = Java.cast(ContextUtils.context.value, ContextClass);
+            const intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
+            intent.addFlags(0x10000000);
+
+            const starAppNamesParams = Java.array('java.lang.Class', [
+                ContextClass.class,
+                Intent.class,
+                Integer.TYPE.value,
+            ]);
+            const starAppMethod = MediaJumpUtils.class.getDeclaredMethod(
+                'starApp',
+                starAppNamesParams
+            );
+
+            starAppMethod.setAccessible(true);
+
+            const starAppParams = Java.array('java.lang.Object', [
+                context,
+                intent,
+                Integer.valueOf(0),
+            ]);
+            starAppMethod.invoke(null, starAppParams);
+        } catch (e) {
+            logger.error(`openPageHook Error: ${e.message}`);
+            logger.error(e.stack);
+        }
+    };
 }
 
 function init() {
+    MediaEnum = Java.use('com.qinggan.media.helper.MediaEnum');
+    ContextUtils = Java.use('com.qinggan.app.service.utils.ContextUtils');
+    ContextClass = Java.use('android.content.Context');
 
-    MediaEnum = Java.use("com.qinggan.media.helper.MediaEnum");
-    ContextUtils = Java.use("com.qinggan.app.service.utils.ContextUtils");
-    ContextClass = Java.use("android.content.Context");
-
-    mediaServices = ["WECAR_FLOW", "XMLA_MUSIC", "RADIO_YUNTING"];
+    mediaServices = ['WECAR_FLOW', 'XMLA_MUSIC', 'RADIO_YUNTING'];
 
     mediaEnums = {
         WECAR_FLOW: { service: MediaEnum.WECAR_FLOW.value, active: false },
@@ -256,7 +251,6 @@ function init() {
 }
 
 function main() {
-
     init();
 
     changeMediaEnum();
@@ -267,7 +261,9 @@ function main() {
     openPageHook();
     isMediaFocusHook();
 
-    logger.info("Media window mod activated");
+    logger.info('Media window mod activated');
 }
 
-Java.perform(() => { main(); });
+Java.perform(() => {
+    main();
+});

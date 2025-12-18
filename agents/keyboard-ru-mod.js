@@ -1,19 +1,19 @@
-import { Logger } from "../lib/logger.js";
+import { Logger } from '../lib/logger.js';
 
 import {
     KEYBOARD_TEMPLATE_PATH,
     KEYBOARD_RU_CONFIG_PATH,
     LoadTextFile,
     parseConfig,
-} from "../lib/utils.js";
+} from '../lib/utils.js';
 
-const logger = new Logger("keyboard-ru-mod");
+const logger = new Logger('keyboard-ru-mod');
 
 const KEYBOARD_CACHE_ID = 999999;
-const EN_INPUT_METHOD_NAME = "english_input_method";
-const EN_INPUT_METHOD_WHITE_NAME = "english_input_method_white";
-const RU_INPUT_METHOD_NAME = "russian_input_method";
-const RU_INPUT_METHOD_WHITE_NAME = "russian_input_method_white";
+const EN_INPUT_METHOD_NAME = 'english_input_method';
+const EN_INPUT_METHOD_WHITE_NAME = 'english_input_method_white';
+const RU_INPUT_METHOD_NAME = 'russian_input_method';
+const RU_INPUT_METHOD_WHITE_NAME = 'russian_input_method_white';
 
 let InputModeSwitcher = null;
 let SoftKey = null;
@@ -47,14 +47,17 @@ let WHITE_THEME = null;
 let RUSSIAN_ICON = null;
 let qwertyToJcuken = null;
 
-const iconConfigNames = [EN_INPUT_METHOD_NAME, EN_INPUT_METHOD_WHITE_NAME,
-    RU_INPUT_METHOD_NAME, RU_INPUT_METHOD_WHITE_NAME];
+const iconConfigNames = [
+    EN_INPUT_METHOD_NAME,
+    EN_INPUT_METHOD_WHITE_NAME,
+    RU_INPUT_METHOD_NAME,
+    RU_INPUT_METHOD_WHITE_NAME,
+];
 
 function createDrawableIons(configContent) {
-
-    const Base64 = Java.use("android.util.Base64");
-    const BitmapFactory = Java.use("android.graphics.BitmapFactory");
-    const BitmapDrawable = Java.use("android.graphics.drawable.BitmapDrawable");
+    const Base64 = Java.use('android.util.Base64');
+    const BitmapFactory = Java.use('android.graphics.BitmapFactory');
+    const BitmapDrawable = Java.use('android.graphics.drawable.BitmapDrawable');
     const context = ActivityThread.currentApplication().getApplicationContext();
 
     const drawableMap = {};
@@ -63,12 +66,11 @@ function createDrawableIons(configContent) {
         const drawable = config.drawable;
 
         for (let iconName of iconConfigNames) {
-
             if (!Object.prototype.hasOwnProperty.call(drawable, iconName)) continue;
 
             const iconData = drawable[iconName];
 
-            if (iconData === "") continue;
+            if (iconData === '') continue;
 
             const bytes = Base64.decode(iconData, Base64.DEFAULT.value);
             const iconBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
@@ -85,7 +87,6 @@ function createDrawableIons(configContent) {
 }
 
 function createQwertyToJcuken(template) {
-
     const charMap = {};
 
     for (const row of template.keyboard.rows) {
@@ -95,7 +96,7 @@ function createQwertyToJcuken(template) {
 
             const keyLabel = key.label;
             if (keyLabel === null) continue;
-            if (keyLabel === "") continue;
+            if (keyLabel === '') continue;
 
             const keyCode = key.code;
             if (keyCode < 29) continue;
@@ -109,11 +110,10 @@ function createQwertyToJcuken(template) {
 }
 
 function resolveResId(resRef, context) {
-
     const resources = context.getResources();
     const pkgName = context.getPackageName();
 
-    if (typeof resRef !== "string" || !resRef.startsWith("@")) {
+    if (typeof resRef !== 'string' || !resRef.startsWith('@')) {
         return resRef;
     }
 
@@ -139,7 +139,6 @@ function resolveResId(resRef, context) {
 }
 
 function buildRussianKeyboard(xmlId, context, width, height, template) {
-
     const ThemeManagerInstance = ThemeManager.getInstance(context);
     const currentThemeTitle = ThemeManagerInstance.getCurrentThemeTitle();
 
@@ -153,7 +152,9 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
         const skbTemplate = skbPool.getSkbTemplate(skbTemplateResId, context);
 
         if (!skbTemplate) {
-            logger.error(`SkbTemplate not found for ${attrs.skb_template} (ID: ${skbTemplateResId})`);
+            logger.error(
+                `SkbTemplate not found for ${attrs.skb_template} (ID: ${skbTemplateResId})`
+            );
             return null;
         }
 
@@ -164,7 +165,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
             attrs.skb_cache_flag,
             attrs.skb_sticky_flag === undefined ? true : attrs.skb_sticky_flag,
             attrs.qwerty,
-            attrs.qwerty_uppercase,
+            attrs.qwerty_uppercase
         );
         softKeyboard.setKeyMargins(attrs.key_xmargin, attrs.key_ymargin);
 
@@ -173,7 +174,6 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
 
         // Processing rows
         for (const row of rows) {
-
             const rowId = row.row_id === undefined ? -1 : row.row_id;
             currentX = row.start_pos_x === undefined ? 0.0 : row.start_pos_x;
             currentY = row.start_pos_y === undefined ? currentY : row.start_pos_y;
@@ -182,20 +182,19 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
 
             // Process the keys in a row
             for (const keyJson of row.keys) {
-
                 let softKey = null;
                 const keyCode = keyJson.code === undefined ? 0 : keyJson.code;
 
                 // 1. Key by ID (special)
                 if (keyJson.id !== undefined) {
-
                     softKey = skbTemplate.getDefaultKey(keyJson.id);
 
                     if (!softKey) {
                         logger.info(`getDefaultKey(${keyJson.id}) returned null`);
                         continue;
                     }
-                } else if (keyJson.toggle_states) { // 2. Key with toggle states
+                } else if (keyJson.toggle_states) {
+                    // 2. Key with toggle states
 
                     softKey = SoftKeyToggle.$new();
 
@@ -204,7 +203,6 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                     let firstState = null;
 
                     for (const stateJson of keyJson.toggle_states) {
-
                         const state = softKey.createToggleState();
 
                         // Resolve state_id
@@ -215,50 +213,55 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                         state.mKeyCode.value = stateJson.code === undefined ? 0 : stateJson.code;
 
                         // Set the label
-                        state.mKeyLabel.value = stateJson.label === undefined ? null : stateJson.label;
+                        state.mKeyLabel.value =
+                            stateJson.label === undefined ? null : stateJson.label;
                         let stateIcon = null;
 
                         if (WHITE_THEME === currentThemeTitle) {
                             // Enable icons
                             if (keyCode === 0) {
-
                                 switch (stateId) {
-                                case 2:
-                                    stateIcon = context.getDrawable(R_drawable.shift_lower_c53_white.value);
-                                    break;
-                                case 3:
-                                    stateIcon = context.getDrawable(R_drawable.shift_uppercase_c53_white.value);
-                                    break;
-                                case 16:
-                                    stateIcon = context.getDrawable(R_drawable.shift_uppercase_c53_temp_white.value);
-                                    break;
+                                    case 2:
+                                        stateIcon = context.getDrawable(
+                                            R_drawable.shift_lower_c53_white.value
+                                        );
+                                        break;
+                                    case 3:
+                                        stateIcon = context.getDrawable(
+                                            R_drawable.shift_uppercase_c53_white.value
+                                        );
+                                        break;
+                                    case 16:
+                                        stateIcon = context.getDrawable(
+                                            R_drawable.shift_uppercase_c53_temp_white.value
+                                        );
+                                        break;
                                 }
                             } else if (keyCode === -2) {
-
-                                if (stateId === 2 ||
-                                    stateId === 3 ||
-                                    stateId === 16) {
-
-                                    if (Object.prototype.hasOwnProperty.call(dravableIcons, RU_INPUT_METHOD_WHITE_NAME)) {
-
+                                if (stateId === 2 || stateId === 3 || stateId === 16) {
+                                    if (
+                                        Object.prototype.hasOwnProperty.call(
+                                            dravableIcons,
+                                            RU_INPUT_METHOD_WHITE_NAME
+                                        )
+                                    ) {
                                         stateIcon = dravableIcons[RU_INPUT_METHOD_WHITE_NAME];
-
                                     } else {
-
-                                        stateIcon = context.getDrawable(R_drawable.english_input_method_white.value);
-
+                                        stateIcon = context.getDrawable(
+                                            R_drawable.english_input_method_white.value
+                                        );
                                     }
                                 }
                             }
                         } else {
                             if (keyCode === -2) {
-
-                                if (stateId === 2 ||
-                                    stateId === 3 ||
-                                    stateId === 16) {
-
-                                    if (Object.prototype.hasOwnProperty.call(dravableIcons, RU_INPUT_METHOD_NAME)) {
-
+                                if (stateId === 2 || stateId === 3 || stateId === 16) {
+                                    if (
+                                        Object.prototype.hasOwnProperty.call(
+                                            dravableIcons,
+                                            RU_INPUT_METHOD_NAME
+                                        )
+                                    ) {
                                         stateIcon = dravableIcons[RU_INPUT_METHOD_NAME];
                                     }
                                 }
@@ -266,47 +269,39 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                         }
 
                         if (stateIcon !== null) {
-
                             state.mKeyIcon.value = stateIcon;
-
                         } else if (stateJson.icon) {
-
                             const iconId = resolveResId(stateJson.icon, context);
                             if (iconId) {
-
                                 state.mKeyIcon.value = context.getDrawable(iconId);
                             }
                         }
 
                         if (stateJson.icon_popup) {
-
                             const iconPopupId = resolveResId(stateJson.icon_popup, context);
                             if (iconPopupId) {
-
                                 state.mKeyIconPopup.value = context.getDrawable(iconPopupId);
                             }
                         }
 
                         // Set the key type if specified
                         if (stateJson.key_type !== undefined) {
-
                             const stateKeyType = skbTemplate.getKeyType(stateJson.key_type);
                             state.mKeyType.value = stateKeyType;
                         }
 
                         // Set flags
-                        const stateRepeat = stateJson.repeat !== undefined ? stateJson.repeat : attrs.repeat;
-                        const stateBalloon = stateJson.balloon !== undefined ? stateJson.balloon : attrs.balloon;
+                        const stateRepeat =
+                            stateJson.repeat !== undefined ? stateJson.repeat : attrs.repeat;
+                        const stateBalloon =
+                            stateJson.balloon !== undefined ? stateJson.balloon : attrs.balloon;
 
                         state.setStateFlags(stateRepeat, stateBalloon);
 
                         // Link the states
                         if (prevState) {
-
                             prevState.mNextState.value = state;
-
                         } else {
-
                             firstState = state;
                         }
 
@@ -315,10 +310,10 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
 
                     // Set the first state
                     if (firstState) {
-
                         softKey.setToggleStates(firstState);
                     }
-                } else { // 3. Regular key
+                } else {
+                    // 3. Regular key
 
                     softKey = SoftKey.$new();
                 }
@@ -329,7 +324,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                     keyCode,
                     keyJson.label === undefined ? null : keyJson.label,
                     keyJson.repeat === undefined ? attrs.repeat : keyJson.repeat,
-                    keyJson.balloon === undefined ? attrs.balloon : keyJson.balloon,
+                    keyJson.balloon === undefined ? attrs.balloon : keyJson.balloon
                 );
 
                 // Set the ID of the popup keyboard
@@ -339,7 +334,8 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                 }
 
                 // Set the key type
-                const keyTypeId = keyJson.key_type === undefined ? attrs.key_type || 0 : keyJson.key_type;
+                const keyTypeId =
+                    keyJson.key_type === undefined ? attrs.key_type || 0 : keyJson.key_type;
                 const keyType = skbTemplate.getKeyType(keyTypeId);
 
                 // Get icons for the key
@@ -347,38 +343,30 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                 let keyIconPopup = null;
 
                 if (keyCode === -7 && WHITE_THEME === currentThemeTitle) {
-
                     keyIcon = context.getDrawable(R_drawable.hide_keyboard_white.value);
-
                 }
 
                 if (keyIcon === null && keyJson.icon) {
-
                     const iconId = resolveResId(keyJson.icon, context);
 
                     if (iconId) {
-
                         keyIcon = context.getDrawable(iconId);
                     }
                 }
 
                 if (keyJson.icon_popup) {
-
                     const iconPopupId = resolveResId(keyJson.icon_popup, context);
 
                     if (iconPopupId) {
-
                         keyIconPopup = context.getDrawable(iconPopupId);
                     }
                 }
 
                 if (keyIcon === null) {
-
                     keyIcon = skbTemplate.getDefaultKeyIcon(keyCode);
                 }
 
                 if (keyIconPopup === null) {
-
                     keyIconPopup = skbTemplate.getDefaultKeyIconPopup(keyCode);
                 }
 
@@ -394,19 +382,15 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                 const keyPositionY = currentY + keyHeight;
 
                 // CHECKING the minimum size (as in the original)
-                if ((keyPositionX - currentX) < attrs.key_xmargin * 2.0 ||
-                    (keyPositionY - currentY) < attrs.key_ymargin * 2.0) {
-
-                    logger.info(`Key too small: ${keyJson.label || keyJson.id || "unknown"}`);
+                if (
+                    keyPositionX - currentX < attrs.key_xmargin * 2.0 ||
+                    keyPositionY - currentY < attrs.key_ymargin * 2.0
+                ) {
+                    logger.info(`Key too small: ${keyJson.label || keyJson.id || 'unknown'}`);
                     continue;
                 }
 
-                currentSoftKey.setKeyDimensions(
-                    currentX,
-                    currentY,
-                    keyPositionX,
-                    keyPositionY,
-                );
+                currentSoftKey.setKeyDimensions(currentX, currentY, keyPositionX, keyPositionY);
 
                 currentSoftKey.setSkbCoreSize(width, height);
                 currentSoftKey.changeCase(false);
@@ -414,7 +398,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                 currentX = keyPositionX;
 
                 if (!softKeyboard.addSoftKey(currentSoftKey)) {
-                    logger.error(`Failed to add key: ${keyJson.label || keyJson.id || "unknown"}`);
+                    logger.error(`Failed to add key: ${keyJson.label || keyJson.id || 'unknown'}`);
                 }
             }
 
@@ -430,20 +414,16 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
         softKeyboard.setSkbCoreSize(width, height);
 
         return softKeyboard;
-
     } catch (e) {
-
         logger.error(`Keyboard build error: ${e}`);
         return null;
     }
 }
 
 function getKeyboardFromCache() {
-
     const mSoftKeyboards = SkbPoolInstance.mSoftKeyboards.value;
 
     for (let i = 0; i < mSoftKeyboards.size(); i++) {
-
         const softKeyboard = Java.cast(mSoftKeyboards.elementAt(i), SoftKeyboard);
 
         if (softKeyboard.getCacheId() === KEYBOARD_CACHE_ID) {
@@ -454,17 +434,13 @@ function getKeyboardFromCache() {
 }
 
 function switchSoftKeyMode(keyRows, isUpper) {
-
     for (let indexRow = 0; indexRow < keyRows.size(); indexRow++) {
-
         const row = Java.cast(keyRows.get(indexRow), KeyRow);
 
         for (let indexKey = 0; indexKey < row.mSoftKeys.value.size(); indexKey++) {
-
             let softKey = Java.cast(row.mSoftKeys.value.get(indexKey), SoftKey);
 
             let keyCode = softKey.getKeyCode();
-
 
             if (keyCode < 29) continue;
             if (keyCode > 54 && keyCode < 10001) continue;
@@ -476,103 +452,95 @@ function switchSoftKeyMode(keyRows, isUpper) {
 }
 
 function disableVoice() {
-
-    const QGInputConfig = Java.use("com.qinggan.app.qgime.QGInputConfig");
+    const QGInputConfig = Java.use('com.qinggan.app.qgime.QGInputConfig');
     QGInputConfig.DISABLE_VOICE.value = true;
 }
 
 function resetCachedSkb() {
-
     SkbPoolInstance.resetCachedSkb();
 }
 
 function getKeyboardHook() {
+    SkbPool.getSoftKeyboard.overload(
+        'int',
+        'int',
+        'int',
+        'int',
+        'android.content.Context'
+    ).implementation = function (cacheId, xmlId, width, height, context) {
+        let softKeyboard = null;
 
-    SkbPool.getSoftKeyboard
-        .overload("int", "int", "int", "int", "android.content.Context")
-        .implementation = function (cacheId, xmlId, width, height, context) {
+        if (currentLayout !== 'ru') {
+            softKeyboard = this.getSoftKeyboard
+                .overload('int', 'int', 'int', 'int', 'android.content.Context')
+                .call(this, cacheId, xmlId, width, height, context);
+        } else {
+            try {
+                softKeyboard = getKeyboardFromCache();
 
-            let softKeyboard = null;
+                if (softKeyboard === null) {
+                    softKeyboard = buildRussianKeyboard(xmlId, context, width, height, template);
+                    softKeyboard.setCacheId(KEYBOARD_CACHE_ID);
 
-            if (currentLayout !== "ru") {
-
-                softKeyboard = this.getSoftKeyboard
-                    .overload("int", "int", "int", "int", "android.content.Context")
-                    .call(this, cacheId, xmlId, width, height, context);
-            } else {
-                try {
-
-                    softKeyboard = getKeyboardFromCache();
-
-                    if (softKeyboard === null) {
-
-                        softKeyboard = buildRussianKeyboard(xmlId, context, width, height, template);
-                        softKeyboard.setCacheId(KEYBOARD_CACHE_ID);
-
-                        this.mSoftKeyboards.value.add(softKeyboard);
-
-                    } else {
-
-                        softKeyboard.setSkbCoreSize(width, height);
-                        softKeyboard.setNewlyLoadedFlag(false);
-                    }
-
-                    // return softKeyboard;
-                } catch (e) {
-                    logger.info(e);
-                    logger.info(e.stack);
+                    this.mSoftKeyboards.value.add(softKeyboard);
+                } else {
+                    softKeyboard.setSkbCoreSize(width, height);
+                    softKeyboard.setNewlyLoadedFlag(false);
                 }
+
+                // return softKeyboard;
+            } catch (e) {
+                logger.info(e);
+                logger.info(e.stack);
             }
+        }
 
-            const tooggleStateForCnCand = InputModeSwitcherInstance.getTooggleStateForCnCand();
-            const toggleStates = InputModeSwitcherInstance.getToggleStates();
+        const tooggleStateForCnCand = InputModeSwitcherInstance.getTooggleStateForCnCand();
+        const toggleStates = InputModeSwitcherInstance.getToggleStates();
 
-            softKeyboard.disableToggleState(tooggleStateForCnCand, false);
-            softKeyboard.enableToggleStates(toggleStates);
+        softKeyboard.disableToggleState(tooggleStateForCnCand, false);
+        softKeyboard.enableToggleStates(toggleStates);
 
-            return softKeyboard;
-        };
+        return softKeyboard;
+    };
 }
 
 function switchModeForUserKeyHook() {
-
-    const QGToast = Java.use("com.pateo.material.dialog.QGToast");
+    const QGToast = Java.use('com.pateo.material.dialog.QGToast');
 
     InputModeSwitcher.switchModeForUserKey.implementation = function (i, z) {
-
         const oldLayout = currentLayout;
 
         if (i === -2) {
-
             // Language switch key
-            if (this.mInputMode.value === enModeSymbol1 ||
-                this.mInputMode.value === enModeSymbol2) {
-
-                currentLayout = "en";
+            if (
+                this.mInputMode.value === enModeSymbol1 ||
+                this.mInputMode.value === enModeSymbol2
+            ) {
+                currentLayout = 'en';
                 needUpdateLyout = oldLayout !== currentLayout;
                 return this.switchModeForUserKey.call(this, i, z);
             }
 
-            currentLayout = (currentLayout === "en") ? "ru" : "en";
-            const newIcon = (currentLayout === "ru") ? RUSSIAN_ICON : R_drawable.ime_en.value;
+            currentLayout = currentLayout === 'en' ? 'ru' : 'en';
+            const newIcon = currentLayout === 'ru' ? RUSSIAN_ICON : R_drawable.ime_en.value;
 
             this.mInputIcon.value = newIcon;
             needUpdateLyout = oldLayout !== currentLayout;
 
             return newIcon;
-
         } else if (i == -3) {
-
-            currentLayout = "en";
-
+            currentLayout = 'en';
         } else if (i === -10) {
+            const message =
+                currentLayout === 'ru'
+                    ? 'Голосовой ввод недоступен для русского языка.'
+                    : 'Voice input is not available for English.';
 
-            const message = currentLayout === "ru"
-                ? "Голосовой ввод недоступен для русского языка."
-                : "Voice input is not available for English.";
-
-            QGToast.makeText.overload("android.content.Context", "java.lang.CharSequence", "int")
-                .call(QGToast, this.mImeService.value, message, 2).show();
+            QGToast.makeText
+                .overload('android.content.Context', 'java.lang.CharSequence', 'int')
+                .call(QGToast, this.mImeService.value, message, 2)
+                .show();
 
             return this.mInputIcon.value;
         }
@@ -583,15 +551,12 @@ function switchModeForUserKeyHook() {
 }
 
 function updateInputModeHook() {
-
-    const SkbContainer = Java.use("com.qinggan.app.qgime.SkbContainer");
+    const SkbContainer = Java.use('com.qinggan.app.qgime.SkbContainer');
 
     SkbContainer.updateInputMode.implementation = function () {
-
         this.updateInputMode.call(this);
 
         if (needUpdateLyout) {
-
             this.updateSkbLayout();
             needUpdateLyout = false;
         }
@@ -599,16 +564,15 @@ function updateInputModeHook() {
 }
 
 function saveInputModeHook() {
-
     InputModeSwitcher.saveInputMode.implementation = function (mode) {
-
-        if (mode !== enModeLover &&
+        if (
+            mode !== enModeLover &&
             mode !== enModeUpper &&
             mode !== enModeFirst &&
             mode !== enModeHkb &&
             mode !== enModeSymbol1 &&
-            mode !== enModeSymbol2) {
-
+            mode !== enModeSymbol2
+        ) {
             mode = enModeFirst;
         }
 
@@ -617,54 +581,44 @@ function saveInputModeHook() {
 }
 
 function processKeyHook() {
+    const EnglishInputProcessor = Java.use('com.qinggan.app.qgime.EnglishInputProcessor');
 
-    const EnglishInputProcessor = Java.use("com.qinggan.app.qgime.EnglishInputProcessor");
+    EnglishInputProcessor.processKey.implementation = function (ic, event, isShift, commit) {
+        if (currentLayout !== 'ru') {
+            return this.processKey.call(this, ic, event, isShift, commit);
+        }
 
-    EnglishInputProcessor.processKey
-        .implementation = function (ic, event, isShift, commit) {
+        const keyCode = event.getKeyCode();
+        if (!Object.prototype.hasOwnProperty.call(qwertyToJcuken, keyCode)) {
+            return this.processKey.call(this, ic, event, isShift, commit);
+        }
 
-            if (currentLayout !== "ru") {
+        const keyLabel = qwertyToJcuken[keyCode];
+        const keyChar = isShift ? keyLabel.toUpperCase() : keyLabel.toLowerCase();
 
-                return this.processKey.call(this, ic, event, isShift, commit);
-            }
+        if (commit) {
+            ic.commitText(Java.use('java.lang.String').$new(keyChar), 1);
+        }
 
-            const keyCode = event.getKeyCode();
-            if (!Object.prototype.hasOwnProperty.call(qwertyToJcuken, keyCode)) {
-
-                return this.processKey.call(this, ic, event, isShift, commit);
-            }
-
-            const keyLabel = qwertyToJcuken[keyCode];
-            const keyChar = (isShift) ? keyLabel.toUpperCase() : keyLabel.toLowerCase();
-
-            if (commit) {
-                ic.commitText(Java.use("java.lang.String").$new(keyChar), 1);
-            }
-
-            this.mLastKeyCode.value = keyCode;
-            return true;
-        };
+        this.mLastKeyCode.value = keyCode;
+        return true;
+    };
 }
 
 function responseSoftKeyEventHook() {
-
     QingganIME.responseSoftKeyEvent.implementation = function (softKey) {
-
         this.responseSoftKeyEvent.call(this, softKey);
 
         if (needUpdateLyout) {
-
             this.mSkbContainer.value.updateInputMode();
             return;
         }
 
-        if (currentLayout === "ru") {
-
+        if (currentLayout === 'ru') {
             let keyCode = softKey.getKeyCode();
             if (!this.mInputModeSwitcher.value.isQwertyFirstMode()) return;
 
             if (keyCode > 10000 && keyCode < 10008) {
-
                 this.mInputModeSwitcher.value.switchModeForUserKey(-1, true);
                 this.resetToIdleState(false);
                 this.mSkbContainer.value.updateInputMode();
@@ -675,12 +629,10 @@ function responseSoftKeyEventHook() {
 }
 
 function switchQwertyModeHook() {
-
     SoftKeyboard.switchQwertyMode.implementation = function (i, isUpper) {
-
         this.switchQwertyMode.call(this, i, isUpper);
 
-        if (currentLayout !== "ru") return;
+        if (currentLayout !== 'ru') return;
 
         const keyRows = this.mKeyRows.value;
 
@@ -689,12 +641,10 @@ function switchQwertyModeHook() {
 }
 
 function enableToggleStatesHook() {
-
     SoftKeyboard.enableToggleStates.implementation = function (toggleStates) {
-
         this.enableToggleStates.call(this, toggleStates);
 
-        if (currentLayout !== "ru") return;
+        if (currentLayout !== 'ru') return;
 
         const isUpper = this.mIsQwertyUpperCase.value;
         const keyRows = this.mKeyRows.value;
@@ -704,55 +654,49 @@ function enableToggleStatesHook() {
 }
 
 function loadKeyboardHook() {
-
-    const XmlKeyboardLoader = Java.use("com.qinggan.app.qgime.XmlKeyboardLoader");
-    const ToggleState = Java.use("com.qinggan.app.qgime.SoftKeyToggle$ToggleState");
-    const List = Java.use("java.util.List");
+    const XmlKeyboardLoader = Java.use('com.qinggan.app.qgime.XmlKeyboardLoader');
+    const ToggleState = Java.use('com.qinggan.app.qgime.SoftKeyToggle$ToggleState');
+    const List = Java.use('java.util.List');
 
     const context = ActivityThread.currentApplication().getApplicationContext();
 
     const ThemeManagerInstance = ThemeManager.getInstance(context);
     const currentThemeTitle = ThemeManagerInstance.getCurrentThemeTitle();
 
-    var keyRowsField = SoftKeyboard.class.getDeclaredField("mKeyRows");
+    var keyRowsField = SoftKeyboard.class.getDeclaredField('mKeyRows');
     keyRowsField.setAccessible(true);
 
-    var softKeysField = KeyRow.class.getDeclaredField("mSoftKeys");
+    var softKeysField = KeyRow.class.getDeclaredField('mSoftKeys');
     softKeysField.setAccessible(true);
 
-    var toggleStateField = SoftKeyToggle.class.getDeclaredField("mToggleState");
+    var toggleStateField = SoftKeyToggle.class.getDeclaredField('mToggleState');
     toggleStateField.setAccessible(true);
 
-    const mKeyIconField = ToggleState.class.getDeclaredField("mKeyIcon");
+    const mKeyIconField = ToggleState.class.getDeclaredField('mKeyIcon');
     mKeyIconField.setAccessible(true);
 
-    const mNextStateField = ToggleState.class.getDeclaredField("mNextState");
+    const mNextStateField = ToggleState.class.getDeclaredField('mNextState');
     mNextStateField.setAccessible(true);
 
     XmlKeyboardLoader.loadKeyboard.implementation = function (xmlId, width, height) {
-
         const softKeyboard = this.loadKeyboard.call(this, xmlId, width, height);
 
-        if (xmlId != R_xml.skb_qwerty.value &&
-            xmlId != R_xml.skb_qwerty_no_voice.value) {
-
+        if (xmlId != R_xml.skb_qwerty.value && xmlId != R_xml.skb_qwerty_no_voice.value) {
             return softKeyboard;
         }
 
         const keyRows = Java.cast(keyRowsField.get(softKeyboard), List);
 
         for (let rowIndex = 0; rowIndex < keyRows.size(); rowIndex++) {
-
             const keyRow = keyRows.get(rowIndex);
             const softKeys = Java.cast(softKeysField.get(keyRow), List);
 
             for (let keyIndex = 0; keyIndex < softKeys.size(); keyIndex++) {
-
                 const softKey = softKeys.get(keyIndex);
 
                 const softKeyClassName = softKey.getClass().getName();
 
-                if (softKeyClassName !== "com.qinggan.app.qgime.SoftKeyToggle") continue;
+                if (softKeyClassName !== 'com.qinggan.app.qgime.SoftKeyToggle') continue;
 
                 const softKeyToggle = Java.cast(softKey, SoftKeyToggle);
 
@@ -763,16 +707,16 @@ function loadKeyboardHook() {
                 let keyIcon = null;
 
                 if (WHITE_THEME === currentThemeTitle) {
-
-                    if (Object.prototype.hasOwnProperty.call(dravableIcons, EN_INPUT_METHOD_WHITE_NAME)) {
-
+                    if (
+                        Object.prototype.hasOwnProperty.call(
+                            dravableIcons,
+                            EN_INPUT_METHOD_WHITE_NAME
+                        )
+                    ) {
                         keyIcon = dravableIcons[EN_INPUT_METHOD_WHITE_NAME];
                     }
-
                 } else {
-
                     if (Object.prototype.hasOwnProperty.call(dravableIcons, EN_INPUT_METHOD_NAME)) {
-
                         keyIcon = dravableIcons[EN_INPUT_METHOD_NAME];
                     }
                 }
@@ -795,10 +739,8 @@ function loadKeyboardHook() {
 }
 
 function getKeyLabelHook() {
-
     SoftKeyToggle.getKeyLabel.implementation = function () {
-
-        if (currentLayout !== "ru") return this.getKeyLabel.call(this);
+        if (currentLayout !== 'ru') return this.getKeyLabel.call(this);
         if (this.mKeyCode.value !== 66) return this.getKeyLabel.call(this);
 
         const toggleState = this.getToggleState();
@@ -809,19 +751,18 @@ function getKeyLabelHook() {
 }
 
 function init() {
+    InputModeSwitcher = Java.use('com.qinggan.app.qgime.InputModeSwitcher');
+    SoftKey = Java.use('com.qinggan.app.qgime.SoftKey');
+    SoftKeyToggle = Java.use('com.qinggan.app.qgime.SoftKeyToggle');
+    SkbPool = Java.use('com.qinggan.app.qgime.SkbPool');
+    SoftKeyboard = Java.use('com.qinggan.app.qgime.SoftKeyboard');
+    QingganIME = Java.use('com.qinggan.app.qgime.QingganIME');
+    ThemeManager = Java.use('com.qinggan.theme.ThemeManager');
+    ActivityThread = Java.use('android.app.ActivityThread');
+    KeyRow = Java.use('com.qinggan.app.qgime.SoftKeyboard$KeyRow');
 
-    InputModeSwitcher = Java.use("com.qinggan.app.qgime.InputModeSwitcher");
-    SoftKey = Java.use("com.qinggan.app.qgime.SoftKey");
-    SoftKeyToggle = Java.use("com.qinggan.app.qgime.SoftKeyToggle");
-    SkbPool = Java.use("com.qinggan.app.qgime.SkbPool");
-    SoftKeyboard = Java.use("com.qinggan.app.qgime.SoftKeyboard");
-    QingganIME = Java.use("com.qinggan.app.qgime.QingganIME");
-    ThemeManager = Java.use("com.qinggan.theme.ThemeManager");
-    ActivityThread = Java.use("android.app.ActivityThread");
-    KeyRow = Java.use("com.qinggan.app.qgime.SoftKeyboard$KeyRow");
-
-    R_drawable = Java.use("com.qinggan.app.qgime.R$drawable");
-    R_xml = Java.use("com.qinggan.app.qgime.R$xml");
+    R_drawable = Java.use('com.qinggan.app.qgime.R$drawable');
+    R_xml = Java.use('com.qinggan.app.qgime.R$xml');
 
     SkbPoolInstance = SkbPool.getInstance();
     InputModeSwitcherInstance = InputModeSwitcher.getInstance();
@@ -830,8 +771,8 @@ function init() {
     enModeUpper = InputModeSwitcher.MODE_SKB_ENGLISH_UPPER.value;
     enModeFirst = InputModeSwitcher.MODE_SKB_ENGLISH_FIRST.value;
     enModeHkb = InputModeSwitcher.MODE_HKB_ENGLISH.value;
-    enModeSymbol1 = InputModeSwitcher.MODE_SKB_SYMBOL1_EN.value;//33685504
-    enModeSymbol2 = InputModeSwitcher.MODE_SKB_SYMBOL2_EN.value;//33685504
+    enModeSymbol1 = InputModeSwitcher.MODE_SKB_SYMBOL1_EN.value; //33685504
+    enModeSymbol2 = InputModeSwitcher.MODE_SKB_SYMBOL2_EN.value; //33685504
 
     WHITE_THEME = ThemeManager.DEFAULT_THEME_TITLE2.value;
 
@@ -845,7 +786,7 @@ function init() {
     const configContent = LoadTextFile(KEYBOARD_RU_CONFIG_PATH);
     dravableIcons = createDrawableIons(configContent);
 
-    currentLayout = "en";
+    currentLayout = 'en';
 }
 
 function main() {
@@ -865,8 +806,9 @@ function main() {
     disableVoice();
     resetCachedSkb();
 
-    logger.info("Russian keyboard hooks installed");
+    logger.info('Russian keyboard hooks installed');
 }
 
-Java.perform(function () { main(); });
-
+Java.perform(function () {
+    main();
+});
