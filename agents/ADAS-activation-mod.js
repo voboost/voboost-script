@@ -1,4 +1,5 @@
 import { Logger } from '../lib/logger.js';
+import { LOG } from './ADAS-activation-log.js';
 
 const logger = new Logger('ADAS-activation-mod');
 
@@ -10,7 +11,7 @@ function doQuerySubscribeInfoHook() {
             return '{"expireStatus":"0","isMqtt":false,"remainDays":"30","subscriptionStatus":"1"}';
         };
     } catch (e) {
-        logger.error(`Error in doQuerySubscribeInfo: ${e.message}`);
+        logger.error(`${LOG.ERROR_SUBSCRIBE_INFO} ${e.message}`);
         logger.error(e.stack);
     }
 }
@@ -21,7 +22,7 @@ function doQueryNOALearnInfoHook() {
             return '1';
         };
     } catch (e) {
-        logger.error(`Error in doQueryNOALearnInfo: ${e.message}`);
+        logger.error(`${LOG.ERROR_NOA_LEARN_INFO} ${e.message}`);
         logger.error(e.stack);
     }
 }
@@ -38,7 +39,7 @@ function main() {
     doQuerySubscribeInfoHook();
     doQueryNOALearnInfoHook();
 
-    logger.info('ADAS activation hooks installed');
+    logger.info(LOG.HOOKS_INSTALLED);
 }
 
 Java.perform(() => {

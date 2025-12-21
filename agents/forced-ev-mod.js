@@ -1,4 +1,5 @@
 import { Logger } from '../lib/logger.js';
+import { LOG } from './forced-ev-log.js';
 
 const logger = new Logger('forced-ev-mod');
 
@@ -40,7 +41,7 @@ function activeForcedEv() {
                 return;
             }
         } catch (e) {
-            logger.error(`Error in activeForcedEv: ${e.message}`);
+            logger.error(`${LOG.ERROR_PREFIX} ${e.message}`);
             logger.error(e.stack);
         }
 
@@ -55,7 +56,7 @@ function activeForcedEv() {
 function main() {
     activeForcedEv();
 
-    logger.info('Forced EV mode activated');
+    logger.info(LOG.ACTIVATED);
 }
 
 Java.perform(function () {

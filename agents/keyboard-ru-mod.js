@@ -1,4 +1,5 @@
 import { Logger } from '../lib/logger.js';
+import { LOG } from './keyboard-ru-log.js';
 
 import {
     KEYBOARD_TEMPLATE_PATH,
@@ -79,7 +80,7 @@ function createDrawableIons(configContent) {
             drawableMap[iconName] = iconDrawable;
         }
     } catch (e) {
-        logger.error(`Error loading icon config: ${e.message}`);
+        logger.error(`${LOG.ERROR_ICON_CONFIG} ${e.message}`);
         return null;
     }
 
@@ -121,7 +122,7 @@ function resolveResId(resRef, context) {
         // Parse "@type/name"
         const match = resRef.match(/^@(\w+)\/(.+)$/);
         if (!match) {
-            logger.info(`Invalid resource reference: ${resRef}`);
+            logger.info(`${LOG.INVALID_RESOURCE_REF} ${resRef}`);
             return 0;
         }
 
@@ -129,11 +130,11 @@ function resolveResId(resRef, context) {
         const id = resources.getIdentifier(name, type, pkgName);
 
         if (id === 0) {
-            logger.info(`Resource not found: ${resRef} (${type}/${name}) in package ${pkgName}`);
+            logger.info(`${LOG.RESOURCE_NOT_FOUND} ${resRef} (${type}/${name}) in package ${pkgName}`);
         }
         return id;
     } catch (e) {
-        logger.error(`Error resolving resource ${resRef}: ${e}`);
+        logger.error(`${LOG.ERROR_RESOLVING_RESOURCE} ${resRef}: ${e}`);
         return 0;
     }
 }
@@ -153,7 +154,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
 
         if (!skbTemplate) {
             logger.error(
-                `SkbTemplate not found for ${attrs.skb_template} (ID: ${skbTemplateResId})`
+                `${LOG.SKB_TEMPLATE_NOT_FOUND} ${attrs.skb_template} (ID: ${skbTemplateResId})`
             );
             return null;
         }
@@ -190,7 +191,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                     softKey = skbTemplate.getDefaultKey(keyJson.id);
 
                     if (!softKey) {
-                        logger.info(`getDefaultKey(${keyJson.id}) returned null`);
+                        logger.info(`${LOG.GET_DEFAULT_KEY_NULL} ${keyJson.id}`);
                         continue;
                     }
                 } else if (keyJson.toggle_states) {
@@ -386,7 +387,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                     keyPositionX - currentX < attrs.key_xmargin * 2.0 ||
                     keyPositionY - currentY < attrs.key_ymargin * 2.0
                 ) {
-                    logger.info(`Key too small: ${keyJson.label || keyJson.id || 'unknown'}`);
+                    logger.info(`${LOG.KEY_TOO_SMALL} ${keyJson.label || keyJson.id || 'unknown'}`);
                     continue;
                 }
 
@@ -398,7 +399,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                 currentX = keyPositionX;
 
                 if (!softKeyboard.addSoftKey(currentSoftKey)) {
-                    logger.error(`Failed to add key: ${keyJson.label || keyJson.id || 'unknown'}`);
+                    logger.error(`${LOG.FAILED_TO_ADD_KEY} ${keyJson.label || keyJson.id || 'unknown'}`);
                 }
             }
 
@@ -415,7 +416,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
 
         return softKeyboard;
     } catch (e) {
-        logger.error(`Keyboard build error: ${e}`);
+        logger.error(`${LOG.KEYBOARD_BUILD_ERROR} ${e}`);
         return null;
     }
 }
@@ -490,8 +491,8 @@ function getKeyboardHook() {
 
                 // return softKeyboard;
             } catch (e) {
-                logger.info(e);
-                logger.info(e.stack);
+                logger.error(`${LOG.KEYBOARD_BUILD_ERROR} ${e}`);
+                logger.error(e.stack);
             }
         }
 
@@ -806,7 +807,7 @@ function main() {
     disableVoice();
     resetCachedSkb();
 
-    logger.info('Russian keyboard hooks installed');
+    logger.info(LOG.HOOKS_INSTALLED);
 }
 
 Java.perform(function () {

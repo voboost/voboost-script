@@ -1,4 +1,5 @@
 import { Logger } from '../lib/logger.js';
+import { LOG } from './phone-num-log.js';
 
 const logger = new Logger('phone-num-mod');
 
@@ -28,9 +29,9 @@ function hookPhoneNumberFormatter() {
 
         UtilClass.getAmendNumber.implementation = getAmendNumber;
 
-        logger.info('Phone number hook installed');
+        logger.info(LOG.HOOK_INSTALLED);
     } catch {
-        logger.debug('bluetoothphone.Util class not available');
+        logger.debug(LOG.UTIL_NOT_AVAILABLE);
     }
 }
 
@@ -52,7 +53,7 @@ function syncContactCache() {
 
         PbapProfileManagerClass.startSync.call(PbapProfileManagerClass);
     } catch (error) {
-        logger.error(`Error processing contact cache: ${error.message}`);
+        logger.error(`${LOG.ERROR_CONTACT_CACHE} ${error.message}`);
         logger.error(error.stack);
     }
 }
@@ -65,7 +66,7 @@ function syncContactCache() {
  * Java.perform(() => { main(); });
  */
 function main() {
-    logger.info('Starting phone number correction');
+    logger.info(LOG.STARTING);
 
     hookPhoneNumberFormatter();
     syncContactCache();

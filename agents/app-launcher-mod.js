@@ -1,4 +1,5 @@
 import { Logger } from '../lib/logger.js';
+import { LOG } from './app-launcher-log.js';
 
 import {
     LANGUAGE_CONFIG_PATH,
@@ -36,7 +37,7 @@ function startApp(packageName) {
     intent.addFlags(0x10000000); // FLAG_ACTIVITY_NEW_TASK
 
     AppLauncher.startApp(context, intent, 0);
-    logger.info(`App launched: ${packageName}`);
+    logger.info(`${LOG.APP_LAUNCHED} ${packageName}`);
 }
 
 function createIconCache() {
@@ -61,7 +62,7 @@ function createIconCache() {
             result[app.package] = [drawableBig, drawableSmall];
         });
 
-        logger.debug('Bitmaps created');
+        logger.debug(LOG.BITMAPS_CREATED);
         return result;
     }
     return result;
@@ -80,7 +81,7 @@ function addCustomApp(originalApps) {
             if (!Object.prototype.hasOwnProperty.call(existingPackages, configApp.package)) {
                 PackageManager.getPackageInfo(configApp.package, 0);
 
-                logger.debug(`Adding to AllApps: ${configApp.package}`);
+                logger.debug(`${LOG.ADDING_TO_ALL_APPS} ${configApp.package}`);
 
                 const bean = AppBean.$new(2131230851, 2131820622, configApp.package);
                 bean.setSubType(configApp.package_sub_type);
@@ -90,9 +91,9 @@ function addCustomApp(originalApps) {
             }
         } catch (e) {
             if (e.message?.includes('NameNotFoundException')) {
-                logger.debug(`App not installed: ${configApp.package}`);
+                logger.debug(`${LOG.APP_NOT_INSTALLED} ${configApp.package}`);
             } else {
-                logger.error(`Error: ${e.message}`);
+                logger.error(`${LOG.ERROR_GENERIC} ${e.message}`);
             }
         }
     });
@@ -101,7 +102,7 @@ function addCustomApp(originalApps) {
 function patchNavigationIcons() {
     Java.choose(NavigationBar.$className, {
         onMatch: function (instance) {
-            logger.debug(`Found NavigationBar instance, mScreenId = ${instance.mScreenId.value}`);
+            logger.debug(`${LOG.NAVIGATION_BAR_FOUND} ${instance.mScreenId.value}`);
 
             if (instance.mScreenId.value !== 0) return;
 
@@ -124,7 +125,7 @@ function patchNavigationIcons() {
                 try {
                     PackageManager.getPackageInfo(customApp.package, 0);
                     logger.debug(
-                        `Replacing icon for package: ${packageName} → ${customApp.package}`
+                        `${LOG.REPLACING_ICON} ${packageName} → ${customApp.package}`
                     );
 
                     button.setOnClickListener(NavClickListener.$new());
@@ -140,15 +141,15 @@ function patchNavigationIcons() {
                     }
                 } catch (e) {
                     if (e.message?.includes('NameNotFoundException')) {
-                        logger.debug(`App not installed: ${customApp.package}`);
+                        logger.debug(`${LOG.APP_NOT_INSTALLED} ${customApp.package}`);
                     } else {
-                        logger.error(`Error: ${e.message}`);
+                        logger.error(`${LOG.ERROR_GENERIC} ${e.message}`);
                     }
                 }
             });
         },
         onComplete: function () {
-            logger.debug('NavigationBar search completed');
+            logger.debug(LOG.NAVIGATION_SEARCH_COMPLETED);
         },
     });
 }
@@ -174,9 +175,9 @@ function updateMainApps() {
                 }
             }
 
-            logger.debug('mMainAllApps updated');
+            logger.debug(LOG.MAIN_APPS_UPDATED);
         } catch (e) {
-            logger.error(`Error updating list: ${e.message}`);
+            logger.error(`${LOG.ERROR_UPDATING_LIST} ${e.message}`);
         }
     });
 }
@@ -192,7 +193,7 @@ function getAllAppsHook() {
     // --- Хук на AllAppDataManager.getAllApps ---
     try {
         AllAppDataManager.getAllApps.overload('int').implementation = function (screenId) {
-            logger.debug(`AllAppDataManager.getAllApps called for screenId: ${screenId}`);
+            logger.debug(`${LOG.GET_ALL_APPS_CALLED} ${screenId}`);
             const originalApps = AllAppDataManager.getAllApps
                 .overload('int')
                 .call(AllAppDataManager, screenId);
@@ -202,9 +203,9 @@ function getAllAppsHook() {
 
             return originalApps;
         };
-        logger.debug('getAllApps hook installed');
+        logger.debug(LOG.GET_ALL_APPS_HOOK_INSTALLED);
     } catch (e) {
-        logger.error(`Error installing getAllApps hook: ${e.message}`);
+        logger.error(`${LOG.ERROR_GET_ALL_APPS_HOOK} ${e.message}`);
     }
 }
 
@@ -260,14 +261,14 @@ function onBindViewHolderHook() {
                     itemView.setOnClickListener(customClickAppListener);
                 }
             } catch (e) {
-                logger.error(`Error in onBindViewHolder: ${e.message}`);
+                logger.error(`${LOG.ERROR_ON_BIND_VIEW_HOLDER} ${e.message}`);
                 logger.error(e.stack);
             }
         };
 
-        logger.debug('onBindViewHolder hook installed');
+        logger.debug(LOG.ON_BIND_VIEW_HOLDER_HOOK_INSTALLED);
     } catch (e) {
-        logger.error(`Error installing onBindViewHolder hook: ${e.message}`);
+        logger.error(`${LOG.ERROR_ON_BIND_VIEW_HOLDER_HOOK} ${e.message}`);
     }
 }
 
@@ -276,7 +277,7 @@ function updateThemeHook() {
     try {
         // --- Хук на initScreenUpViews (для замены иконок и тегов при инициализации) ---
         NavigationBar.updateTheme.implementation = function () {
-            logger.debug('NavigationBar.updateTheme() called');
+            logger.debug(LOG.UPDATE_THEME_CALLED);
 
             // Сначала оригинальное поведение
             this.updateTheme.call(this);
@@ -285,7 +286,7 @@ function updateThemeHook() {
             patchNavigationIcons();
         };
     } catch (e) {
-        logger.error(`Error installing NavigationBar hooks: ${e.message}`);
+        logger.error(`${LOG.ERROR_NAVIGATION_BAR_HOOKS} ${e.message}`);
     }
 }
 
@@ -316,12 +317,12 @@ function init() {
 
                     if (appBean) {
                         const packageName = appBean.getPackageName();
-                        logger.debug(`Click on: ${packageName}`);
+                        logger.debug(`${LOG.CLICK_ON} ${packageName}`);
 
                         startApp(packageName);
                     }
                 } catch (e) {
-                    logger.error(`Error in custom click: ${e.message}`);
+                    logger.error(`${LOG.ERROR_CUSTOM_CLICK} ${e.message}`);
                 }
             },
         },
@@ -339,7 +340,7 @@ function init() {
                     const packageName = tagPkg.toString();
                     startApp(packageName);
                 } catch (e) {
-                    logger.error(`NavClickListener error: ${e.message}`);
+                    logger.error(`${LOG.ERROR_NAV_CLICK} ${e.message}`);
                 }
             },
         },
@@ -365,7 +366,7 @@ function main() {
     //изминение стандартного списка приложений
     updateMainApps();
 
-    logger.info('App launcher hooks installed');
+    logger.info(LOG.HOOKS_INSTALLED);
 }
 
 Java.perform(() => {

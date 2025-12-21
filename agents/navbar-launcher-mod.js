@@ -1,4 +1,5 @@
 import { Logger } from '../lib/logger.js';
+import { LOG } from './navbar-launcher-log.js';
 
 import { APP_VIEWPORT_CONFIG_PATH, LoadTextFile, parseConfig } from '../lib/utils.js';
 
@@ -48,7 +49,7 @@ function onReceiveHook() {
                 break;
             }
         } catch (e) {
-            logger.error(`Error in hook: ${e.message}`);
+            logger.error(`${LOG.ERROR_HOOK} ${e.message}`);
             logger.error(e.stack);
         }
     };
@@ -59,7 +60,7 @@ function main() {
     config = parseConfig(appViewPortContent);
 
     onReceiveHook();
-    logger.info('Navbar launcher hook installed');
+    logger.info(LOG.HOOK_INSTALLED);
 }
 
 Java.perform(function () {

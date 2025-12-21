@@ -1,4 +1,5 @@
 import { Logger } from '../lib/logger.js';
+import { LOG } from './voboost-to-menu-log.js';
 
 import { LANGUAGE_CONFIG_PATH, LoadTextFile, parseConfig } from '../lib/utils.js';
 
@@ -43,15 +44,15 @@ function startApp() {
             .overload('android.content.Context', 'android.content.Intent')
             .call(ActivityAnimUtils, context, intent);
 
-        logger.info(`App launched: ${APP_NAME}`);
+        logger.info(`${LOG.APP_LAUNCHED} ${APP_NAME}`);
     } catch (e) {
-        logger.error(`Error starting app: ${e.toString()}`);
+        logger.error(`${LOG.ERROR_STARTING_APP} ${e.toString()}`);
     }
 }
 
 function createMenuItem(content) {
     try {
-        logger.debug('Creating custom button');
+        logger.debug(LOG.CREATING_BUTTON);
 
         // Получаем контейнер LinearLayout внутри OverScrollView
         const menuContainer = content.carSettingBinding.value.menuContainer.value;
@@ -61,7 +62,7 @@ function createMenuItem(content) {
         const systemSettingsButton =
             content.carSettingBinding.value.mainMenuItemSystemSetting.value;
         if (!systemSettingsButton) {
-            logger.error('System settings button not found');
+            logger.error(LOG.SYSTEM_SETTINGS_NOT_FOUND);
             return;
         }
 
@@ -155,13 +156,13 @@ function createMenuItem(content) {
 
         if (insertIndex !== -1) {
             linearLayoutGroup.addView(customButton, insertIndex);
-            logger.info('Custom button added to menu');
+            logger.info(LOG.BUTTON_ADDED);
         } else {
             linearLayoutGroup.addView(customButton);
-            logger.info('Custom button added to menu');
+            logger.info(LOG.BUTTON_ADDED);
         }
     } catch (e) {
-        logger.error(`Error creating custom button: ${e.toString()}`);
+        logger.error(`${LOG.ERROR_CREATING_BUTTON} ${e.toString()}`);
         logger.error(e.stack);
     }
 }
@@ -199,7 +200,7 @@ function main() {
     languageConfig = parseConfig(languageContent);
 
     onCreateHook();
-    logger.info('Menu mod hooks installed');
+    logger.info(LOG.HOOKS_INSTALLED);
 }
 
 Java.perform(() => {

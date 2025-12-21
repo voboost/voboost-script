@@ -1,4 +1,5 @@
 import { Logger } from '../lib/logger.js';
+import { LOG } from './keyboard-lock-en-log.js';
 
 import { KEYBOARD_LOCK_EN_CONFIG_PATH, LoadTextFile } from '../lib/utils.js';
 
@@ -37,7 +38,7 @@ function createDrawableIons(configContent) {
             drawableMap[iconName] = iconDrawable;
         }
     } catch (e) {
-        logger.error(`Error loading icon config: ${e.message}`);
+        logger.error(`${LOG.ERROR_ICON_CONFIG} ${e.message}`);
         return null;
     }
 
@@ -48,7 +49,7 @@ function disableVoice() {
     const QGInputConfig = Java.use('com.qinggan.app.qgime.QGInputConfig');
     QGInputConfig.DISABLE_VOICE.value = true;
 
-    logger.debug(`Voice disabled: ${QGInputConfig.DISABLE_VOICE.value}`);
+    logger.debug(`${LOG.VOICE_DISABLED} ${QGInputConfig.DISABLE_VOICE.value}`);
 }
 
 function resetCachedSkb() {
@@ -192,7 +193,7 @@ function main() {
     disableVoice();
     resetCachedSkb();
 
-    logger.info('Keyboard lock EN hooks installed');
+    logger.info(LOG.HOOKS_INSTALLED);
 }
 
 Java.perform(function () {
