@@ -1,4 +1,5 @@
 import { Logger } from '../lib/logger.js';
+import { LOG } from './media-source-log.js';
 
 import {
     LANGUAGE_CONFIG_PATH,
@@ -115,7 +116,7 @@ function reconnectMedia() {
                     }
                 }
             } catch (e) {
-                logger.error(`reconnectMedia Error: ${e}`);
+                logger.error(`${LOG.RECONNECT_ERROR} ${e}`);
                 logger.error(e.stack);
             }
         },
@@ -144,7 +145,7 @@ function waitForConnection(instance) {
             // Продолжаем проверку
             setTimeout(() => checkConnected(), delay);
         } catch (e) {
-            logger.error(`checkConnected Error: ${e}`);
+            logger.error(`${LOG.CHECK_CONNECTED_ERROR} ${e}`);
             logger.error(e.stack);
         }
     };
@@ -172,7 +173,7 @@ function changeTabIcon() {
                     .overload('android.graphics.drawable.Drawable')
                     .call(imageView, drawable.icon);
             } catch (e) {
-                logger.error(`bindViewHook Error: ${e.message}`);
+                logger.error(`${LOG.BIND_VIEW_ERROR} ${e.message}`);
                 logger.error(e.stack);
             }
         },
@@ -201,7 +202,7 @@ function bindViewHook() {
                 .overload('android.graphics.drawable.Drawable')
                 .call(imageView, drawable.icon);
         } catch (e) {
-            logger.error(`bindViewHook Error: ${e.message}`);
+            logger.error(`${LOG.BIND_VIEW_ERROR} ${e.message}`);
             logger.error(e.stack);
         }
     };
@@ -229,7 +230,7 @@ function updateTitleUIHook() {
                 .overload('android.graphics.drawable.Drawable')
                 .call(imageView, drawable.icon);
         } catch (e) {
-            logger.error(`updateTitleUIHook Error: ${e.message}`);
+            logger.error(`${LOG.UPDATE_TITLE_ERROR} ${e.message}`);
             logger.error(e.stack);
         }
     };
@@ -262,7 +263,7 @@ function openMediaPageHook() {
 
             AppLauncher.startApp(context, intent, 0);
         } catch (e) {
-            logger.error(`openMediaPageHook Error: ${e.message}`);
+            logger.error(`${LOG.OPEN_PAGE_ERROR} ${e.message}`);
             logger.error(e.stack);
         }
     };
@@ -291,7 +292,7 @@ function getStartIntentHook() {
 
             return intent;
         } catch (e) {
-            logger.error(`getStartIntentHook Error: ${e.message}`);
+            logger.error(`${LOG.GET_INTENT_ERROR} ${e.message}`);
             logger.error(e.stack);
         }
         return null;
@@ -321,7 +322,7 @@ function isMediaFocusHook() {
                 return currentPackage === mediaPackage;
             }
         } catch (e) {
-            logger.error(`isMediaFocusHook Error: ${e.message}`);
+            logger.error(`${LOG.MEDIA_FOCUS_ERROR}: ${e.message}`);
             logger.error(e.stack);
         }
 
@@ -378,7 +379,7 @@ function main() {
     getStartIntentHook();
     isMediaFocusHook();
 
-    logger.info('Media source mod activated');
+    logger.info(LOG.ACTIVATED);
 }
 
 Java.perform(() => {

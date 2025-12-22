@@ -1,4 +1,5 @@
 import { Logger } from '../lib/logger.js';
+import { LOG } from './app-viewport-log.js';
 
 import {
     LANGUAGE_CONFIG_PATH,
@@ -81,9 +82,9 @@ function applyAppSettings(activityRecord, displayId) {
         configAR.setLocale(currentLocale);
         activityRecord.onConfigurationChanged(configAR);
 
-        logger.info(`Applied settings to ${packageName} on ${currentDisplay}`);
+        logger.info(`${LOG.APPLIED_SETTINGS} ${packageName} on ${currentDisplay}`);
     } catch (e) {
-        logger.error(`Error applying settings: ${e.message}`);
+        logger.error(`${LOG.ERROR_APPLYING_SETTINGS} ${e.message}`);
         logger.error(e.stack);
     }
 }
@@ -99,7 +100,7 @@ function onDisplayChangedHook() {
             const displayId = displayContent.getDisplayId();
             applyAppSettings(this, displayId);
         } catch (e) {
-            logger.error(`Error in hook: ${e.message}`);
+            logger.error(`${LOG.ERROR_HOOK} ${e.message}`);
             logger.error(e.stack);
         }
     };
@@ -124,7 +125,7 @@ function main() {
 
     onDisplayChangedHook();
 
-    logger.info('Viewport mod hooks installed');
+    logger.info(LOG.HOOKS_INSTALLED);
 }
 
 Java.perform(function () {

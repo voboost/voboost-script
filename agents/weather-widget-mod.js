@@ -15,6 +15,7 @@
  */
 
 import { Logger } from '../lib/logger.js';
+import { LOG } from './weather-widget-log.js';
 
 import {
     LANGUAGE_CONFIG_PATH,
@@ -334,7 +335,7 @@ function convertWeatherIdToLauncherCode(owId) {
         return '03';
     }
 
-    logger.debug(`Weather code not defined: ${owId}`);
+    logger.debug(`${LOG.WEATHER_CODE_NOT_DEFINED} ${owId}`);
     return '00';
 }
 
@@ -949,7 +950,7 @@ function handleWeatherLiveRequest(call, originalRequest, callback) {
             return;
         }
     } catch (e) {
-        logger.error(`Async weather proxy error: ${e.message}`);
+        logger.error(`${LOG.ERROR_ASYNC_WEATHER} ${e.message}`);
     }
 }
 
@@ -976,7 +977,7 @@ function handleAqiForecastRequest(call, originalRequest, callback) {
             callback.onResponse(call, fakeResponse);
         }
     } catch (e) {
-        logger.error(`AQI proxy error: ${e.message}`);
+        logger.error(`${LOG.ERROR_AQI} ${e.message}`);
     }
 }
 
@@ -1003,7 +1004,7 @@ function handleGeocodeRequest(call, originalRequest, callback) {
             callback.onResponse(call, fakeResponse);
         }
     } catch (e) {
-        logger.error(`Geocode proxy error: ${e.message}`);
+        logger.error(`${LOG.ERROR_GEOCODE} ${e.message}`);
     }
 }
 
@@ -1013,15 +1014,15 @@ function installRequestInterceptor() {
         const url = originalRequest.url().toString();
 
         if (url.includes('/cp/weather/weather-live-info')) {
-            logger.info(`Proxying weather (async): ${url}`);
+            logger.info(`${LOG.PROXYING_WEATHER} ${url}`);
 
             handleWeatherLiveRequest(this, originalRequest, callback);
         } else if (url.includes('/cp/weather/aqi-forecast-info')) {
-            logger.info('Proxying AQI request');
+            logger.info(LOG.PROXYING_AQI);
 
             handleAqiForecastRequest(this, originalRequest, callback);
         } else if (url.includes('/cp/geo/regeocode')) {
-            logger.info('Proxying reverse geocode request');
+            logger.info(LOG.PROXYING_GEOCODE);
 
             handleGeocodeRequest(this, originalRequest, callback);
         }
@@ -1042,7 +1043,7 @@ function init() {
         Protocol = Java.use('okhttp3.Protocol');
         ResponseProtocol = Protocol.get('http/1.1');
     } catch {
-        logger.error('Failed to get Protocol');
+        logger.error(LOG.ERROR_PROTOCOL);
 
         return;
     }
@@ -1055,7 +1056,7 @@ function main() {
     languageConfig = parseConfig(LoadTextFile(LANGUAGE_CONFIG_PATH));
     installRequestInterceptor();
 
-    logger.info('Weather + Forecast proxy installed (8-day, sync & async)');
+    logger.info(LOG.PROXY_INSTALLED);
 }
 
 // Only run in Frida context

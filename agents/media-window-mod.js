@@ -1,4 +1,5 @@
 import { Logger } from '../lib/logger.js';
+import { LOG } from './media-window-log.js';
 
 import {
     LANGUAGE_CONFIG_PATH,
@@ -7,7 +8,7 @@ import {
     parseConfig,
 } from '../lib/utils.js';
 
-const logger = new Logger('media-source-mod');
+const logger = new Logger('media-window-mod');
 
 let ContextUtils = null;
 let ContextClass = null;
@@ -49,7 +50,7 @@ function changeMediaEnum() {
             mediaEnum.enable = true;
         }
     } catch (e) {
-        logger.error(`changeMediaEnum Error: ${e.message}`);
+        logger.error(`${LOG.CHANGE_ENUM_ERROR} ${e.message}`);
         logger.error(e.stack);
     }
 }
@@ -86,7 +87,7 @@ function createIconDrawable() {
             drawable[serviceName] = { icon: iconDrawable, name: nameText };
         }
     } catch (e) {
-        logger.error(`createIconDrawable Error: ${e.message}`);
+        logger.error(`${LOG.CREATE_ICON_ERROR} ${e.message}`);
         logger.error(e.stack);
     }
 
@@ -118,7 +119,7 @@ function bindViewHook() {
                 .overload('android.graphics.drawable.Drawable')
                 .call(imageView, drawable.icon);
         } catch (e) {
-            logger.error(`bindViewHook Error: ${e.message}`);
+            logger.error(`${LOG.BIND_VIEW_ERROR}: ${e.message}`);
             logger.error(e.stack);
         }
     };
@@ -157,7 +158,7 @@ function isMediaFocusHook() {
             const mediaPackage = mediaService.service.pageName.value;
             return currentPackage === mediaPackage;
         } catch (e) {
-            logger.error(`isMediaFocusHook Error: ${e.message}`);
+            logger.error(`${LOG.MEDIA_FOCUS_ERROR}: ${e.message}`);
             logger.error(e.stack);
         }
 
@@ -222,7 +223,7 @@ function openPageHook() {
             ]);
             starAppMethod.invoke(null, starAppParams);
         } catch (e) {
-            logger.error(`openPageHook Error: ${e.message}`);
+            logger.error(`${LOG.OPEN_PAGE_ERROR}: ${e.message}`);
             logger.error(e.stack);
         }
     };
@@ -261,7 +262,7 @@ function main() {
     openPageHook();
     isMediaFocusHook();
 
-    logger.info('Media window mod activated');
+    logger.info(LOG.ACTIVATED);
 }
 
 Java.perform(() => {
