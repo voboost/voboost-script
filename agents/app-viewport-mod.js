@@ -4,8 +4,7 @@ import { LOG } from './app-viewport-log.js';
 import {
     LANGUAGE_CONFIG_PATH,
     APP_VIEWPORT_CONFIG_PATH,
-    LoadTextFile,
-    parseConfig,
+    loadConfig,
 } from '../lib/utils.js';
 
 const logger = new Logger('app-viewport-mod');
@@ -116,11 +115,19 @@ function init() {
 function main() {
     init();
 
-    const appViewPortContent = LoadTextFile(APP_VIEWPORT_CONFIG_PATH);
-    config = parseConfig(appViewPortContent);
+    // Load config with full parameter support
+    // Priority: 1) params.config, 2) params.configPath, 3) APP_VIEWPORT_CONFIG_PATH
+    config = loadConfig(APP_VIEWPORT_CONFIG_PATH, logger);
 
-    const languageContent = LoadTextFile(LANGUAGE_CONFIG_PATH);
-    const languageConfig = parseConfig(languageContent);
+    // Config is required for this agent
+    if (!config) {
+        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        return;
+    }
+
+    // Load language config with full parameter support
+    // Priority: 1) params.config, 2) params.configPath, 3) LANGUAGE_CONFIG_PATH
+    const languageConfig = loadConfig(LANGUAGE_CONFIG_PATH, logger);
     currentLocale = createLocale(languageConfig);
 
     onDisplayChangedHook();

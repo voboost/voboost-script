@@ -4,8 +4,7 @@ import { LOG } from './app-launcher-log.js';
 import {
     LANGUAGE_CONFIG_PATH,
     APP_CONFIG_PATH,
-    LoadTextFile,
-    parseConfig,
+    loadConfig,
     parseAppConfig,
 } from '../lib/utils.js';
 
@@ -350,12 +349,21 @@ function init() {
 function main() {
     // --- Основная логика Frida ---
     init();
-    // Загружаем конфиг при старте скрипта
-    const appContent = LoadTextFile(APP_CONFIG_PATH);
-    config = parseAppConfig(appContent);
 
-    const languageContent = LoadTextFile(LANGUAGE_CONFIG_PATH);
-    languageConfig = parseConfig(languageContent);
+    // Load app config with full parameter support
+    // Priority: 1) params.config, 2) params.configPath, 3) APP_CONFIG_PATH
+    const appContent = loadConfig(APP_CONFIG_PATH, logger);
+    config = parseAppConfig(JSON.stringify(appContent));
+
+    // Config is required for this agent
+    if (!config) {
+        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        return;
+    }
+
+    // Load language config with full parameter support
+    // Priority: 1) params.config, 2) params.configPath, 3) LANGUAGE_CONFIG_PATH
+    languageConfig = loadConfig(LANGUAGE_CONFIG_PATH, logger);
 
     // Создаем кэш иконок при старте
     customDrawables = createIconCache();

@@ -9,4 +9,5 @@ export const LOG = {
     ERROR_AQI: 'AQI proxy error:',
     ERROR_GEOCODE: 'Geocode proxy error:',
     ERROR_PROTOCOL: 'Failed to get Protocol',
+    CONFIG_NOT_AVAILABLE: 'Weather config not available or missing api_key',
 };

@@ -4,8 +4,7 @@ import { LOG } from './keyboard-ru-log.js';
 import {
     KEYBOARD_TEMPLATE_PATH,
     KEYBOARD_RU_CONFIG_PATH,
-    LoadTextFile,
-    parseConfig,
+    loadConfig,
 } from '../lib/utils.js';
 
 const logger = new Logger('keyboard-ru-mod');
@@ -779,13 +778,25 @@ function init() {
 
     RUSSIAN_ICON = R_drawable.ime_pinyin.value;
 
-    const templateContent = LoadTextFile(KEYBOARD_TEMPLATE_PATH);
-    template = parseConfig(templateContent);
+    // Load template config with full parameter support
+    // Priority: 1) params.config, 2) params.configPath, 3) KEYBOARD_TEMPLATE_PATH
+    template = loadConfig(KEYBOARD_TEMPLATE_PATH, logger);
+
+    // Config is required for this agent
+    if (!template) {
+        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        return;
+    }
 
     qwertyToJcuken = createQwertyToJcuken(template);
 
-    const configContent = LoadTextFile(KEYBOARD_RU_CONFIG_PATH);
-    dravableIcons = createDrawableIons(configContent);
+    // Load keyboard config with full parameter support
+    // Priority: 1) params.config, 2) params.configPath, 3) KEYBOARD_RU_CONFIG_PATH
+    const keyboardConfig = loadConfig(KEYBOARD_RU_CONFIG_PATH, logger);
+
+    if (keyboardConfig) {
+        dravableIcons = createDrawableIons(JSON.stringify(keyboardConfig));
+    }
 
     currentLayout = 'en';
 }
@@ -793,6 +804,7 @@ function init() {
 function main() {
     init();
 
+    // Config validation already done in init()
     getKeyboardHook();
     switchModeForUserKeyHook();
     saveInputModeHook();

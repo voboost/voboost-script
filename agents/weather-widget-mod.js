@@ -20,8 +20,7 @@ import { LOG } from './weather-widget-log.js';
 import {
     LANGUAGE_CONFIG_PATH,
     WEATHER_CONFIG_PATH,
-    LoadTextFile,
-    parseConfig,
+    loadConfig,
 } from '../lib/utils.js';
 
 import {
@@ -1052,8 +1051,20 @@ function init() {
 function main() {
     init();
 
-    config = parseConfig(LoadTextFile(WEATHER_CONFIG_PATH));
-    languageConfig = parseConfig(LoadTextFile(LANGUAGE_CONFIG_PATH));
+    // Load config with full parameter support
+    // Priority: 1) params.config, 2) params.configPath, 3) WEATHER_CONFIG_PATH
+    config = loadConfig(WEATHER_CONFIG_PATH, logger);
+
+    // Config is required for this agent
+    if (!config || !config.api_key) {
+        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        return;
+    }
+
+    // Load language config with full parameter support
+    // Priority: 1) params.config, 2) params.configPath, 3) LANGUAGE_CONFIG_PATH
+    languageConfig = loadConfig(LANGUAGE_CONFIG_PATH, logger);
+
     installRequestInterceptor();
 
     logger.info(LOG.PROXY_INSTALLED);

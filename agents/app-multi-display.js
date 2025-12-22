@@ -14,7 +14,7 @@
 import { Logger } from '../lib/logger.js';
 import { LOG } from './app-multi-display-log.js';
 
-import { APP_VIEWPORT_CONFIG_PATH, LoadTextFile, parseConfig } from '../lib/utils.js';
+import { APP_VIEWPORT_CONFIG_PATH, loadConfig } from '../lib/utils.js';
 
 const logger = new Logger('app-multi-display');
 
@@ -89,9 +89,16 @@ function hookMultiDisplayWhitelist() {
  * Loads the viewport configuration and initializes the multi-display hook.
  */
 function main() {
-    const appViewPortContent = LoadTextFile(APP_VIEWPORT_CONFIG_PATH);
+    // Load config with full parameter support
+    // Priority: 1) params.config, 2) params.configPath, 3) APP_VIEWPORT_CONFIG_PATH
+    config = loadConfig(APP_VIEWPORT_CONFIG_PATH, logger);
 
-    config = parseConfig(appViewPortContent);
+    // Config is required for this agent
+    if (!config) {
+        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        return;
+    }
+
     hookMultiDisplayWhitelist();
 
     logger.info(LOG.HOOK_INSTALLED);

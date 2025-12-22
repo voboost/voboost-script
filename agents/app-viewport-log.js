@@ -4,4 +4,5 @@ export const LOG = {
     APPLIED_SETTINGS: 'Applied settings to',
     ERROR_APPLYING_SETTINGS: 'Error applying settings:',
     ERROR_HOOK: 'Error in hook:',
+    CONFIG_NOT_AVAILABLE: 'Viewport config not available',
 };
