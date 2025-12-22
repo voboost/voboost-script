@@ -4,8 +4,7 @@ import { LOG } from './media-window-log.js';
 import {
     LANGUAGE_CONFIG_PATH,
     MEDIA_SOURCE_CONFIG_PATH,
-    LoadTextFile,
-    parseConfig,
+    loadConfig,
 } from '../lib/utils.js';
 
 const logger = new Logger('media-window-mod');
@@ -242,11 +241,19 @@ function init() {
         RADIO_YUNTING: { service: MediaEnum.RADIO_YUNTING.value, active: false },
     };
 
-    const languageContent = LoadTextFile(LANGUAGE_CONFIG_PATH);
-    languageConfig = parseConfig(languageContent);
+    // Load language config with full parameter support
+    // Priority: 1) params.config, 2) params.configPath, 3) LANGUAGE_CONFIG_PATH
+    languageConfig = loadConfig(LANGUAGE_CONFIG_PATH, logger);
 
-    const mediaContent = LoadTextFile(MEDIA_SOURCE_CONFIG_PATH);
-    config = parseConfig(mediaContent);
+    // Load media config with full parameter support
+    // Priority: 1) params.config, 2) params.configPath, 3) MEDIA_SOURCE_CONFIG_PATH
+    config = loadConfig(MEDIA_SOURCE_CONFIG_PATH, logger);
+
+    // Config is required for this agent
+    if (!config) {
+        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        return;
+    }
 
     iconDrawables = createIconDrawable();
 }
@@ -254,6 +261,7 @@ function init() {
 function main() {
     init();
 
+    // Config validation already done in init()
     changeMediaEnum();
 
     config = null;

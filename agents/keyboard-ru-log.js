@@ -10,4 +10,5 @@ export const LOG = {
     KEY_TOO_SMALL: 'Key too small:',
     FAILED_TO_ADD_KEY: 'Failed to add key:',
     GET_DEFAULT_KEY_NULL: 'getDefaultKey returned null for id:',
+    CONFIG_NOT_AVAILABLE: 'Keyboard config not available',
 };

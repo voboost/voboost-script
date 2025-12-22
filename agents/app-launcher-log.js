@@ -22,4 +22,5 @@ export const LOG = {
     ERROR_NAVIGATION_BAR_HOOKS: 'Error installing NavigationBar hooks:',
     CLICK_ON: 'Click on:',
     ERROR_GENERIC: 'Error:',
+    CONFIG_NOT_AVAILABLE: 'Apps config not available',
 };

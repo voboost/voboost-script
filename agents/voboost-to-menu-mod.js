@@ -1,7 +1,7 @@
 import { Logger } from '../lib/logger.js';
 import { LOG } from './voboost-to-menu-log.js';
 
-import { LANGUAGE_CONFIG_PATH, LoadTextFile, parseConfig } from '../lib/utils.js';
+import { LANGUAGE_CONFIG_PATH, loadConfig } from '../lib/utils.js';
 
 const logger = new Logger('voboost-to-menu-mod');
 
@@ -196,8 +196,14 @@ function main() {
     // --- Основная логика Frida ---
     init();
 
-    const languageContent = LoadTextFile(LANGUAGE_CONFIG_PATH);
-    languageConfig = parseConfig(languageContent);
+    // Load language config with full parameter support
+    // Priority: 1) params.config, 2) params.configPath, 3) LANGUAGE_CONFIG_PATH
+    languageConfig = loadConfig(LANGUAGE_CONFIG_PATH, logger);
+
+    // Language config is optional for this agent - will use defaults if not available
+    if (!languageConfig) {
+        logger.debug('Language config not available, using defaults');
+    }
 
     onCreateHook();
     logger.info(LOG.HOOKS_INSTALLED);

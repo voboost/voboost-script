@@ -7,4 +7,5 @@ export const LOG = {
     OPEN_PAGE_ERROR: 'openMediaPageHook Error',
     GET_INTENT_ERROR: 'getStartIntentHook Error',
     MEDIA_FOCUS_ERROR: 'isMediaFocusHook Error',
+    CONFIG_NOT_AVAILABLE: 'Media source config not available',
 };

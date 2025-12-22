@@ -2,6 +2,7 @@
 
 ## Global
 - This project MUST follows ALL common rules from ../voboost-codestyle/AGENTS.md
+- All log messages MUST be defined as constants in `-log.js` files, never as inline strings
 
 ## Commands
 - `npm run setup`: Initial project setup

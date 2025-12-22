@@ -5,4 +5,5 @@ export const LOG = {
     BIND_VIEW_ERROR: 'bindViewHook Error',
     MEDIA_FOCUS_ERROR: 'isMediaFocusHook Error',
     OPEN_PAGE_ERROR: 'openPageHook Error',
+    CONFIG_NOT_AVAILABLE: 'Media source config not available',
 };
