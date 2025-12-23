@@ -15,4 +15,11 @@ export default [
             'no-console': 'off',
         },
     },
+    // Allow unused DEBUG in agent files for consistent imports
+    {
+        files: ['**/agents/*-mod.js'],
+        rules: {
+            'no-unused-vars': ['error', { varsIgnorePattern: '^DEBUG$' }],
+        },
+    },
 ];

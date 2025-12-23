@@ -1,5 +1,5 @@
 import { Logger } from '../lib/logger.js';
-import { LOG } from './phone-num-log.js';
+import { INFO, DEBUG, ERROR } from './phone-num-log.js';
 import { runAgent } from '../lib/utils.js';
 
 const logger = new Logger('phone-num-mod');
@@ -30,9 +30,9 @@ function hookPhoneNumberFormatter() {
 
         UtilClass.getAmendNumber.implementation = getAmendNumber;
 
-        logger.info(LOG.HOOK_INSTALLED);
+        logger.debug(DEBUG.HOOK_INSTALLED);
     } catch {
-        logger.debug(LOG.UTIL_NOT_AVAILABLE);
+        logger.debug(DEBUG.UTIL_NOT_AVAILABLE);
     }
 }
 
@@ -54,7 +54,7 @@ function syncContactCache() {
 
         PbapProfileManagerClass.startSync.call(PbapProfileManagerClass);
     } catch (error) {
-        logger.error(`${LOG.ERROR_CONTACT_CACHE} ${error.message}`);
+        logger.error(`${ERROR.CONTACT_CACHE} ${error.message}`);
         logger.error(error.stack);
     }
 }
@@ -64,10 +64,12 @@ function syncContactCache() {
  * Initializes all hooks and triggers contact cache synchronization.
  */
 function main() {
-    logger.info(LOG.STARTING);
+    logger.info(INFO.STARTING);
 
     hookPhoneNumberFormatter();
     syncContactCache();
+
+    logger.info(INFO.STARTED);
 }
 
 runAgent(main);

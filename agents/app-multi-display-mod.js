@@ -12,7 +12,7 @@
  */
 
 import { Logger } from '../lib/logger.js';
-import { LOG } from './app-multi-display-log.js';
+import { INFO, DEBUG, ERROR } from './app-multi-display-log.js';
 
 import { APP_VIEWPORT_CONFIG_PATH, loadConfig, runAgent } from '../lib/utils.js';
 
@@ -69,7 +69,7 @@ function hookMultiDisplayWhitelist() {
         var MultiDisplayImpl = Java.use('com.qinggan.systemservice.multidisplay.MultiDisplayImpl');
 
         MultiDisplayImpl.isWhiteListApp.implementation = function (packageName) {
-            logger.debug(`${LOG.CHECKING_STATUS} ${packageName}`);
+            logger.debug(`${DEBUG.CHECKING_STATUS} ${packageName}`);
             const result = isMultiDisplayApp(packageName, config.apps);
 
             if (result !== null) {
@@ -79,7 +79,7 @@ function hookMultiDisplayWhitelist() {
             return this.isWhiteListApp.call(MultiDisplayImpl, packageName);
         };
     } catch (e) {
-        logger.error(`${LOG.ERROR_HOOK} ${e.message}`);
+        logger.error(`${ERROR.HOOK} ${e.message}`);
         logger.error(e.stack);
     }
 }
@@ -89,17 +89,20 @@ function hookMultiDisplayWhitelist() {
  * Loads the viewport configuration and initializes the multi-display hook.
  */
 function main() {
+    logger.info(INFO.STARTING);
+
     config = loadConfig(APP_VIEWPORT_CONFIG_PATH, logger);
 
     // Config is required for this agent
     if (!config) {
-        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        logger.error(ERROR.CONFIG_NOT_AVAILABLE);
         return;
     }
 
     hookMultiDisplayWhitelist();
 
-    logger.info(LOG.HOOK_INSTALLED);
+    logger.info(INFO.HOOK_INSTALLED);
+    logger.info(INFO.STARTED);
 }
 
 runAgent(main);

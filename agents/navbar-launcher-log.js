@@ -1,6 +1,13 @@
-// Log message constants for navbar-launcher-mod agent
-export const LOG = {
+export const INFO = {
+    STARTING: 'Agent starting',
+    STARTED: 'Agent started',
+};
+
+export const DEBUG = {
     HOOK_INSTALLED: 'Navbar launcher hook installed',
-    ERROR_HOOK: 'Error in hook:',
+};
+
+export const ERROR = {
+    HOOK: 'Error in hook:',
     CONFIG_NOT_AVAILABLE: 'Apps config not available',
 };

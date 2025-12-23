@@ -1,7 +1,11 @@
-// Log message constants for app-launcher-mod agent
-export const LOG = {
-    HOOKS_INSTALLED: 'App launcher hooks installed',
+export const INFO = {
+    STARTING: 'Agent starting',
+    STARTED: 'Agent started',
     APP_LAUNCHED: 'App launched:',
+};
+
+export const DEBUG = {
+    HOOKS_INSTALLED: 'App launcher hooks installed',
     BITMAPS_CREATED: 'Bitmaps created',
     ADDING_TO_ALL_APPS: 'Adding to AllApps:',
     APP_NOT_INSTALLED: 'App not installed:',
@@ -13,14 +17,17 @@ export const LOG = {
     GET_ALL_APPS_HOOK_INSTALLED: 'getAllApps hook installed',
     ON_BIND_VIEW_HOLDER_HOOK_INSTALLED: 'onBindViewHolder hook installed',
     UPDATE_THEME_CALLED: 'NavigationBar.updateTheme() called',
-    ERROR_UPDATING_LIST: 'Error updating list:',
-    ERROR_ON_BIND_VIEW_HOLDER: 'Error in onBindViewHolder:',
-    ERROR_CUSTOM_CLICK: 'Error in custom click:',
-    ERROR_NAV_CLICK: 'NavClickListener error:',
-    ERROR_GET_ALL_APPS_HOOK: 'Error installing getAllApps hook:',
-    ERROR_ON_BIND_VIEW_HOLDER_HOOK: 'Error installing onBindViewHolder hook:',
-    ERROR_NAVIGATION_BAR_HOOKS: 'Error installing NavigationBar hooks:',
     CLICK_ON: 'Click on:',
-    ERROR_GENERIC: 'Error:',
+};
+
+export const ERROR = {
+    UPDATING_LIST: 'Error updating list:',
+    ON_BIND_VIEW_HOLDER: 'onBindViewHolder error:',
+    CUSTOM_CLICK: 'Custom click error:',
+    NAV_CLICK: 'NavClickListener error:',
+    GET_ALL_APPS_HOOK: 'getAllApps hook error:',
+    ON_BIND_VIEW_HOLDER_HOOK: 'onBindViewHolder hook error:',
+    NAVIGATION_BAR_HOOKS: 'NavigationBar hooks error:',
+    GENERIC: 'Error:',
     CONFIG_NOT_AVAILABLE: 'Apps config not available',
 };

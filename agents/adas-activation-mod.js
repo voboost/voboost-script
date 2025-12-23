@@ -1,5 +1,5 @@
 import { Logger } from '../lib/logger.js';
-import { LOG } from './ADAS-activation-log.js';
+import { INFO, DEBUG, ERROR } from './ADAS-activation-log.js';
 import { runAgent } from '../lib/utils.js';
 
 const logger = new Logger('ADAS-activation-mod');
@@ -12,7 +12,7 @@ function doQuerySubscribeInfoHook() {
             return '{"expireStatus":"0","isMqtt":false,"remainDays":"30","subscriptionStatus":"1"}';
         };
     } catch (e) {
-        logger.error(`${LOG.ERROR_SUBSCRIBE_INFO} ${e.message}`);
+        logger.error(`${ERROR.SUBSCRIBE_INFO} ${e.message}`);
         logger.error(e.stack);
     }
 }
@@ -23,7 +23,7 @@ function doQueryNOALearnInfoHook() {
             return '1';
         };
     } catch (e) {
-        logger.error(`${LOG.ERROR_NOA_LEARN_INFO} ${e.message}`);
+        logger.error(`${ERROR.NOA_LEARN_INFO} ${e.message}`);
         logger.error(e.stack);
     }
 }
@@ -35,12 +35,13 @@ function init() {
 }
 
 function main() {
+    logger.info(INFO.STARTING);
+
     init();
 
     doQuerySubscribeInfoHook();
     doQueryNOALearnInfoHook();
-
-    logger.info(LOG.HOOKS_INSTALLED);
+    logger.info(INFO.STARTED);
 }
 
 runAgent(main);

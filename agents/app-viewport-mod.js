@@ -1,5 +1,5 @@
 import { Logger } from '../lib/logger.js';
-import { LOG } from './app-viewport-log.js';
+import { INFO, DEBUG, ERROR } from './app-viewport-log.js';
 
 import {
     LANGUAGE_CONFIG_PATH,
@@ -82,9 +82,9 @@ function applyAppSettings(activityRecord, displayId) {
         configAR.setLocale(currentLocale);
         activityRecord.onConfigurationChanged(configAR);
 
-        logger.info(`${LOG.APPLIED_SETTINGS} ${packageName} on ${currentDisplay}`);
+        logger.info(`${INFO.APPLIED_SETTINGS} ${packageName} on ${currentDisplay}`);
     } catch (e) {
-        logger.error(`${LOG.ERROR_APPLYING_SETTINGS} ${e.message}`);
+        logger.error(`${ERROR.APPLYING_SETTINGS} ${e.message}`);
         logger.error(e.stack);
     }
 }
@@ -100,7 +100,7 @@ function onDisplayChangedHook() {
             const displayId = displayContent.getDisplayId();
             applyAppSettings(this, displayId);
         } catch (e) {
-            logger.error(`${LOG.ERROR_HOOK} ${e.message}`);
+            logger.error(`${ERROR.HOOK} ${e.message}`);
             logger.error(e.stack);
         }
     };
@@ -114,13 +114,15 @@ function init() {
 }
 
 function main() {
+    logger.info(INFO.STARTING);
+
     init();
 
     config = loadConfig(APP_VIEWPORT_CONFIG_PATH, logger);
 
     // Config is required for this agent
     if (!config) {
-        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        logger.error(ERROR.CONFIG_NOT_AVAILABLE);
         return;
     }
 
@@ -131,7 +133,8 @@ function main() {
 
     onDisplayChangedHook();
 
-    logger.info(LOG.HOOKS_INSTALLED);
+    logger.info(INFO.HOOKS_INSTALLED);
+    logger.info(INFO.STARTED);
 }
 
 runAgent(main);

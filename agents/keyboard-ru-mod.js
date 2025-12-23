@@ -1,5 +1,5 @@
 import { Logger } from '../lib/logger.js';
-import { LOG } from './keyboard-ru-log.js';
+import { INFO, DEBUG, ERROR } from './keyboard-ru-log.js';
 
 import {
     KEYBOARD_TEMPLATE_PATH,
@@ -80,7 +80,7 @@ function createDrawableIons(configContent) {
             drawableMap[iconName] = iconDrawable;
         }
     } catch (e) {
-        logger.error(`${LOG.ERROR_ICON_CONFIG} ${e.message}`);
+        logger.error(`${ERROR.ICON_CONFIG} ${e.message}`);
         return null;
     }
 
@@ -122,7 +122,7 @@ function resolveResId(resRef, context) {
         // Parse "@type/name"
         const match = resRef.match(/^@(\w+)\/(.+)$/);
         if (!match) {
-            logger.info(`${LOG.INVALID_RESOURCE_REF} ${resRef}`);
+            logger.info(`${INFO.INVALID_RESOURCE_REF} ${resRef}`);
             return 0;
         }
 
@@ -131,12 +131,12 @@ function resolveResId(resRef, context) {
 
         if (id === 0) {
             logger.info(
-                `${LOG.RESOURCE_NOT_FOUND} ${resRef} (${type}/${name}) in package ${pkgName}`
+                `${INFO.RESOURCE_NOT_FOUND} ${resRef} (${type}/${name}) in package ${pkgName}`
             );
         }
         return id;
     } catch (e) {
-        logger.error(`${LOG.ERROR_RESOLVING_RESOURCE} ${resRef}: ${e}`);
+        logger.error(`${ERROR.RESOLVING_RESOURCE} ${resRef}: ${e}`);
         return 0;
     }
 }
@@ -156,7 +156,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
 
         if (!skbTemplate) {
             logger.error(
-                `${LOG.SKB_TEMPLATE_NOT_FOUND} ${attrs.skb_template} (ID: ${skbTemplateResId})`
+                `${ERROR.SKB_TEMPLATE_NOT_FOUND} ${attrs.skb_template} (ID: ${skbTemplateResId})`
             );
             return null;
         }
@@ -193,7 +193,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                     softKey = skbTemplate.getDefaultKey(keyJson.id);
 
                     if (!softKey) {
-                        logger.info(`${LOG.GET_DEFAULT_KEY_NULL} ${keyJson.id}`);
+                        logger.info(`${INFO.GET_DEFAULT_KEY_NULL} ${keyJson.id}`);
                         continue;
                     }
                 } else if (keyJson.toggle_states) {
@@ -389,7 +389,9 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                     keyPositionX - currentX < attrs.key_xmargin * 2.0 ||
                     keyPositionY - currentY < attrs.key_ymargin * 2.0
                 ) {
-                    logger.info(`${LOG.KEY_TOO_SMALL} ${keyJson.label || keyJson.id || 'unknown'}`);
+                    logger.info(
+                        `${INFO.KEY_TOO_SMALL} ${keyJson.label || keyJson.id || 'unknown'}`
+                    );
                     continue;
                 }
 
@@ -402,7 +404,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
 
                 if (!softKeyboard.addSoftKey(currentSoftKey)) {
                     logger.error(
-                        `${LOG.FAILED_TO_ADD_KEY} ${keyJson.label || keyJson.id || 'unknown'}`
+                        `${ERROR.FAILED_TO_ADD_KEY} ${keyJson.label || keyJson.id || 'unknown'}`
                     );
                 }
             }
@@ -420,7 +422,7 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
 
         return softKeyboard;
     } catch (e) {
-        logger.error(`${LOG.KEYBOARD_BUILD_ERROR} ${e}`);
+        logger.error(`${ERROR.KEYBOARD_BUILD_ERROR} ${e}`);
         return null;
     }
 }
@@ -495,7 +497,7 @@ function getKeyboardHook() {
 
                 // return softKeyboard;
             } catch (e) {
-                logger.error(`${LOG.KEYBOARD_BUILD_ERROR} ${e}`);
+                logger.error(`${ERROR.KEYBOARD_BUILD_ERROR} ${e}`);
                 logger.error(e.stack);
             }
         }
@@ -789,7 +791,7 @@ function init() {
 
     // Config is required for this agent
     if (!template) {
-        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        logger.error(ERROR.CONFIG_NOT_AVAILABLE);
         return;
     }
 
@@ -807,6 +809,8 @@ function init() {
 }
 
 function main() {
+    logger.info(INFO.STARTING);
+
     init();
 
     // Config validation already done in init()
@@ -824,7 +828,8 @@ function main() {
     disableVoice();
     resetCachedSkb();
 
-    logger.info(LOG.HOOKS_INSTALLED);
+    logger.info(INFO.HOOKS_INSTALLED);
+    logger.info(INFO.STARTED);
 }
 
 runAgent(main);
