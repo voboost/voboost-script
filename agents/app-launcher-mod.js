@@ -1,11 +1,12 @@
 import { Logger } from '../lib/logger.js';
-import { LOG } from './app-launcher-log.js';
+import { INFO, DEBUG, ERROR } from './app-launcher-log.js';
 
 import {
     LANGUAGE_CONFIG_PATH,
     APP_CONFIG_PATH,
     loadConfig,
     parseAppConfig,
+    runAgent,
 } from '../lib/utils.js';
 
 const logger = new Logger('app-launcher-mod');
@@ -36,7 +37,7 @@ function startApp(packageName) {
     intent.addFlags(0x10000000); // FLAG_ACTIVITY_NEW_TASK
 
     AppLauncher.startApp(context, intent, 0);
-    logger.info(`${LOG.APP_LAUNCHED} ${packageName}`);
+    logger.info(`${INFO.APP_LAUNCHED} ${packageName}`);
 }
 
 function createIconCache() {
@@ -61,7 +62,7 @@ function createIconCache() {
             result[app.package] = [drawableBig, drawableSmall];
         });
 
-        logger.debug(LOG.BITMAPS_CREATED);
+        logger.debug(DEBUG.BITMAPS_CREATED);
         return result;
     }
     return result;
@@ -80,7 +81,7 @@ function addCustomApp(originalApps) {
             if (!Object.prototype.hasOwnProperty.call(existingPackages, configApp.package)) {
                 PackageManager.getPackageInfo(configApp.package, 0);
 
-                logger.debug(`${LOG.ADDING_TO_ALL_APPS} ${configApp.package}`);
+                logger.debug(`${DEBUG.ADDING_TO_ALL_APPS} ${configApp.package}`);
 
                 const bean = AppBean.$new(2131230851, 2131820622, configApp.package);
                 bean.setSubType(configApp.package_sub_type);
@@ -90,9 +91,9 @@ function addCustomApp(originalApps) {
             }
         } catch (e) {
             if (e.message?.includes('NameNotFoundException')) {
-                logger.debug(`${LOG.APP_NOT_INSTALLED} ${configApp.package}`);
+                logger.debug(`${DEBUG.APP_NOT_INSTALLED} ${configApp.package}`);
             } else {
-                logger.error(`${LOG.ERROR_GENERIC} ${e.message}`);
+                logger.error(`${ERROR.GENERIC} ${e.message}`);
             }
         }
     });
@@ -101,7 +102,7 @@ function addCustomApp(originalApps) {
 function patchNavigationIcons() {
     Java.choose(NavigationBar.$className, {
         onMatch: function (instance) {
-            logger.debug(`${LOG.NAVIGATION_BAR_FOUND} ${instance.mScreenId.value}`);
+            logger.debug(`${DEBUG.NAVIGATION_BAR_FOUND} ${instance.mScreenId.value}`);
 
             if (instance.mScreenId.value !== 0) return;
 
@@ -123,9 +124,7 @@ function patchNavigationIcons() {
 
                 try {
                     PackageManager.getPackageInfo(customApp.package, 0);
-                    logger.debug(
-                        `${LOG.REPLACING_ICON} ${packageName} → ${customApp.package}`
-                    );
+                    logger.debug(`${DEBUG.REPLACING_ICON} ${packageName} → ${customApp.package}`);
 
                     button.setOnClickListener(NavClickListener.$new());
 
@@ -140,15 +139,15 @@ function patchNavigationIcons() {
                     }
                 } catch (e) {
                     if (e.message?.includes('NameNotFoundException')) {
-                        logger.debug(`${LOG.APP_NOT_INSTALLED} ${customApp.package}`);
+                        logger.debug(`${DEBUG.APP_NOT_INSTALLED} ${customApp.package}`);
                     } else {
-                        logger.error(`${LOG.ERROR_GENERIC} ${e.message}`);
+                        logger.error(`${ERROR.GENERIC} ${e.message}`);
                     }
                 }
             });
         },
         onComplete: function () {
-            logger.debug(LOG.NAVIGATION_SEARCH_COMPLETED);
+            logger.debug(DEBUG.NAVIGATION_SEARCH_COMPLETED);
         },
     });
 }
@@ -174,9 +173,9 @@ function updateMainApps() {
                 }
             }
 
-            logger.debug(LOG.MAIN_APPS_UPDATED);
+            logger.debug(DEBUG.MAIN_APPS_UPDATED);
         } catch (e) {
-            logger.error(`${LOG.ERROR_UPDATING_LIST} ${e.message}`);
+            logger.error(`${ERROR.UPDATING_LIST} ${e.message}`);
         }
     });
 }
@@ -192,7 +191,7 @@ function getAllAppsHook() {
     // --- Хук на AllAppDataManager.getAllApps ---
     try {
         AllAppDataManager.getAllApps.overload('int').implementation = function (screenId) {
-            logger.debug(`${LOG.GET_ALL_APPS_CALLED} ${screenId}`);
+            logger.debug(`${DEBUG.GET_ALL_APPS_CALLED} ${screenId}`);
             const originalApps = AllAppDataManager.getAllApps
                 .overload('int')
                 .call(AllAppDataManager, screenId);
@@ -202,9 +201,9 @@ function getAllAppsHook() {
 
             return originalApps;
         };
-        logger.debug(LOG.GET_ALL_APPS_HOOK_INSTALLED);
+        logger.debug(DEBUG.GET_ALL_APPS_HOOK_INSTALLED);
     } catch (e) {
-        logger.error(`${LOG.ERROR_GET_ALL_APPS_HOOK} ${e.message}`);
+        logger.error(`${ERROR.GET_ALL_APPS_HOOK} ${e.message}`);
     }
 }
 
@@ -260,14 +259,14 @@ function onBindViewHolderHook() {
                     itemView.setOnClickListener(customClickAppListener);
                 }
             } catch (e) {
-                logger.error(`${LOG.ERROR_ON_BIND_VIEW_HOLDER} ${e.message}`);
+                logger.error(`${ERROR.ON_BIND_VIEW_HOLDER} ${e.message}`);
                 logger.error(e.stack);
             }
         };
 
-        logger.debug(LOG.ON_BIND_VIEW_HOLDER_HOOK_INSTALLED);
+        logger.debug(DEBUG.ON_BIND_VIEW_HOLDER_HOOK_INSTALLED);
     } catch (e) {
-        logger.error(`${LOG.ERROR_ON_BIND_VIEW_HOLDER_HOOK} ${e.message}`);
+        logger.error(`${ERROR.ON_BIND_VIEW_HOLDER_HOOK} ${e.message}`);
     }
 }
 
@@ -276,7 +275,7 @@ function updateThemeHook() {
     try {
         // --- Хук на initScreenUpViews (для замены иконок и тегов при инициализации) ---
         NavigationBar.updateTheme.implementation = function () {
-            logger.debug(LOG.UPDATE_THEME_CALLED);
+            logger.debug(DEBUG.UPDATE_THEME_CALLED);
 
             // Сначала оригинальное поведение
             this.updateTheme.call(this);
@@ -285,7 +284,7 @@ function updateThemeHook() {
             patchNavigationIcons();
         };
     } catch (e) {
-        logger.error(`${LOG.ERROR_NAVIGATION_BAR_HOOKS} ${e.message}`);
+        logger.error(`${ERROR.NAVIGATION_BAR_HOOKS} ${e.message}`);
     }
 }
 
@@ -316,12 +315,12 @@ function init() {
 
                     if (appBean) {
                         const packageName = appBean.getPackageName();
-                        logger.debug(`${LOG.CLICK_ON} ${packageName}`);
+                        logger.debug(`${DEBUG.CLICK_ON} ${packageName}`);
 
                         startApp(packageName);
                     }
                 } catch (e) {
-                    logger.error(`${LOG.ERROR_CUSTOM_CLICK} ${e.message}`);
+                    logger.error(`${ERROR.CUSTOM_CLICK} ${e.message}`);
                 }
             },
         },
@@ -339,7 +338,7 @@ function init() {
                     const packageName = tagPkg.toString();
                     startApp(packageName);
                 } catch (e) {
-                    logger.error(`${LOG.ERROR_NAV_CLICK} ${e.message}`);
+                    logger.error(`${ERROR.NAV_CLICK} ${e.message}`);
                 }
             },
         },
@@ -347,6 +346,8 @@ function init() {
 }
 
 function main() {
+    logger.info(INFO.STARTING);
+
     // --- Основная логика Frida ---
     init();
 
@@ -357,7 +358,7 @@ function main() {
 
     // Config is required for this agent
     if (!config) {
-        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        logger.error(ERROR.CONFIG_NOT_AVAILABLE);
         return;
     }
 
@@ -374,9 +375,8 @@ function main() {
     //изминение стандартного списка приложений
     updateMainApps();
 
-    logger.info(LOG.HOOKS_INSTALLED);
+    logger.info(INFO.HOOKS_INSTALLED);
+    logger.info(INFO.STARTED);
 }
 
-Java.perform(() => {
-    main();
-});
+runAgent(main);

@@ -1,7 +1,7 @@
 import { Logger } from '../lib/logger.js';
-import { LOG } from './keyboard-lock-en-log.js';
+import { INFO, DEBUG, ERROR } from './keyboard-lock-en-log.js';
 
-import { KEYBOARD_LOCK_EN_CONFIG_PATH, loadConfig } from '../lib/utils.js';
+import { KEYBOARD_LOCK_EN_CONFIG_PATH, loadConfig, runAgent } from '../lib/utils.js';
 
 const logger = new Logger('keyboard-lock-en-mod');
 
@@ -38,7 +38,7 @@ function createDrawableIons(configContent) {
             drawableMap[iconName] = iconDrawable;
         }
     } catch (e) {
-        logger.error(`${LOG.ERROR_ICON_CONFIG} ${e.message}`);
+        logger.error(`${ERROR.ICON_CONFIG} ${e.message}`);
         return null;
     }
 
@@ -49,7 +49,7 @@ function disableVoice() {
     const QGInputConfig = Java.use('com.qinggan.app.qgime.QGInputConfig');
     QGInputConfig.DISABLE_VOICE.value = true;
 
-    logger.debug(`${LOG.VOICE_DISABLED} ${QGInputConfig.DISABLE_VOICE.value}`);
+    logger.debug(`${DEBUG.VOICE_DISABLED} ${QGInputConfig.DISABLE_VOICE.value}`);
 }
 
 function resetCachedSkb() {
@@ -180,8 +180,6 @@ function loadKeyboardHook() {
 function init() {
     ActivityThread = Java.use('android.app.ActivityThread');
 
-    // Load config with full parameter support
-    // Priority: 1) params.config, 2) params.configPath, 3) KEYBOARD_LOCK_EN_CONFIG_PATH
     const config = loadConfig(KEYBOARD_LOCK_EN_CONFIG_PATH, logger);
 
     if (config) {
@@ -190,6 +188,8 @@ function init() {
 }
 
 function main() {
+    logger.info(INFO.STARTING);
+
     init();
 
     saveInputModeHook();
@@ -198,9 +198,8 @@ function main() {
     disableVoice();
     resetCachedSkb();
 
-    logger.info(LOG.HOOKS_INSTALLED);
+    logger.info(INFO.HOOKS_INSTALLED);
+    logger.info(INFO.STARTED);
 }
 
-Java.perform(function () {
-    main();
-});
+runAgent(main);

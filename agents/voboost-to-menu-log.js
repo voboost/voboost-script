@@ -1,10 +1,17 @@
-// Log message constants for voboost-to-menu-mod agent
-export const LOG = {
-    HOOKS_INSTALLED: 'Menu mod hooks installed',
-    CREATING_BUTTON: 'Creating custom button',
+export const INFO = {
+    STARTING: 'Agent starting',
+    STARTED: 'Agent started',
     BUTTON_ADDED: 'Custom button added to menu',
     APP_LAUNCHED: 'App launched:',
-    ERROR_STARTING_APP: 'Error starting app:',
-    ERROR_CREATING_BUTTON: 'Error creating custom button:',
+};
+
+export const DEBUG = {
+    HOOKS_INSTALLED: 'Menu mod hooks installed',
+    CREATING_BUTTON: 'Creating custom button',
+};
+
+export const ERROR = {
+    STARTING_APP: 'Error starting app:',
+    CREATING_BUTTON: 'Error creating custom button:',
     SYSTEM_SETTINGS_NOT_FOUND: 'System settings button not found',
 };

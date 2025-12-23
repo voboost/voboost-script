@@ -13,4 +13,4 @@
 - Configuration: `config/`
 - Code: `agents/`
 - Tests: `test/`
-- Build: `bundles/`
+- Build: `build/`

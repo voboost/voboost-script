@@ -1,10 +1,11 @@
 import { Logger } from '../lib/logger.js';
-import { LOG } from './media-window-log.js';
+import { INFO, DEBUG, ERROR } from './media-window-log.js';
 
 import {
     LANGUAGE_CONFIG_PATH,
     MEDIA_SOURCE_CONFIG_PATH,
     loadConfig,
+    runAgent,
 } from '../lib/utils.js';
 
 const logger = new Logger('media-window-mod');
@@ -49,7 +50,7 @@ function changeMediaEnum() {
             mediaEnum.enable = true;
         }
     } catch (e) {
-        logger.error(`${LOG.CHANGE_ENUM_ERROR} ${e.message}`);
+        logger.error(`${ERROR.CHANGE_ENUM_ERROR} ${e.message}`);
         logger.error(e.stack);
     }
 }
@@ -86,7 +87,7 @@ function createIconDrawable() {
             drawable[serviceName] = { icon: iconDrawable, name: nameText };
         }
     } catch (e) {
-        logger.error(`${LOG.CREATE_ICON_ERROR} ${e.message}`);
+        logger.error(`${ERROR.CREATE_ICON_ERROR} ${e.message}`);
         logger.error(e.stack);
     }
 
@@ -118,7 +119,7 @@ function bindViewHook() {
                 .overload('android.graphics.drawable.Drawable')
                 .call(imageView, drawable.icon);
         } catch (e) {
-            logger.error(`${LOG.BIND_VIEW_ERROR}: ${e.message}`);
+            logger.error(`${ERROR.BIND_VIEW_ERROR}: ${e.message}`);
             logger.error(e.stack);
         }
     };
@@ -157,7 +158,7 @@ function isMediaFocusHook() {
             const mediaPackage = mediaService.service.pageName.value;
             return currentPackage === mediaPackage;
         } catch (e) {
-            logger.error(`${LOG.MEDIA_FOCUS_ERROR}: ${e.message}`);
+            logger.error(`${ERROR.MEDIA_FOCUS_ERROR}: ${e.message}`);
             logger.error(e.stack);
         }
 
@@ -222,7 +223,7 @@ function openPageHook() {
             ]);
             starAppMethod.invoke(null, starAppParams);
         } catch (e) {
-            logger.error(`${LOG.OPEN_PAGE_ERROR}: ${e.message}`);
+            logger.error(`${ERROR.OPEN_PAGE_ERROR}: ${e.message}`);
             logger.error(e.stack);
         }
     };
@@ -251,7 +252,7 @@ function init() {
 
     // Config is required for this agent
     if (!config) {
-        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        logger.error(ERROR.CONFIG_NOT_AVAILABLE);
         return;
     }
 
@@ -259,6 +260,8 @@ function init() {
 }
 
 function main() {
+    logger.info(INFO.STARTING);
+
     init();
 
     // Config validation already done in init()
@@ -270,9 +273,8 @@ function main() {
     openPageHook();
     isMediaFocusHook();
 
-    logger.info(LOG.ACTIVATED);
+    logger.info(INFO.ACTIVATED);
+    logger.info(INFO.STARTED);
 }
 
-Java.perform(() => {
-    main();
-});
+runAgent(main);

@@ -1,9 +1,17 @@
-export const LOG = {
+export const INFO = {
+    STARTING: 'Agent starting',
+    STARTED: 'Agent started',
+};
+
+export const DEBUG = {
     ACTIVATED: 'Media window mod activated',
-    CHANGE_ENUM_ERROR: 'changeMediaEnum Error',
-    CREATE_ICON_ERROR: 'createIconDrawable Error',
-    BIND_VIEW_ERROR: 'bindViewHook Error',
-    MEDIA_FOCUS_ERROR: 'isMediaFocusHook Error',
-    OPEN_PAGE_ERROR: 'openPageHook Error',
+};
+
+export const ERROR = {
+    CHANGE_ENUM: 'changeMediaEnum error',
+    CREATE_ICON: 'createIconDrawable error',
+    BIND_VIEW: 'bindViewHook error',
+    MEDIA_FOCUS: 'isMediaFocusHook error',
+    OPEN_PAGE: 'openPageHook error',
     CONFIG_NOT_AVAILABLE: 'Media source config not available',
 };

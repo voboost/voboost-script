@@ -1,10 +1,11 @@
 import { Logger } from '../lib/logger.js';
-import { LOG } from './media-source-log.js';
+import { INFO, DEBUG, ERROR } from './media-source-log.js';
 
 import {
     LANGUAGE_CONFIG_PATH,
     MEDIA_SOURCE_CONFIG_PATH,
     loadConfig,
+    runAgent,
 } from '../lib/utils.js';
 
 const logger = new Logger('media-source-mod');
@@ -115,7 +116,7 @@ function reconnectMedia() {
                     }
                 }
             } catch (e) {
-                logger.error(`${LOG.RECONNECT_ERROR} ${e}`);
+                logger.error(`${ERROR.RECONNECT_ERROR} ${e}`);
                 logger.error(e.stack);
             }
         },
@@ -144,7 +145,7 @@ function waitForConnection(instance) {
             // Продолжаем проверку
             setTimeout(() => checkConnected(), delay);
         } catch (e) {
-            logger.error(`${LOG.CHECK_CONNECTED_ERROR} ${e}`);
+            logger.error(`${ERROR.CHECK_CONNECTED_ERROR} ${e}`);
             logger.error(e.stack);
         }
     };
@@ -172,7 +173,7 @@ function changeTabIcon() {
                     .overload('android.graphics.drawable.Drawable')
                     .call(imageView, drawable.icon);
             } catch (e) {
-                logger.error(`${LOG.BIND_VIEW_ERROR} ${e.message}`);
+                logger.error(`${ERROR.BIND_VIEW_ERROR} ${e.message}`);
                 logger.error(e.stack);
             }
         },
@@ -201,7 +202,7 @@ function bindViewHook() {
                 .overload('android.graphics.drawable.Drawable')
                 .call(imageView, drawable.icon);
         } catch (e) {
-            logger.error(`${LOG.BIND_VIEW_ERROR} ${e.message}`);
+            logger.error(`${ERROR.BIND_VIEW_ERROR} ${e.message}`);
             logger.error(e.stack);
         }
     };
@@ -229,7 +230,7 @@ function updateTitleUIHook() {
                 .overload('android.graphics.drawable.Drawable')
                 .call(imageView, drawable.icon);
         } catch (e) {
-            logger.error(`${LOG.UPDATE_TITLE_ERROR} ${e.message}`);
+            logger.error(`${ERROR.UPDATE_TITLE_ERROR} ${e.message}`);
             logger.error(e.stack);
         }
     };
@@ -262,7 +263,7 @@ function openMediaPageHook() {
 
             AppLauncher.startApp(context, intent, 0);
         } catch (e) {
-            logger.error(`${LOG.OPEN_PAGE_ERROR} ${e.message}`);
+            logger.error(`${ERROR.OPEN_PAGE_ERROR} ${e.message}`);
             logger.error(e.stack);
         }
     };
@@ -291,7 +292,7 @@ function getStartIntentHook() {
 
             return intent;
         } catch (e) {
-            logger.error(`${LOG.GET_INTENT_ERROR} ${e.message}`);
+            logger.error(`${ERROR.GET_INTENT_ERROR} ${e.message}`);
             logger.error(e.stack);
         }
         return null;
@@ -321,7 +322,7 @@ function isMediaFocusHook() {
                 return currentPackage === mediaPackage;
             }
         } catch (e) {
-            logger.error(`${LOG.MEDIA_FOCUS_ERROR}: ${e.message}`);
+            logger.error(`${ERROR.MEDIA_FOCUS_ERROR}: ${e.message}`);
             logger.error(e.stack);
         }
 
@@ -361,7 +362,7 @@ function init() {
 
     // Config is required for this agent
     if (!config) {
-        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        logger.error(ERROR.CONFIG_NOT_AVAILABLE);
         return;
     }
 
@@ -369,6 +370,8 @@ function init() {
 }
 
 function main() {
+    logger.info(INFO.STARTING);
+
     init();
 
     // Config validation already done in init()
@@ -387,9 +390,8 @@ function main() {
     getStartIntentHook();
     isMediaFocusHook();
 
-    logger.info(LOG.ACTIVATED);
+    logger.info(INFO.ACTIVATED);
+    logger.info(INFO.STARTED);
 }
 
-Java.perform(() => {
-    main();
-});
+runAgent(main);

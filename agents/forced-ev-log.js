@@ -1,5 +1,12 @@
-// Log message constants for forced-ev-mod agent
-export const LOG = {
+export const INFO = {
+    STARTING: 'Agent starting',
+    STARTED: 'Agent started',
+};
+
+export const DEBUG = {
     ACTIVATED: 'Forced EV mode activated',
-    ERROR_PREFIX: 'Error in activeForcedEv:',
+};
+
+export const ERROR = {
+    ACTIVATION: 'activeForcedEv error:',
 };

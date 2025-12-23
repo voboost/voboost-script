@@ -1,5 +1,6 @@
 import { Logger } from '../lib/logger.js';
-import { LOG } from './low-speed-sound-log.js';
+import { INFO, DEBUG, ERROR } from './low-speed-sound-log.js';
+import { runAgent } from '../lib/utils.js';
 
 const logger = new Logger('low-speed-sound-mod');
 
@@ -43,7 +44,7 @@ function disableLowSpeedSound() {
                 return;
             }
         } catch (e) {
-            logger.error(`${LOG.ERROR} ${e.message}`);
+            logger.error(`${ERROR.DISABLE} ${e.message}`);
             logger.error(e.stack);
         }
 
@@ -56,11 +57,11 @@ function disableLowSpeedSound() {
 }
 
 function main() {
+    logger.info(INFO.STARTING);
+
     disableLowSpeedSound();
 
-    logger.info(LOG.ACTIVATED);
+    logger.info(INFO.STARTED);
 }
 
-Java.perform(function () {
-    main();
-});
+runAgent(main);

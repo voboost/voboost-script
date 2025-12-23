@@ -1,5 +1,5 @@
 import test from 'ava';
-import { isMultiDisplayApp } from '../agents/app-multi-display.js';
+import { isMultiDisplayApp } from '../agents/app-multi-display-mod.js';
 
 test('returns true for app with multiple screens', (t) => {
     const apps = [{ package: 'com.example.multiscreen', screen: ['main', 'third'] }];

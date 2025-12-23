@@ -15,13 +15,9 @@
  */
 
 import { Logger } from '../lib/logger.js';
-import { LOG } from './weather-widget-log.js';
+import { INFO, DEBUG, ERROR } from './weather-widget-log.js';
 
-import {
-    LANGUAGE_CONFIG_PATH,
-    WEATHER_CONFIG_PATH,
-    loadConfig,
-} from '../lib/utils.js';
+import { LANGUAGE_CONFIG_PATH, WEATHER_CONFIG_PATH, loadConfig, runAgent } from '../lib/utils.js';
 
 import {
     ALARM_LEVEL,
@@ -334,7 +330,7 @@ function convertWeatherIdToLauncherCode(owId) {
         return '03';
     }
 
-    logger.debug(`${LOG.WEATHER_CODE_NOT_DEFINED} ${owId}`);
+    logger.debug(`${DEBUG.WEATHER_CODE_NOT_DEFINED} ${owId}`);
     return '00';
 }
 
@@ -949,7 +945,7 @@ function handleWeatherLiveRequest(call, originalRequest, callback) {
             return;
         }
     } catch (e) {
-        logger.error(`${LOG.ERROR_ASYNC_WEATHER} ${e.message}`);
+        logger.error(`${ERROR.ASYNC_WEATHER} ${e.message}`);
     }
 }
 
@@ -976,7 +972,7 @@ function handleAqiForecastRequest(call, originalRequest, callback) {
             callback.onResponse(call, fakeResponse);
         }
     } catch (e) {
-        logger.error(`${LOG.ERROR_AQI} ${e.message}`);
+        logger.error(`${ERROR.AQI} ${e.message}`);
     }
 }
 
@@ -1003,7 +999,7 @@ function handleGeocodeRequest(call, originalRequest, callback) {
             callback.onResponse(call, fakeResponse);
         }
     } catch (e) {
-        logger.error(`${LOG.ERROR_GEOCODE} ${e.message}`);
+        logger.error(`${ERROR.GEOCODE} ${e.message}`);
     }
 }
 
@@ -1013,15 +1009,15 @@ function installRequestInterceptor() {
         const url = originalRequest.url().toString();
 
         if (url.includes('/cp/weather/weather-live-info')) {
-            logger.info(`${LOG.PROXYING_WEATHER} ${url}`);
+            logger.info(`${INFO.PROXYING_WEATHER} ${url}`);
 
             handleWeatherLiveRequest(this, originalRequest, callback);
         } else if (url.includes('/cp/weather/aqi-forecast-info')) {
-            logger.info(LOG.PROXYING_AQI);
+            logger.info(INFO.PROXYING_AQI);
 
             handleAqiForecastRequest(this, originalRequest, callback);
         } else if (url.includes('/cp/geo/regeocode')) {
-            logger.info(LOG.PROXYING_GEOCODE);
+            logger.info(INFO.PROXYING_GEOCODE);
 
             handleGeocodeRequest(this, originalRequest, callback);
         }
@@ -1042,40 +1038,34 @@ function init() {
         Protocol = Java.use('okhttp3.Protocol');
         ResponseProtocol = Protocol.get('http/1.1');
     } catch {
-        logger.error(LOG.ERROR_PROTOCOL);
+        logger.error(ERROR.PROTOCOL);
 
         return;
     }
 }
 
 function main() {
+    logger.info(INFO.STARTING);
+
     init();
 
-    // Load config with full parameter support
-    // Priority: 1) params.config, 2) params.configPath, 3) WEATHER_CONFIG_PATH
     config = loadConfig(WEATHER_CONFIG_PATH, logger);
 
     // Config is required for this agent
     if (!config || !config.api_key) {
-        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        logger.error(ERROR.CONFIG_NOT_AVAILABLE);
         return;
     }
 
-    // Load language config with full parameter support
-    // Priority: 1) params.config, 2) params.configPath, 3) LANGUAGE_CONFIG_PATH
     languageConfig = loadConfig(LANGUAGE_CONFIG_PATH, logger);
 
     installRequestInterceptor();
 
-    logger.info(LOG.PROXY_INSTALLED);
+    logger.debug(DEBUG.PROXY_INSTALLED);
+    logger.info(INFO.STARTED);
 }
 
-// Only run in Frida context
-if (typeof Java !== 'undefined') {
-    Java.perform(() => {
-        main();
-    });
-}
+runAgent(main);
 
 // Export for testing
 export {

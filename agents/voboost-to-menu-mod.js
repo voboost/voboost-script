@@ -1,7 +1,7 @@
 import { Logger } from '../lib/logger.js';
-import { LOG } from './voboost-to-menu-log.js';
+import { INFO, DEBUG, ERROR } from './voboost-to-menu-log.js';
 
-import { LANGUAGE_CONFIG_PATH, loadConfig } from '../lib/utils.js';
+import { LANGUAGE_CONFIG_PATH, loadConfig, runAgent } from '../lib/utils.js';
 
 const logger = new Logger('voboost-to-menu-mod');
 
@@ -44,15 +44,15 @@ function startApp() {
             .overload('android.content.Context', 'android.content.Intent')
             .call(ActivityAnimUtils, context, intent);
 
-        logger.info(`${LOG.APP_LAUNCHED} ${APP_NAME}`);
+        logger.info(`${INFO.APP_LAUNCHED} ${APP_NAME}`);
     } catch (e) {
-        logger.error(`${LOG.ERROR_STARTING_APP} ${e.toString()}`);
+        logger.error(`${ERROR.STARTING_APP} ${e.toString()}`);
     }
 }
 
 function createMenuItem(content) {
     try {
-        logger.debug(LOG.CREATING_BUTTON);
+        logger.debug(DEBUG.CREATING_BUTTON);
 
         // Получаем контейнер LinearLayout внутри OverScrollView
         const menuContainer = content.carSettingBinding.value.menuContainer.value;
@@ -62,7 +62,7 @@ function createMenuItem(content) {
         const systemSettingsButton =
             content.carSettingBinding.value.mainMenuItemSystemSetting.value;
         if (!systemSettingsButton) {
-            logger.error(LOG.SYSTEM_SETTINGS_NOT_FOUND);
+            logger.error(ERROR.SYSTEM_SETTINGS_NOT_FOUND);
             return;
         }
 
@@ -156,13 +156,13 @@ function createMenuItem(content) {
 
         if (insertIndex !== -1) {
             linearLayoutGroup.addView(customButton, insertIndex);
-            logger.info(LOG.BUTTON_ADDED);
+            logger.info(INFO.BUTTON_ADDED);
         } else {
             linearLayoutGroup.addView(customButton);
-            logger.info(LOG.BUTTON_ADDED);
+            logger.info(INFO.BUTTON_ADDED);
         }
     } catch (e) {
-        logger.error(`${LOG.ERROR_CREATING_BUTTON} ${e.toString()}`);
+        logger.error(`${ERROR.CREATING_BUTTON} ${e.toString()}`);
         logger.error(e.stack);
     }
 }
@@ -193,11 +193,11 @@ function init() {
 }
 
 function main() {
+    logger.info(INFO.STARTING);
+
     // --- Основная логика Frida ---
     init();
 
-    // Load language config with full parameter support
-    // Priority: 1) params.config, 2) params.configPath, 3) LANGUAGE_CONFIG_PATH
     languageConfig = loadConfig(LANGUAGE_CONFIG_PATH, logger);
 
     // Language config is optional for this agent - will use defaults if not available
@@ -206,9 +206,8 @@ function main() {
     }
 
     onCreateHook();
-    logger.info(LOG.HOOKS_INSTALLED);
+    logger.info(INFO.HOOKS_INSTALLED);
+    logger.info(INFO.STARTED);
 }
 
-Java.perform(() => {
-    main();
-});
+runAgent(main);

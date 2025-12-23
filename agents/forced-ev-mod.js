@@ -1,5 +1,6 @@
 import { Logger } from '../lib/logger.js';
-import { LOG } from './forced-ev-log.js';
+import { INFO, DEBUG, ERROR } from './forced-ev-log.js';
+import { runAgent } from '../lib/utils.js';
 
 const logger = new Logger('forced-ev-mod');
 
@@ -41,7 +42,7 @@ function activeForcedEv() {
                 return;
             }
         } catch (e) {
-            logger.error(`${LOG.ERROR_PREFIX} ${e.message}`);
+            logger.error(`${ERROR.ACTIVATION} ${e.message}`);
             logger.error(e.stack);
         }
 
@@ -54,11 +55,12 @@ function activeForcedEv() {
 }
 
 function main() {
+    logger.info(INFO.STARTING);
+
     activeForcedEv();
 
-    logger.info(LOG.ACTIVATED);
+    logger.debug(DEBUG.ACTIVATED);
+    logger.info(INFO.STARTED);
 }
 
-Java.perform(function () {
-    main();
-});
+runAgent(main);

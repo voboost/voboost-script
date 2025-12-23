@@ -1,11 +1,19 @@
-export const LOG = {
+export const INFO = {
+    STARTING: 'Agent starting',
+    STARTED: 'Agent started',
+};
+
+export const DEBUG = {
     ACTIVATED: 'Media source mod activated',
-    RECONNECT_ERROR: 'reconnectMedia Error',
-    CHECK_CONNECTED_ERROR: 'checkConnected Error:',
-    BIND_VIEW_ERROR: 'bindViewHook Error',
-    UPDATE_TITLE_ERROR: 'updateTitleUIHook Error',
-    OPEN_PAGE_ERROR: 'openMediaPageHook Error',
-    GET_INTENT_ERROR: 'getStartIntentHook Error',
-    MEDIA_FOCUS_ERROR: 'isMediaFocusHook Error',
+};
+
+export const ERROR = {
+    RECONNECT: 'reconnectMedia error',
+    CHECK_CONNECTED: 'checkConnected error:',
+    BIND_VIEW: 'bindViewHook error',
+    UPDATE_TITLE: 'updateTitleUIHook error',
+    OPEN_PAGE: 'openMediaPageHook error',
+    GET_INTENT: 'getStartIntentHook error',
+    MEDIA_FOCUS: 'isMediaFocusHook error',
     CONFIG_NOT_AVAILABLE: 'Media source config not available',
 };

@@ -1,7 +1,7 @@
 import { Logger } from '../lib/logger.js';
-import { LOG } from './navbar-launcher-log.js';
+import { INFO, DEBUG, ERROR } from './navbar-launcher-log.js';
 
-import { APP_VIEWPORT_CONFIG_PATH, loadConfig } from '../lib/utils.js';
+import { APP_VIEWPORT_CONFIG_PATH, loadConfig, runAgent } from '../lib/utils.js';
 
 const logger = new Logger('navbar-launcher-mod');
 
@@ -49,27 +49,26 @@ function onReceiveHook() {
                 break;
             }
         } catch (e) {
-            logger.error(`${LOG.ERROR_HOOK} ${e.message}`);
+            logger.error(`${ERROR.HOOK} ${e.message}`);
             logger.error(e.stack);
         }
     };
 }
 
 function main() {
-    // Load config with full parameter support
-    // Priority: 1) params.config, 2) params.configPath, 3) APP_VIEWPORT_CONFIG_PATH
+    logger.info(INFO.STARTING);
+
     config = loadConfig(APP_VIEWPORT_CONFIG_PATH, logger);
 
     // Config is required for this agent
     if (!config) {
-        logger.error(LOG.CONFIG_NOT_AVAILABLE);
+        logger.error(ERROR.CONFIG_NOT_AVAILABLE);
         return;
     }
 
     onReceiveHook();
-    logger.info(LOG.HOOK_INSTALLED);
+    logger.info(INFO.HOOK_INSTALLED);
+    logger.info(INFO.STARTED);
 }
 
-Java.perform(function () {
-    main();
-});
+runAgent(main);

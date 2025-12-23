@@ -1,7 +1,13 @@
-// Log message constants for phone-num-mod agent
-export const LOG = {
+export const INFO = {
     STARTING: 'Starting phone number correction',
+    STARTED: 'Agent started',
+};
+
+export const DEBUG = {
     HOOK_INSTALLED: 'Phone number hook installed',
     UTIL_NOT_AVAILABLE: 'bluetoothphone.Util class not available',
-    ERROR_CONTACT_CACHE: 'Error processing contact cache:',
+};
+
+export const ERROR = {
+    CONTACT_CACHE: 'Error processing contact cache:',
 };
