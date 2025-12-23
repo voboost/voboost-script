@@ -5,6 +5,7 @@ import {
     LANGUAGE_CONFIG_PATH,
     MEDIA_SOURCE_CONFIG_PATH,
     loadConfig,
+    runAgent,
 } from '../lib/utils.js';
 
 const logger = new Logger('media-window-mod');
@@ -273,6 +274,4 @@ function main() {
     logger.info(LOG.ACTIVATED);
 }
 
-Java.perform(() => {
-    main();
-});
+runAgent(main);

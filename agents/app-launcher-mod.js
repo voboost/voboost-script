@@ -6,6 +6,7 @@ import {
     APP_CONFIG_PATH,
     loadConfig,
     parseAppConfig,
+    runAgent,
 } from '../lib/utils.js';
 
 const logger = new Logger('app-launcher-mod');
@@ -123,9 +124,7 @@ function patchNavigationIcons() {
 
                 try {
                     PackageManager.getPackageInfo(customApp.package, 0);
-                    logger.debug(
-                        `${LOG.REPLACING_ICON} ${packageName} → ${customApp.package}`
-                    );
+                    logger.debug(`${LOG.REPLACING_ICON} ${packageName} → ${customApp.package}`);
 
                     button.setOnClickListener(NavClickListener.$new());
 
@@ -377,6 +376,4 @@ function main() {
     logger.info(LOG.HOOKS_INSTALLED);
 }
 
-Java.perform(() => {
-    main();
-});
+runAgent(main);

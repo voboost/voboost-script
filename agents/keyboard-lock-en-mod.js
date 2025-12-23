@@ -1,7 +1,7 @@
 import { Logger } from '../lib/logger.js';
 import { LOG } from './keyboard-lock-en-log.js';
 
-import { KEYBOARD_LOCK_EN_CONFIG_PATH, loadConfig } from '../lib/utils.js';
+import { KEYBOARD_LOCK_EN_CONFIG_PATH, loadConfig, runAgent } from '../lib/utils.js';
 
 const logger = new Logger('keyboard-lock-en-mod');
 
@@ -180,8 +180,6 @@ function loadKeyboardHook() {
 function init() {
     ActivityThread = Java.use('android.app.ActivityThread');
 
-    // Load config with full parameter support
-    // Priority: 1) params.config, 2) params.configPath, 3) KEYBOARD_LOCK_EN_CONFIG_PATH
     const config = loadConfig(KEYBOARD_LOCK_EN_CONFIG_PATH, logger);
 
     if (config) {
@@ -201,6 +199,4 @@ function main() {
     logger.info(LOG.HOOKS_INSTALLED);
 }
 
-Java.perform(function () {
-    main();
-});
+runAgent(main);

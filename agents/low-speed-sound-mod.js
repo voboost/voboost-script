@@ -1,5 +1,6 @@
 import { Logger } from '../lib/logger.js';
 import { LOG } from './low-speed-sound-log.js';
+import { runAgent } from '../lib/utils.js';
 
 const logger = new Logger('low-speed-sound-mod');
 
@@ -61,6 +62,4 @@ function main() {
     logger.info(LOG.ACTIVATED);
 }
 
-Java.perform(function () {
-    main();
-});
+runAgent(main);

@@ -1,5 +1,6 @@
 import { Logger } from '../lib/logger.js';
 import { LOG } from './ADAS-activation-log.js';
+import { runAgent } from '../lib/utils.js';
 
 const logger = new Logger('ADAS-activation-mod');
 
@@ -42,6 +43,4 @@ function main() {
     logger.info(LOG.HOOKS_INSTALLED);
 }
 
-Java.perform(() => {
-    main();
-});
+runAgent(main);

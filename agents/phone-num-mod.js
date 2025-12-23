@@ -1,5 +1,6 @@
 import { Logger } from '../lib/logger.js';
 import { LOG } from './phone-num-log.js';
+import { runAgent } from '../lib/utils.js';
 
 const logger = new Logger('phone-num-mod');
 
@@ -61,9 +62,6 @@ function syncContactCache() {
 /**
  * Main entry point for the phone number modification agent.
  * Initializes all hooks and triggers contact cache synchronization.
- *
- * @example
- * Java.perform(() => { main(); });
  */
 function main() {
     logger.info(LOG.STARTING);
@@ -72,12 +70,7 @@ function main() {
     syncContactCache();
 }
 
-// Only run in Frida context
-if (typeof Java !== 'undefined') {
-    Java.perform(() => {
-        main();
-    });
-}
+runAgent(main);
 
 // Export for testing
 export { getAmendNumber };

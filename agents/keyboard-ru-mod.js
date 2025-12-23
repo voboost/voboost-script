@@ -5,6 +5,7 @@ import {
     KEYBOARD_TEMPLATE_PATH,
     KEYBOARD_RU_CONFIG_PATH,
     loadConfig,
+    runAgent,
 } from '../lib/utils.js';
 
 const logger = new Logger('keyboard-ru-mod');
@@ -129,7 +130,9 @@ function resolveResId(resRef, context) {
         const id = resources.getIdentifier(name, type, pkgName);
 
         if (id === 0) {
-            logger.info(`${LOG.RESOURCE_NOT_FOUND} ${resRef} (${type}/${name}) in package ${pkgName}`);
+            logger.info(
+                `${LOG.RESOURCE_NOT_FOUND} ${resRef} (${type}/${name}) in package ${pkgName}`
+            );
         }
         return id;
     } catch (e) {
@@ -398,7 +401,9 @@ function buildRussianKeyboard(xmlId, context, width, height, template) {
                 currentX = keyPositionX;
 
                 if (!softKeyboard.addSoftKey(currentSoftKey)) {
-                    logger.error(`${LOG.FAILED_TO_ADD_KEY} ${keyJson.label || keyJson.id || 'unknown'}`);
+                    logger.error(
+                        `${LOG.FAILED_TO_ADD_KEY} ${keyJson.label || keyJson.id || 'unknown'}`
+                    );
                 }
             }
 
@@ -822,6 +827,4 @@ function main() {
     logger.info(LOG.HOOKS_INSTALLED);
 }
 
-Java.perform(function () {
-    main();
-});
+runAgent(main);

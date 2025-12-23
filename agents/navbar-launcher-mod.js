@@ -1,7 +1,7 @@
 import { Logger } from '../lib/logger.js';
 import { LOG } from './navbar-launcher-log.js';
 
-import { APP_VIEWPORT_CONFIG_PATH, loadConfig } from '../lib/utils.js';
+import { APP_VIEWPORT_CONFIG_PATH, loadConfig, runAgent } from '../lib/utils.js';
 
 const logger = new Logger('navbar-launcher-mod');
 
@@ -56,8 +56,6 @@ function onReceiveHook() {
 }
 
 function main() {
-    // Load config with full parameter support
-    // Priority: 1) params.config, 2) params.configPath, 3) APP_VIEWPORT_CONFIG_PATH
     config = loadConfig(APP_VIEWPORT_CONFIG_PATH, logger);
 
     // Config is required for this agent
@@ -70,6 +68,4 @@ function main() {
     logger.info(LOG.HOOK_INSTALLED);
 }
 
-Java.perform(function () {
-    main();
-});
+runAgent(main);

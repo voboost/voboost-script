@@ -5,6 +5,7 @@ import {
     LANGUAGE_CONFIG_PATH,
     APP_VIEWPORT_CONFIG_PATH,
     loadConfig,
+    runAgent,
 } from '../lib/utils.js';
 
 const logger = new Logger('app-viewport-mod');
@@ -115,8 +116,6 @@ function init() {
 function main() {
     init();
 
-    // Load config with full parameter support
-    // Priority: 1) params.config, 2) params.configPath, 3) APP_VIEWPORT_CONFIG_PATH
     config = loadConfig(APP_VIEWPORT_CONFIG_PATH, logger);
 
     // Config is required for this agent
@@ -135,6 +134,4 @@ function main() {
     logger.info(LOG.HOOKS_INSTALLED);
 }
 
-Java.perform(function () {
-    main();
-});
+runAgent(main);

@@ -1,5 +1,6 @@
 import { Logger } from '../lib/logger.js';
 import { LOG } from './forced-ev-log.js';
+import { runAgent } from '../lib/utils.js';
 
 const logger = new Logger('forced-ev-mod');
 
@@ -59,6 +60,4 @@ function main() {
     logger.info(LOG.ACTIVATED);
 }
 
-Java.perform(function () {
-    main();
-});
+runAgent(main);

@@ -1,5 +1,11 @@
 import test from 'ava';
-import { getConfig, loadConfig, parseConfig } from '../lib/utils.js';
+import {
+    getConfig,
+    loadConfig,
+    parseConfig,
+    mockRpcForTests,
+    cleanupMockRpc,
+} from '../lib/utils.js';
 
 // Store original console.log
 const originalConsoleLog = console.log;
@@ -7,11 +13,11 @@ const originalConsoleLog = console.log;
 // === Test Helpers ===
 
 function setFridaParams(params) {
-    globalThis.__frida_params__ = params;
+    mockRpcForTests(params);
 }
 
 function clearFridaParams() {
-    delete globalThis.__frida_params__;
+    cleanupMockRpc();
 }
 
 function createMockLogger() {
@@ -93,7 +99,7 @@ test('parseConfig returns null for empty string', (t) => {
 
 test.serial('getConfig returns stringified config from params.config object', (t) => {
     setFridaParams({
-        config: { api_key: 'test-key', units: 'metric' }
+        config: { api_key: 'test-key', units: 'metric' },
     });
 
     const result = getConfig('/default/path.json');
@@ -106,11 +112,9 @@ test.serial('getConfig returns stringified config from params.config object', (t
 test.serial('getConfig handles nested config objects', (t) => {
     setFridaParams({
         config: {
-            apps: [
-                { package: 'com.example', name: ['App', 'Приложение'] }
-            ],
-            settings: { enabled: true }
-        }
+            apps: [{ package: 'com.example', name: ['App', 'Приложение'] }],
+            settings: { enabled: true },
+        },
     });
 
     const result = getConfig('/default/path.json');
@@ -133,7 +137,7 @@ test.serial('getConfig handles empty config object', (t) => {
 
 test.serial('getConfig returns config string as-is', (t) => {
     setFridaParams({
-        config: '{"api_key":"test-key"}'
+        config: '{"api_key":"test-key"}',
     });
 
     const result = getConfig('/default/path.json');
@@ -146,7 +150,7 @@ test.serial('getConfig returns config string as-is', (t) => {
 test.serial('getConfig prioritizes params.config over params.configPath', (t) => {
     setFridaParams({
         config: { source: 'direct' },
-        configPath: '/custom/path.json'
+        configPath: '/custom/path.json',
     });
 
     const result = getConfig('/default/path.json');
@@ -186,7 +190,7 @@ test.serial('getConfig skips undefined config value', (t) => {
 
 test.serial('loadConfig returns parsed object from params.config', (t) => {
     setFridaParams({
-        config: { api_key: 'test-key', lang: 'ru' }
+        config: { api_key: 'test-key', lang: 'ru' },
     });
 
     const result = loadConfig('/default/path.json');
@@ -201,8 +205,8 @@ test.serial('loadConfig handles complex weather config', (t) => {
         config: {
             api_key: 'openweathermap-key',
             units: 'metric',
-            lang: 'ru'
-        }
+            lang: 'ru',
+        },
     });
 
     const result = loadConfig('/data/local/tmp/test/weather-config.json');
@@ -222,10 +226,10 @@ test.serial('loadConfig handles complex apps config', (t) => {
                     name: ['Яндекс Музыка', 'Yandex Music'],
                     replace_bar: true,
                     original_package: ['com.qinggan.app.music'],
-                    package_sub_type: 'MUSIC'
-                }
-            ]
-        }
+                    package_sub_type: 'MUSIC',
+                },
+            ],
+        },
     });
 
     const result = loadConfig('/data/local/tmp/test/apps-config.json');
@@ -244,10 +248,10 @@ test.serial('loadConfig handles complex media config', (t) => {
                     pageName: 'ru.yandex.music',
                     servicePageName: 'ru.yandex.music',
                     serviceName: 'ru.yandex.music.MusicService',
-                    autoPlay: true
-                }
-            }
-        }
+                    autoPlay: true,
+                },
+            },
+        },
     });
 
     const result = loadConfig('/data/local/tmp/test/media-source-config.json');
@@ -270,7 +274,7 @@ test.serial('loadConfig returns null when no config available', (t) => {
 
 test.serial('loadConfig returns null for invalid JSON string config', (t) => {
     setFridaParams({
-        config: 'not valid json {'
+        config: 'not valid json {',
     });
 
     const result = loadConfig('/default/path.json');
@@ -284,7 +288,7 @@ test.serial('loadConfig uses custom logger when provided', (t) => {
     const mockLogger = createMockLogger();
 
     setFridaParams({
-        config: { test: true }
+        config: { test: true },
     });
 
     loadConfig('/default/path.json', mockLogger);
@@ -292,7 +296,7 @@ test.serial('loadConfig uses custom logger when provided', (t) => {
     // Should have logged something
     t.true(mockLogger.logs.length > 0);
     // Should have info level log for successful load
-    t.true(mockLogger.logs.some(l => l.level === 'info'));
+    t.true(mockLogger.logs.some((l) => l.level === 'info'));
 });
 
 test.serial('loadConfig logs debug when no config available', (t) => {
@@ -303,7 +307,7 @@ test.serial('loadConfig logs debug when no config available', (t) => {
     loadConfig(null, mockLogger);
 
     // Should have logged debug message about no config
-    t.true(mockLogger.logs.some(l => l.level === 'debug'));
+    t.true(mockLogger.logs.some((l) => l.level === 'debug'));
 });
 
 // === Real-World Config Scenarios ===
@@ -314,8 +318,8 @@ test.serial('weather widget config scenario', (t) => {
         config: {
             api_key: 'abc123def456',
             units: 'metric',
-            lang: 'ru'
-        }
+            lang: 'ru',
+        },
     });
 
     const config = loadConfig('/data/local/tmp/test/weather-config.json');
@@ -340,7 +344,7 @@ test.serial('keyboard template config scenario', (t) => {
                     repeat: false,
                     balloon: true,
                     qwerty: true,
-                    qwerty_uppercase: false
+                    qwerty_uppercase: false,
                 },
                 rows: [
                     {
@@ -348,12 +352,12 @@ test.serial('keyboard template config scenario', (t) => {
                         start_pos_y: 0.0,
                         keys: [
                             { code: 45, label: 'й', width: 0.1 },
-                            { code: 51, label: 'ц', width: 0.1 }
-                        ]
-                    }
-                ]
-            }
-        }
+                            { code: 51, label: 'ц', width: 0.1 },
+                        ],
+                    },
+                ],
+            },
+        },
     });
 
     const config = loadConfig('/data/local/tmp/test/skb-qwerty-ru-no-voice.json');
@@ -377,16 +381,16 @@ test.serial('app launcher config scenario', (t) => {
                     icon_big: 'base64encodedicon...',
                     replace_bar: true,
                     original_package: ['com.qinggan.app.music'],
-                    package_sub_type: 'MUSIC'
+                    package_sub_type: 'MUSIC',
                 },
                 {
                     package: 'com.spotify.music',
                     name: ['Spotify', 'Spotify'],
                     replace_bar: false,
-                    package_sub_type: 'MUSIC'
-                }
-            ]
-        }
+                    package_sub_type: 'MUSIC',
+                },
+            ],
+        },
     });
 
     const config = loadConfig('/data/local/tmp/test/apps-config.json');
@@ -404,9 +408,9 @@ test.serial('missing required field scenario - weather without api_key', (t) => 
     setFridaParams({
         config: {
             units: 'metric',
-            lang: 'ru'
+            lang: 'ru',
             // Missing api_key!
-        }
+        },
     });
 
     const config = loadConfig('/data/local/tmp/test/weather-config.json');
