@@ -273,7 +273,6 @@ function main() {
     openPageHook();
     isMediaFocusHook();
 
-    logger.info(INFO.ACTIVATED);
     logger.info(INFO.STARTED);
 }
 

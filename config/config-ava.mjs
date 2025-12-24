@@ -10,8 +10,16 @@ export default {
     tap: false,
     // Run files in parallel but collect output properly
     concurrency: 512,
-    // Only show test failures
     reporter: 'verbose',
 
     files: ['test/**/*.test.js'],
+    // Load test setup files before running tests
+    // Order matters: test-logger.js must be first to patch Logger before other mocks
+    require: ['./lib/test-logger.js'],
+
+    // Set test environment variables
+    environmentVariables: {
+        LOG: process.env.LOG || 'error',
+        NODE_ENV: 'test',
+    },
 };

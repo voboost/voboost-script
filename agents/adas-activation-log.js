@@ -3,9 +3,7 @@ export const INFO = {
     STARTED: 'Agent started',
 };
 
-export const DEBUG = {
-    HOOKS_INSTALLED: 'ADAS activation hooks installed',
-};
+export const DEBUG = {};
 
 export const ERROR = {
     SUBSCRIBE_INFO: 'doQuerySubscribeInfo error:',

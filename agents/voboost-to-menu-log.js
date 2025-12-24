@@ -6,7 +6,6 @@ export const INFO = {
 };
 
 export const DEBUG = {
-    HOOKS_INSTALLED: 'Menu mod hooks installed',
     CREATING_BUTTON: 'Creating custom button',
 };
 

@@ -6,6 +6,10 @@ import {
     MEDIA_SOURCE_CONFIG_PATH,
     loadConfig,
     runAgent,
+    getFieldValue,
+    setFieldValue,
+    scheduleOnMainThreadSafe,
+    getAndroidContext,
 } from '../lib/utils.js';
 
 const logger = new Logger('media-source-mod');
@@ -14,8 +18,6 @@ let MediaBeanInter = null;
 let MediaTabHolder = null;
 let MediaEnum = null;
 let BigMediaView97cV2 = null;
-let ContextUtils = null;
-let ContextClass = null;
 
 let WECAR_FLOW = null;
 let XMLA_MUSIC = null;
@@ -38,18 +40,18 @@ function changeMediaEnum() {
 
         const serviceMedia = service.media;
 
-        serviceMedia.pageName.value = media.pageName;
+        setFieldValue(serviceMedia, 'pageName', media.pageName);
 
         if (media.servicePageName !== undefined && media.servicePageName !== '') {
-            serviceMedia.servicePageName.value = media.servicePageName;
+            setFieldValue(serviceMedia, 'servicePageName', media.servicePageName);
         }
 
         if (media.serviceName !== undefined && media.serviceName !== '') {
-            serviceMedia.serviceName.value = media.serviceName;
+            setFieldValue(serviceMedia, 'serviceName', media.serviceName);
         }
 
         if (media.clientId !== undefined && media.clientId !== '') {
-            serviceMedia.clientId.value = media.clientId;
+            setFieldValue(serviceMedia, 'clientId', media.clientId);
         }
 
         service.enable = true;
@@ -62,7 +64,10 @@ function createIconDrawable() {
     const BitmapFactory = Java.use('android.graphics.BitmapFactory');
     const BitmapDrawable = Java.use('android.graphics.drawable.BitmapDrawable');
 
-    const context = Java.cast(ContextUtils.context.value, ContextClass);
+    const context = getAndroidContext(logger);
+    if (!context) {
+        return {};
+    }
 
     const drawable = {};
 
@@ -257,7 +262,11 @@ function openMediaPageHook() {
         }
 
         try {
-            const context = Java.cast(ContextUtils.context.value, ContextClass);
+            const context = getAndroidContext(logger);
+            if (!context) {
+                return;
+            }
+
             const intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
             intent.addFlags(0x10000000);
 
@@ -287,9 +296,12 @@ function getStartIntentHook() {
         }
 
         try {
-            const context = Java.cast(ContextUtils.context.value, ContextClass);
-            const intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
+            const context = getAndroidContext(logger);
+            if (!context) {
+                return null;
+            }
 
+            const intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
             return intent;
         } catch (e) {
             logger.error(`${ERROR.GET_INTENT_ERROR} ${e.message}`);
@@ -318,7 +330,7 @@ function isMediaFocusHook() {
                 if (!service.enable) continue;
                 if (service.name !== mediaName) continue;
                 const currentPackage = audioPolicyInfo.getPackageName();
-                const mediaPackage = service.media.pageName.value;
+                const mediaPackage = getFieldValue(service.media, 'pageName');
                 return currentPackage === mediaPackage;
             }
         } catch (e) {
@@ -339,8 +351,6 @@ function init() {
     );
     MediaEnum = Java.use('com.qinggan.media.helper.MediaEnum');
     BigMediaView97cV2 = Java.use('com.pateo.voyah.mediaCard.home.h97cV2.BigMediaView97cV2');
-    ContextUtils = Java.use('com.qinggan.app.service.utils.ContextUtils');
-    ContextClass = Java.use('android.content.Context');
 
     WECAR_FLOW = MediaEnum.WECAR_FLOW.value;
     XMLA_MUSIC = MediaEnum.XMLA_MUSIC.value;
@@ -377,12 +387,8 @@ function main() {
     // Config validation already done in init()
     changeMediaEnum();
 
-    Java.scheduleOnMainThread(() => {
-        reconnectMedia();
-    });
-    Java.scheduleOnMainThread(() => {
-        changeTabIcon();
-    });
+    scheduleOnMainThreadSafe(reconnectMedia, logger);
+    scheduleOnMainThreadSafe(changeTabIcon, logger);
 
     bindViewHook();
     updateTitleUIHook();
@@ -390,7 +396,6 @@ function main() {
     getStartIntentHook();
     isMediaFocusHook();
 
-    logger.info(INFO.ACTIVATED);
     logger.info(INFO.STARTED);
 }
 

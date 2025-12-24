@@ -3,9 +3,7 @@ export const INFO = {
     STARTED: 'Agent started',
 };
 
-export const DEBUG = {
-    ACTIVATED: 'Media window mod activated',
-};
+export const DEBUG = {};
 
 export const ERROR = {
     CHANGE_ENUM: 'changeMediaEnum error',

@@ -7,7 +7,6 @@ export const INFO = {
 };
 
 export const DEBUG = {
-    PROXY_INSTALLED: 'Weather + Forecast proxy installed (8-day, sync & async)',
     WEATHER_CODE_NOT_DEFINED: 'Weather code not defined:',
 };
 

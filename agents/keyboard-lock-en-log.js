@@ -4,7 +4,6 @@ export const INFO = {
 };
 
 export const DEBUG = {
-    HOOKS_INSTALLED: 'Keyboard lock EN hooks installed',
     VOICE_DISABLED: 'Voice disabled:',
 };
 

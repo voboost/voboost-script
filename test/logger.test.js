@@ -1,5 +1,9 @@
 import test from 'ava';
 import { Logger } from '../lib/logger.js';
+import { enableAllLogging } from '../lib/test-logger.js';
+
+// Enable all logging for logger tests
+enableAllLogging();
 
 // Store original console.log
 const originalConsoleLog = console.log;

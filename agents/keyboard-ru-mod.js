@@ -4,6 +4,7 @@ import { INFO, DEBUG, ERROR } from './keyboard-ru-log.js';
 import {
     KEYBOARD_TEMPLATE_PATH,
     KEYBOARD_RU_CONFIG_PATH,
+    setFieldValue,
     loadConfig,
     runAgent,
 } from '../lib/utils.js';
@@ -460,7 +461,7 @@ function switchSoftKeyMode(keyRows, isUpper) {
 
 function disableVoice() {
     const QGInputConfig = Java.use('com.qinggan.app.qgime.QGInputConfig');
-    QGInputConfig.DISABLE_VOICE.value = true;
+    setFieldValue(QGInputConfig, 'DISABLE_VOICE', true);
 }
 
 function resetCachedSkb() {
@@ -822,13 +823,18 @@ function main() {
     processKeyHook();
     switchQwertyModeHook();
     enableToggleStatesHook();
-    loadKeyboardHook();
+
+    try {
+        loadKeyboardHook();
+    } catch (e) {
+        logger.error('loadKeyboardHook failed: ' + e.message);
+    }
+
     getKeyLabelHook();
 
     disableVoice();
     resetCachedSkb();
 
-    logger.info(INFO.HOOKS_INSTALLED);
     logger.info(INFO.STARTED);
 }
 

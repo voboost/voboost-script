@@ -7,6 +7,8 @@ import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
 import { fileURLToPath } from 'url';
+import * as acorn from 'acorn';
+import * as walk from 'acorn-walk';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,7 +17,6 @@ const BUILD_DIR = path.resolve(__dirname, '../build');
 
 // Check if build directory exists
 if (!fs.existsSync(BUILD_DIR)) {
-    console.warn('Build directory does not exist. Run "npm run build" first.');
     process.exit(0);
 }
 
@@ -26,7 +27,6 @@ const builtFiles = fs
     .sort();
 
 if (builtFiles.length === 0) {
-    console.warn('No built files found. Run "npm run build" first.');
     process.exit(0);
 }
 
@@ -128,5 +128,112 @@ test('none variant has no logging code', (t) => {
                 `${noneFile} (${noneSize} bytes) should be <= ${debugFile} (${debugSize} bytes)`
             );
         }
+    }
+});
+
+// Helper to check Logger methods using AST
+function checkLoggerMethods(code, expectedMethods) {
+    try {
+        const ast = acorn.parse(code, {
+            ecmaVersion: 'latest',
+            sourceType: 'script',
+        });
+
+        const foundMethods = new Set();
+
+        walk.simple(ast, {
+            ClassDeclaration(node) {
+                // Check all classes since Logger might be inlined with a different name
+                // Look for methods that match Logger's signature
+                for (const method of node.body.body) {
+                    if (method.type === 'MethodDefinition' && method.key.type === 'Identifier') {
+                        if (['error', 'info', 'debug'].includes(method.key.name)) {
+                            foundMethods.add(method.key.name);
+                        }
+                    }
+                }
+            },
+        });
+
+        // Check if all expected methods are found
+        for (const method of expectedMethods) {
+            if (!foundMethods.has(method)) {
+                return false;
+            }
+        }
+
+        // Check if no unexpected methods are found
+        for (const method of foundMethods) {
+            if (!expectedMethods.includes(method) && ['error', 'info', 'debug'].includes(method)) {
+                return false;
+            }
+        }
+
+        return true;
+    } catch {
+        // If AST parsing fails, fall back to regex for unminified files
+        const hasError = /error\s*\(/.test(code);
+        const hasInfo = /info\s*\(/.test(code);
+        const hasDebug = /debug\s*\(/.test(code);
+
+        if (expectedMethods.includes('error') && !hasError) return false;
+        if (expectedMethods.includes('info') && !hasInfo) return false;
+        if (expectedMethods.includes('debug') && !hasDebug) return false;
+
+        if (!expectedMethods.includes('info') && hasInfo) return false;
+        if (!expectedMethods.includes('debug') && hasDebug) return false;
+
+        return true;
+    }
+}
+
+// Test that _1error.js Logger class has no info or debug methods (only check mod files)
+test('_1error.js Logger class has no info or debug methods', (t) => {
+    const errorFiles = builtFiles.filter((f) => f.endsWith('_1error.js') && f.includes('-mod'));
+    t.true(errorFiles.length > 0, 'Should have at least one _1error.js mod file');
+
+    for (const file of errorFiles) {
+        const filePath = path.join(BUILD_DIR, file);
+        const code = fs.readFileSync(filePath, 'utf8');
+
+        // Check that Logger class only has error() method
+        const hasCorrectMethods = checkLoggerMethods(code, ['error']);
+
+        t.true(hasCorrectMethods, `${file} should only contain error() method in Logger class`);
+    }
+});
+
+// Test that _2info.js Logger class has no debug method (only check mod files)
+test('_2info.js Logger class has no debug method', (t) => {
+    const infoFiles = builtFiles.filter((f) => f.endsWith('_2info.js') && f.includes('-mod'));
+    t.true(infoFiles.length > 0, 'Should have at least one _2info.js mod file');
+
+    for (const file of infoFiles) {
+        const filePath = path.join(BUILD_DIR, file);
+        const code = fs.readFileSync(filePath, 'utf8');
+
+        // Check that Logger class has error() and info() methods but not debug()
+        const hasCorrectMethods = checkLoggerMethods(code, ['error', 'info']);
+
+        t.true(
+            hasCorrectMethods,
+            `${file} should contain error() and info() methods but not debug() in Logger class`
+        );
+    }
+});
+
+// Test that _3debug.js Logger class has all methods (only check mod files, not log files)
+test('_3debug.js Logger class has all logging methods', (t) => {
+    const debugFiles = builtFiles.filter((f) => f.endsWith('_3debug.js') && f.includes('-mod'));
+    t.true(debugFiles.length > 0, 'Should have at least one _3debug.js mod file');
+
+    for (const file of debugFiles) {
+        const filePath = path.join(BUILD_DIR, file);
+        const code = fs.readFileSync(filePath, 'utf8');
+
+        // Check that Logger class has all methods
+        const hasCorrectMethods = checkLoggerMethods(code, ['error', 'info', 'debug']);
+
+        t.true(hasCorrectMethods, `${file} should contain all logging methods in Logger class`);
     }
 });

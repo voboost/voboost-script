@@ -1,7 +1,13 @@
 import { Logger } from '../lib/logger.js';
 import { INFO, DEBUG, ERROR } from './keyboard-lock-en-log.js';
 
-import { KEYBOARD_LOCK_EN_CONFIG_PATH, loadConfig, runAgent } from '../lib/utils.js';
+import {
+    KEYBOARD_LOCK_EN_CONFIG_PATH,
+    setFieldValue,
+    getFieldValue,
+    loadConfig,
+    runAgent,
+} from '../lib/utils.js';
 
 const logger = new Logger('keyboard-lock-en-mod');
 
@@ -47,9 +53,11 @@ function createDrawableIons(configContent) {
 
 function disableVoice() {
     const QGInputConfig = Java.use('com.qinggan.app.qgime.QGInputConfig');
-    QGInputConfig.DISABLE_VOICE.value = true;
 
-    logger.debug(`${DEBUG.VOICE_DISABLED} ${QGInputConfig.DISABLE_VOICE.value}`);
+    // QGInputConfig.DISABLE_VOICE.value = true;
+    setFieldValue(QGInputConfig, 'DISABLE_VOICE', true);
+
+    logger.debug(`${DEBUG.VOICE_DISABLED} ${getFieldValue(QGInputConfig, 'DISABLE_VOICE')}`);
 }
 
 function resetCachedSkb() {
@@ -191,14 +199,17 @@ function main() {
     logger.info(INFO.STARTING);
 
     init();
-
     saveInputModeHook();
-    loadKeyboardHook();
+
+    try {
+        loadKeyboardHook();
+    } catch (e) {
+        logger.error('loadKeyboardHook failed: ' + e.message);
+    }
 
     disableVoice();
     resetCachedSkb();
 
-    logger.info(INFO.HOOKS_INSTALLED);
     logger.info(INFO.STARTED);
 }
 

@@ -3,9 +3,7 @@ export const INFO = {
     STARTED: 'Agent started',
 };
 
-export const DEBUG = {
-    HOOK_INSTALLED: 'Navbar launcher hook installed',
-};
+export const DEBUG = {};
 
 export const ERROR = {
     HOOK: 'Error in hook:',

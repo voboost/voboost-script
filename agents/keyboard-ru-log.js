@@ -4,7 +4,6 @@ export const INFO = {
 };
 
 export const DEBUG = {
-    HOOKS_INSTALLED: 'Russian keyboard hooks installed',
     INVALID_RESOURCE_REF: 'Invalid resource reference:',
     RESOURCE_NOT_FOUND: 'Resource not found:',
     KEY_TOO_SMALL: 'Key too small:',

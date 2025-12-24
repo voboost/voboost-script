@@ -5,7 +5,6 @@ export const INFO = {
 };
 
 export const DEBUG = {
-    HOOKS_INSTALLED: 'App launcher hooks installed',
     BITMAPS_CREATED: 'Bitmaps created',
     ADDING_TO_ALL_APPS: 'Adding to AllApps:',
     APP_NOT_INSTALLED: 'App not installed:',
@@ -28,6 +27,6 @@ export const ERROR = {
     GET_ALL_APPS_HOOK: 'getAllApps hook error:',
     ON_BIND_VIEW_HOLDER_HOOK: 'onBindViewHolder hook error:',
     NAVIGATION_BAR_HOOKS: 'NavigationBar hooks error:',
-    GENERIC: 'Error:',
+    GENERIC: 'Failed to initialize Java classes:',
     CONFIG_NOT_AVAILABLE: 'Apps config not available',
 };

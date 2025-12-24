@@ -4,7 +4,6 @@ export const INFO = {
 };
 
 export const DEBUG = {
-    HOOK_INSTALLED: 'Multi-display hook installed',
     CHECKING_STATUS: 'Checking multi-display status for:',
 };
 

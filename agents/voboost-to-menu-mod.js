@@ -1,7 +1,7 @@
 import { Logger } from '../lib/logger.js';
 import { INFO, DEBUG, ERROR } from './voboost-to-menu-log.js';
 
-import { LANGUAGE_CONFIG_PATH, loadConfig, runAgent } from '../lib/utils.js';
+import { LANGUAGE_CONFIG_PATH, loadConfig, runAgent, registerClassSafe } from '../lib/utils.js';
 
 const logger = new Logger('voboost-to-menu-mod');
 
@@ -181,15 +181,19 @@ function init() {
     ActivityAnimUtils = Java.use('com.pateo.material.anim.ActivityAnimUtils');
     const View$OnClickListener = Java.use('android.view.View$OnClickListener');
 
-    CustomOnClickListener = Java.registerClass({
-        name: 'com.qinggan.frida.CustomClickListener',
-        implements: [View$OnClickListener],
-        methods: {
-            onClick: function () {
-                startApp();
+    CustomOnClickListener = registerClassSafe(
+        {
+            name: 'com.qinggan.frida.CustomClickListener',
+            implements: [View$OnClickListener],
+            methods: {
+                onClick: function () {
+                    startApp();
+                },
             },
         },
-    });
+        'ru.voboost.stub.ClickListener',
+        logger
+    );
 }
 
 function main() {
@@ -206,7 +210,6 @@ function main() {
     }
 
     onCreateHook();
-    logger.info(INFO.HOOKS_INSTALLED);
     logger.info(INFO.STARTED);
 }
 

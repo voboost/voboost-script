@@ -38,9 +38,9 @@ function main() {
     logger.info(INFO.STARTING);
 
     init();
-
     doQuerySubscribeInfoHook();
     doQueryNOALearnInfoHook();
+
     logger.info(INFO.STARTED);
 }
 

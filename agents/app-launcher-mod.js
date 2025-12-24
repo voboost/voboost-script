@@ -7,6 +7,8 @@ import {
     loadConfig,
     parseAppConfig,
     runAgent,
+    registerClassSafe,
+    scheduleOnMainThreadSafe,
 } from '../lib/utils.js';
 
 const logger = new Logger('app-launcher-mod');
@@ -153,7 +155,7 @@ function patchNavigationIcons() {
 }
 
 function updateMainApps() {
-    Java.scheduleOnMainThread(() => {
+    scheduleOnMainThreadSafe(() => {
         try {
             const instance = AllAppDataManager.getInstance();
             const mainApps = instance.mMainAllApps.value; // ← прямой доступ к списку
@@ -303,46 +305,54 @@ function init() {
 
     const View$OnClickListener = Java.use('android.view.View$OnClickListener');
 
-    CustomClickListener = Java.registerClass({
-        name: 'com.qinggan.frida.CustomClickListener',
-        implements: [View$OnClickListener],
-        methods: {
-            onClick: function (view) {
-                try {
-                    // Получаем AppBean из тега
-                    const appBeanNative = view.getTag();
-                    const appBean = Java.cast(appBeanNative, AppBean);
+    CustomClickListener = registerClassSafe(
+        {
+            name: 'com.qinggan.frida.CustomClickListener',
+            implements: [View$OnClickListener],
+            methods: {
+                onClick: function (view) {
+                    try {
+                        // Получаем AppBean из тега
+                        const appBeanNative = view.getTag();
+                        const appBean = Java.cast(appBeanNative, AppBean);
 
-                    if (appBean) {
-                        const packageName = appBean.getPackageName();
-                        logger.debug(`${DEBUG.CLICK_ON} ${packageName}`);
+                        if (appBean) {
+                            const packageName = appBean.getPackageName();
+                            logger.debug(`${DEBUG.CLICK_ON} ${packageName}`);
 
-                        startApp(packageName);
+                            startApp(packageName);
+                        }
+                    } catch (e) {
+                        logger.error(`${ERROR.CUSTOM_CLICK} ${e.message}`);
                     }
-                } catch (e) {
-                    logger.error(`${ERROR.CUSTOM_CLICK} ${e.message}`);
-                }
+                },
             },
         },
-    });
+        'ru.voboost.stub.ClickListener',
+        logger
+    );
 
-    NavClickListener = Java.registerClass({
-        name: 'com.qinggan.frida.NavClickListener',
-        implements: [View$OnClickListener],
-        methods: {
-            onClick: function (view) {
-                try {
-                    const tagPkg = view.getTag(R_id.screen_up_item_package.value);
-                    if (!tagPkg) return;
+    NavClickListener = registerClassSafe(
+        {
+            name: 'com.qinggan.frida.NavClickListener',
+            implements: [View$OnClickListener],
+            methods: {
+                onClick: function (view) {
+                    try {
+                        const tagPkg = view.getTag(R_id.screen_up_item_package.value);
+                        if (!tagPkg) return;
 
-                    const packageName = tagPkg.toString();
-                    startApp(packageName);
-                } catch (e) {
-                    logger.error(`${ERROR.NAV_CLICK} ${e.message}`);
-                }
+                        const packageName = tagPkg.toString();
+                        startApp(packageName);
+                    } catch (e) {
+                        logger.error(`${ERROR.NAV_CLICK} ${e.message}`);
+                    }
+                },
             },
         },
-    });
+        'ru.voboost.stub.ClickListener',
+        logger
+    );
 }
 
 function main() {
@@ -375,7 +385,6 @@ function main() {
     //изминение стандартного списка приложений
     updateMainApps();
 
-    logger.info(INFO.HOOKS_INSTALLED);
     logger.info(INFO.STARTED);
 }
 
