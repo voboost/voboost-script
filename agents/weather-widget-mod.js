@@ -1061,7 +1061,6 @@ function main() {
 
     installRequestInterceptor();
 
-    logger.debug(DEBUG.PROXY_INSTALLED);
     logger.info(INFO.STARTED);
 }
 

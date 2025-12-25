@@ -67,7 +67,6 @@ function main() {
     }
 
     onReceiveHook();
-    logger.info(INFO.HOOK_INSTALLED);
     logger.info(INFO.STARTED);
 }
 

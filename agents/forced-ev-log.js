@@ -3,9 +3,7 @@ export const INFO = {
     STARTED: 'Agent started',
 };
 
-export const DEBUG = {
-    ACTIVATED: 'Forced EV mode activated',
-};
+export const DEBUG = {};
 
 export const ERROR = {
     ACTIVATION: 'activeForcedEv error:',

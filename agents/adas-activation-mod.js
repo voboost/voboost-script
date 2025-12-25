@@ -1,8 +1,8 @@
 import { Logger } from '../lib/logger.js';
-import { INFO, DEBUG, ERROR } from './ADAS-activation-log.js';
+import { INFO, DEBUG, ERROR } from './adas-activation-log.js';
 import { runAgent } from '../lib/utils.js';
 
-const logger = new Logger('ADAS-activation-mod');
+const logger = new Logger('adas-activation-mod');
 
 let BaiduProviderUtil = null;
 
@@ -38,9 +38,9 @@ function main() {
     logger.info(INFO.STARTING);
 
     init();
-
     doQuerySubscribeInfoHook();
     doQueryNOALearnInfoHook();
+
     logger.info(INFO.STARTED);
 }
 

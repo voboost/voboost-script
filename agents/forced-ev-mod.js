@@ -59,7 +59,6 @@ function main() {
 
     activeForcedEv();
 
-    logger.debug(DEBUG.ACTIVATED);
     logger.info(INFO.STARTED);
 }
 

@@ -101,7 +101,6 @@ function main() {
 
     hookMultiDisplayWhitelist();
 
-    logger.info(INFO.HOOK_INSTALLED);
     logger.info(INFO.STARTED);
 }
 

@@ -133,7 +133,6 @@ function main() {
 
     onDisplayChangedHook();
 
-    logger.info(INFO.HOOKS_INSTALLED);
     logger.info(INFO.STARTED);
 }
 

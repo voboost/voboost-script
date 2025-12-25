@@ -4,9 +4,7 @@ export const INFO = {
     APPLIED_SETTINGS: 'Applied settings to',
 };
 
-export const DEBUG = {
-    HOOKS_INSTALLED: 'Viewport mod hooks installed',
-};
+export const DEBUG = {};
 
 export const ERROR = {
     APPLYING_SETTINGS: 'Error applying settings:',
