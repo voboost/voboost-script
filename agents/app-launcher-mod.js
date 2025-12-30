@@ -9,6 +9,7 @@ import {
     runAgent,
     registerClassSafe,
     scheduleOnMainThreadSafe,
+    getFieldValue,
 } from '../lib/utils.js';
 
 const logger = new Logger('app-launcher-mod');
@@ -104,17 +105,17 @@ function addCustomApp(originalApps) {
 function patchNavigationIcons() {
     Java.choose(NavigationBar.$className, {
         onMatch: function (instance) {
-            logger.debug(`${DEBUG.NAVIGATION_BAR_FOUND} ${instance.mScreenId.value}`);
+            logger.debug(`${DEBUG.NAVIGATION_BAR_FOUND} ${getFieldValue(instance, 'mScreenId')}`);
 
-            if (instance.mScreenId.value !== 0) return;
+            if (getFieldValue(instance, 'mScreenId') !== 0) return;
 
-            const mScreenUpItemView1 = instance.mScreenUpItemView1.value;
-            const mScreenUpItemView2 = instance.mScreenUpItemView2.value;
+            const mScreenUpItemView1 = getFieldValue(instance, 'mScreenUpItemView1');
+            const mScreenUpItemView2 = getFieldValue(instance, 'mScreenUpItemView2');
 
             [mScreenUpItemView1, mScreenUpItemView2].forEach((button) => {
                 if (!button) return;
 
-                const tagPackage = button.getTag(R_id.screen_up_item_package.value);
+                const tagPackage = button.getTag(getFieldValue(R_id, 'screen_up_item_package'));
                 if (!tagPackage) return;
 
                 const packageName = tagPackage.toString();
@@ -130,9 +131,9 @@ function patchNavigationIcons() {
 
                     button.setOnClickListener(NavClickListener.$new());
 
-                    button.setTag(R_id.screen_up_item_package.value, customApp.package);
+                    button.setTag(getFieldValue(R_id, 'screen_up_item_package'), customApp.package);
                     button.setTag(
-                        R_id.screen_up_item_app_sub_type.value,
+                        getFieldValue(R_id, 'screen_up_item_app_sub_type'),
                         customApp.package_sub_type
                     );
 
@@ -158,13 +159,13 @@ function updateMainApps() {
     scheduleOnMainThreadSafe(() => {
         try {
             const instance = AllAppDataManager.getInstance();
-            const mainApps = instance.mMainAllApps.value; // ← прямой доступ к списку
+            const mainApps = getFieldValue(instance, 'mMainAllApps'); // ← прямой доступ к списку
 
             addCustomApp(mainApps);
             patchNavigationIcons();
 
             // Уведомляем слушателей
-            const listeners = instance.mAllAppDataListeners.value;
+            const listeners = getFieldValue(instance, 'mAllAppDataListeners');
             for (let i = 0; i < listeners.size(); i++) {
                 const listenerNative = listeners.get(i);
                 if (
@@ -222,7 +223,7 @@ function onBindViewHolderHook() {
                 .call(this, viewHolder, position);
 
             try {
-                const mAppBeans = this.mAppBeans.value;
+                const mAppBeans = getFieldValue(this, 'mAppBeans');
                 if (!mAppBeans) return;
 
                 const size = mAppBeans.size();
@@ -237,9 +238,9 @@ function onBindViewHolderHook() {
                 if (!packageName || packageName === '') return;
 
                 if (Object.prototype.hasOwnProperty.call(customDrawables, packageName)) {
-                    const iconView = viewHolder.iconView.value;
-                    const textView = viewHolder.nameView.value;
-                    const itemView = viewHolder.itemView.value;
+                    const iconView = getFieldValue(viewHolder, 'iconView');
+                    const textView = getFieldValue(viewHolder, 'nameView');
+                    const itemView = getFieldValue(viewHolder, 'itemView');
 
                     const customApp = config.apps.find((app) => app.package === packageName);
 
@@ -339,7 +340,7 @@ function init() {
             methods: {
                 onClick: function (view) {
                     try {
-                        const tagPkg = view.getTag(R_id.screen_up_item_package.value);
+                        const tagPkg = view.getTag(getFieldValue(R_id, 'screen_up_item_package'));
                         if (!tagPkg) return;
 
                         const packageName = tagPkg.toString();

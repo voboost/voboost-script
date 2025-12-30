@@ -1,7 +1,13 @@
 import { Logger } from '../lib/logger.js';
 import { INFO, DEBUG, ERROR } from './voboost-to-menu-log.js';
 
-import { LANGUAGE_CONFIG_PATH, loadConfig, runAgent, registerClassSafe } from '../lib/utils.js';
+import {
+    LANGUAGE_CONFIG_PATH,
+    loadConfig,
+    runAgent,
+    registerClassSafe,
+    getFieldValue,
+} from '../lib/utils.js';
 
 const logger = new Logger('voboost-to-menu-mod');
 
@@ -54,13 +60,15 @@ function createMenuItem(content) {
     try {
         logger.debug(DEBUG.CREATING_BUTTON);
 
+        const carSettingBinding = getFieldValue(content, 'carSettingBinding');
+
         // Получаем контейнер LinearLayout внутри OverScrollView
-        const menuContainer = content.carSettingBinding.value.menuContainer.value;
+        const menuContainer = getFieldValue(carSettingBinding, 'menuContainer');
         const linearLayout = menuContainer.getChildAt(0);
 
         // Находим существующую кнопку системных настроек через binding
-        const systemSettingsButton =
-            content.carSettingBinding.value.mainMenuItemSystemSetting.value;
+        const systemSettingsButton = getFieldValue(carSettingBinding, 'mainMenuItemSystemSetting');
+
         if (!systemSettingsButton) {
             logger.error(ERROR.SYSTEM_SETTINGS_NOT_FOUND);
             return;
@@ -87,7 +95,7 @@ function createMenuItem(content) {
         const R_id = Java.use('com.qinggan.app.vehiclesetting.R$id');
 
         const sampleTextViewNative = systemSettingsButton.findViewById(
-            R_id.main_menu_item_system_setting_textview.value
+            getFieldValue(R_id, 'main_menu_item_system_setting_textview')
         );
         const buttonTextNamive = BoldTextView.$new(content);
         const buttonText = Java.cast(buttonTextNamive, textView);
@@ -117,7 +125,7 @@ function createMenuItem(content) {
         // Копируем иконку
         const ImageView = Java.use('android.widget.ImageView');
         const sampleIconN = systemSettingsButton.findViewById(
-            R_id.main_menu_item_system_setting_imgview.value
+            getFieldValue(R_id, 'main_menu_item_system_setting_imgview')
         );
         const buttonIcon = ImageView.$new(content);
 
@@ -142,7 +150,7 @@ function createMenuItem(content) {
         customButton.setOnClickListener(CustomOnClickListener.$new());
 
         // Добавляем кнопку перед системными настройками
-        const systemSettingsId = R_id.main_menu_item_system_setting.value;
+        const systemSettingsId = getFieldValue(R_id, 'main_menu_item_system_setting');
         let insertIndex = -1;
 
         const linearLayoutGroup = Java.cast(linearLayout, Java.use('android.view.ViewGroup'));

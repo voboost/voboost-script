@@ -1,6 +1,6 @@
 import { Logger } from '../lib/logger.js';
 import { INFO, DEBUG, ERROR } from './forced-ev-log.js';
-import { runAgent } from '../lib/utils.js';
+import { runAgent, getFieldValue } from '../lib/utils.js';
 
 const logger = new Logger('forced-ev-mod');
 
@@ -31,13 +31,12 @@ function activeForcedEv() {
                 setTimeout(() => activate(), delay);
             }
 
-            const currentState = canBusManager.getVehicleState(VehicleState.IVI_SOC_MODESET.value);
+            const iviSocModeSet = getFieldValue(VehicleState, 'IVI_SOC_MODESET');
+
+            const currentState = canBusManager.getVehicleState(iviSocModeSet);
 
             if (currentState !== FORCED_EV_ON) {
-                result = canBusManager.setVehicleState(
-                    VehicleState.IVI_SOC_MODESET.value,
-                    FORCED_EV_ON
-                );
+                result = canBusManager.setVehicleState(iviSocModeSet, FORCED_EV_ON);
             } else {
                 return;
             }

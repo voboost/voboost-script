@@ -37,7 +37,7 @@ function createDrawableIons(configContent) {
 
             if (iconData === '') continue;
 
-            const bytes = Base64.decode(iconData, Base64.DEFAULT.value);
+            const bytes = Base64.decode(iconData, getFieldValue(Base64, 'DEFAULT'));
             const iconBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
             const iconDrawable = BitmapDrawable.$new(context.getResources(), iconBitmap);
 
@@ -70,12 +70,12 @@ function resetCachedSkb() {
 function saveInputModeHook() {
     const InputModeSwitcher = Java.use('com.qinggan.app.qgime.InputModeSwitcher');
 
-    const enModeLover = InputModeSwitcher.MODE_SKB_ENGLISH_LOWER.value;
-    const enModeUpper = InputModeSwitcher.MODE_SKB_ENGLISH_UPPER.value;
-    const enModeFirst = InputModeSwitcher.MODE_SKB_ENGLISH_FIRST.value;
-    const enModeHkb = InputModeSwitcher.MODE_HKB_ENGLISH.value;
-    const enModeSymbol1 = InputModeSwitcher.MODE_SKB_SYMBOL1_EN.value;
-    const enModeSymbol2 = InputModeSwitcher.MODE_SKB_SYMBOL2_EN.value;
+    const enModeLover = getFieldValue(InputModeSwitcher, 'MODE_SKB_ENGLISH_LOWER');
+    const enModeUpper = getFieldValue(InputModeSwitcher, 'MODE_SKB_ENGLISH_UPPER');
+    const enModeFirst = getFieldValue(InputModeSwitcher, 'MODE_SKB_ENGLISH_FIRST');
+    const enModeHkb = getFieldValue(InputModeSwitcher, 'MODE_HKB_ENGLISH');
+    const enModeSymbol1 = getFieldValue(InputModeSwitcher, 'MODE_SKB_SYMBOL1_EN');
+    const enModeSymbol2 = getFieldValue(InputModeSwitcher, 'MODE_SKB_SYMBOL2_EN');
 
     InputModeSwitcher.saveInputMode.implementation = function (mode) {
         if (
@@ -103,7 +103,7 @@ function loadKeyboardHook() {
     const SoftKeyToggle = Java.use('com.qinggan.app.qgime.SoftKeyToggle');
     const List = Java.use('java.util.List');
 
-    const WHITE_THEME = ThemeManager.DEFAULT_THEME_TITLE2.value;
+    const WHITE_THEME = getFieldValue(ThemeManager, 'DEFAULT_THEME_TITLE2');
 
     const context = ActivityThread.currentApplication().getApplicationContext();
 
@@ -128,7 +128,10 @@ function loadKeyboardHook() {
     XmlKeyboardLoader.loadKeyboard.implementation = function (xmlId, width, height) {
         const softKeyboard = this.loadKeyboard.call(this, xmlId, width, height);
 
-        if (xmlId != R_xml.skb_qwerty.value && xmlId != R_xml.skb_qwerty_no_voice.value) {
+        if (
+            xmlId != getFieldValue(R_xml, 'skb_qwerty') &&
+            xmlId != getFieldValue(R_xml, 'skb_qwerty_no_voice')
+        ) {
             return softKeyboard;
         }
 

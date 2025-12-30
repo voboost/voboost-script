@@ -6,6 +6,8 @@ import {
     APP_VIEWPORT_CONFIG_PATH,
     loadConfig,
     runAgent,
+    setFieldValue,
+    getFieldValue,
 } from '../lib/utils.js';
 
 const logger = new Logger('app-viewport-mod');
@@ -39,7 +41,7 @@ function createLocale(languageConfig) {
 // 4. Основная функция применения настроек к приложению
 function applyAppSettings(activityRecord, displayId) {
     try {
-        const packageName = activityRecord.packageName.value;
+        const packageName = getFieldValue(activityRecord, 'packageName');
         const currentDisplay = displayId === 0 ? 'main' : 'second';
         const screenLift = getScreenLiftState();
 
@@ -69,16 +71,16 @@ function applyAppSettings(activityRecord, displayId) {
 
         // Создание и применение новых границ
         const newBounds = Rect.$new(left, top, right, bottom);
-        activityRecord.mSizeCompatBounds.value = newBounds;
+        setFieldValue(activityRecord, 'mSizeCompatBounds', newBounds);
 
         // Применение масштаба
-        activityRecord.mSizeCompatScale.value = appConfig.scale;
+        setFieldValue(activityRecord, 'mSizeCompatScale', appConfig.scale);
 
         // Применение DPI и ориентации
         const configAR = activityRecord.getConfiguration();
-        configAR.densityDpi.value = appConfig.dpi;
-        configAR.orientation.value = 2; // Landscape всегда
-        configAR.locale.value = currentLocale;
+        setFieldValue(configAR, 'densityDpi', appConfig.dpi);
+        setFieldValue(configAR, 'orientation', 2); // Landscape всегда
+        setFieldValue(configAR, 'locale', currentLocale);
         configAR.setLocale(currentLocale);
         activityRecord.onConfigurationChanged(configAR);
 

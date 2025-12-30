@@ -79,7 +79,7 @@ function createIconDrawable() {
         if (media.pageName === undefined || media.pageName === '') continue;
         if (media.icon === undefined || media.icon === '') continue;
 
-        const bytes = Base64.decode(media.icon, Base64.DEFAULT.value);
+        const bytes = Base64.decode(media.icon, getFieldValue(Base64, 'DEFAULT'));
         const iconBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         const iconDrawable = BitmapDrawable.$new(context.getResources(), iconBitmap);
 
@@ -111,9 +111,21 @@ function reconnectMedia() {
                     const helper = instance.getMediaBrowserHelper();
 
                     helper.onStop();
-                    helper.mMediaType.value = serviceMedia.mediaId.value;
-                    helper.mMediaServicePackage.value = serviceMedia.servicePageName.value;
-                    helper.mMediaServiceClass.value = serviceMedia.serviceName.value;
+                    setFieldValue(
+                        helper,
+                        'mMediaType',
+                        getFieldValue(serviceMedia, 'mediaId')
+                    );
+                    setFieldValue(
+                        helper,
+                        'mMediaServicePackage',
+                        getFieldValue(serviceMedia, 'servicePageName')
+                    );
+                    setFieldValue(
+                        helper,
+                        'mMediaServiceClass',
+                        getFieldValue(serviceMedia, 'serviceName')
+                    );
                     helper.onStart();
 
                     if (service.autoPlay) {
@@ -162,7 +174,10 @@ function changeTabIcon() {
     Java.choose(MediaTabHolder.$className, {
         onMatch: function (instance) {
             try {
-                const mediaBeanInter = Java.cast(instance.mediaBean.value, MediaBeanInter);
+                const mediaBeanInter = Java.cast(
+                    getFieldValue(instance, 'mediaBean'),
+                    MediaBeanInter
+                );
 
                 const mediaEnum = Java.cast(mediaBeanInter.getMediaEnum(), MediaEnum);
                 const mediaEnumName = mediaEnum.toString();
@@ -170,8 +185,8 @@ function changeTabIcon() {
                 if (!Object.prototype.hasOwnProperty.call(iconDrawables, mediaEnumName)) return;
 
                 const drawable = iconDrawables[mediaEnumName];
-                const textView = instance.tvName.value;
-                const imageView = instance.ivIcon.value;
+                const textView = getFieldValue(instance, 'tvName');
+                const imageView = getFieldValue(instance, 'ivIcon');
 
                 textView.setText.overload('java.lang.CharSequence').call(textView, drawable.name);
                 imageView.setImageDrawable
@@ -190,7 +205,7 @@ function bindViewHook() {
     MediaTabHolder.bindView.implementation = function (dataIndex) {
         this.bindView.call(this, dataIndex);
         try {
-            const mediaBeanInter = Java.cast(this.mediaBean.value, MediaBeanInter);
+            const mediaBeanInter = Java.cast(getFieldValue(this, 'mediaBean'), MediaBeanInter);
 
             const mediaEnum = Java.cast(mediaBeanInter.getMediaEnum(), MediaEnum);
             const mediaEnumName = mediaEnum.toString();
@@ -199,8 +214,8 @@ function bindViewHook() {
 
             const drawable = iconDrawables[mediaEnumName];
 
-            const textView = this.tvName.value;
-            const imageView = this.ivIcon.value;
+            const textView = getFieldValue(this, 'tvName');
+            const imageView = getFieldValue(this, 'ivIcon');
 
             textView.setText.overload('java.lang.CharSequence').call(textView, drawable.name);
             imageView.setImageDrawable
@@ -227,8 +242,8 @@ function updateTitleUIHook() {
 
             const drawable = iconDrawables[mediaEnumName];
 
-            const textView = this.binding.value.tvMediaName.value;
-            const imageView = this.binding.value.mediaIcon.value;
+            const textView = getFieldValue(getFieldValue(this, 'binding'), 'tvMediaName');
+            const imageView = getFieldValue(getFieldValue(this, 'binding'), 'mediaIcon');
 
             textView.setText.overload('java.lang.CharSequence').call(textView, drawable.name);
             imageView.setImageDrawable
@@ -245,7 +260,7 @@ function openMediaPageHook() {
     const AppLauncher = Java.use('com.qinggan.launcher.base.utils.AppLauncher');
 
     BigMediaView97cV2.openMediaPage.implementation = function () {
-        const curMediaEnum = this.mediaInfoHelper.value.getCurMediaEnum();
+        const curMediaEnum = getFieldValue(this, 'mediaInfoHelper').getCurMediaEnum();
         const mediaEnumName = curMediaEnum.toString();
 
         if (!Object.prototype.hasOwnProperty.call(config.media, mediaEnumName)) {
@@ -352,9 +367,9 @@ function init() {
     MediaEnum = Java.use('com.qinggan.media.helper.MediaEnum');
     BigMediaView97cV2 = Java.use('com.pateo.voyah.mediaCard.home.h97cV2.BigMediaView97cV2');
 
-    WECAR_FLOW = MediaEnum.WECAR_FLOW.value;
-    XMLA_MUSIC = MediaEnum.XMLA_MUSIC.value;
-    RADIO_YUNTING = MediaEnum.RADIO_YUNTING.value;
+    WECAR_FLOW = getFieldValue(MediaEnum, 'WECAR_FLOW');
+    XMLA_MUSIC = getFieldValue(MediaEnum, 'XMLA_MUSIC');
+    RADIO_YUNTING = getFieldValue(MediaEnum, 'RADIO_YUNTING');
 
     mediaServices = [
         { name: 'WECAR_FLOW', media: WECAR_FLOW, enable: false, autoPlay: false },
