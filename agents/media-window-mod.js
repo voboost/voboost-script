@@ -65,7 +65,7 @@ function createIconDrawable() {
     const drawable = {};
 
     try {
-        const context = Java.cast(getFieldValue(ContextUtils, 'context'), ContextClass);
+        const context = Java.cast(ContextUtils.context.value, ContextClass);
 
         for (let serviceName of mediaServices) {
             if (!Object.prototype.hasOwnProperty.call(config.media, serviceName)) continue;
@@ -206,7 +206,7 @@ function openPageHook() {
             const handler = getFieldValue(this, 'handler');
             handler.removeMessages.overload('int').call(handler, 1);
 
-            const context = Java.cast(getFieldValue(ContextUtils, 'context'), ContextClass);
+            const context = Java.cast(ContextUtils.context.value, ContextClass);
             const intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
             intent.addFlags(0x10000000);
 

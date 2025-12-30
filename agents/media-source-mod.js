@@ -111,11 +111,7 @@ function reconnectMedia() {
                     const helper = instance.getMediaBrowserHelper();
 
                     helper.onStop();
-                    setFieldValue(
-                        helper,
-                        'mMediaType',
-                        getFieldValue(serviceMedia, 'mediaId')
-                    );
+                    setFieldValue(helper, 'mMediaType', getFieldValue(serviceMedia, 'mediaId'));
                     setFieldValue(
                         helper,
                         'mMediaServicePackage',
