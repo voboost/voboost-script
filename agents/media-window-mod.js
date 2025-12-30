@@ -6,6 +6,8 @@ import {
     MEDIA_SOURCE_CONFIG_PATH,
     loadConfig,
     runAgent,
+    setFieldValue,
+    getFieldValue,
 } from '../lib/utils.js';
 
 const logger = new Logger('media-window-mod');
@@ -33,18 +35,18 @@ function changeMediaEnum() {
 
             const mediaEnum = mediaEnums[serviceName];
 
-            mediaEnum.service.pageName.value = media.pageName;
+            setFieldValue(mediaEnum.service, 'pageName', media.pageName);
 
             if (media.servicePageName !== undefined && media.servicePageName !== '') {
-                mediaEnum.service.servicePageName.value = media.servicePageName;
+                setFieldValue(mediaEnum.service, 'servicePageName', media.servicePageName);
             }
 
             if (media.serviceName !== undefined && media.serviceName !== '') {
-                mediaEnum.service.serviceName.value = media.serviceName;
+                setFieldValue(mediaEnum.service, 'serviceName', media.serviceName);
             }
 
             if (media.clientId !== undefined && media.clientId !== '') {
-                mediaEnum.service.clientId.value = media.clientId;
+                setFieldValue(mediaEnum.service, 'clientId', media.clientId);
             }
 
             mediaEnum.enable = true;
@@ -63,7 +65,7 @@ function createIconDrawable() {
     const drawable = {};
 
     try {
-        const context = Java.cast(ContextUtils.context.value, ContextClass);
+        const context = Java.cast(getFieldValue(ContextUtils, 'context'), ContextClass);
 
         for (let serviceName of mediaServices) {
             if (!Object.prototype.hasOwnProperty.call(config.media, serviceName)) continue;
@@ -73,7 +75,7 @@ function createIconDrawable() {
             if (media.pageName === undefined || media.pageName === '') continue;
             if (media.iconLarge === undefined || media.iconLarge === '') continue;
 
-            const bytes = Base64.decode(media.iconLarge, Base64.DEFAULT.value);
+            const bytes = Base64.decode(media.iconLarge, getFieldValue(Base64, 'DEFAULT'));
             const iconBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
             const iconDrawable = BitmapDrawable.$new(context.getResources(), iconBitmap);
 
@@ -103,7 +105,10 @@ function bindViewHook() {
         this.bindView.call(this, i);
 
         try {
-            const mediaEnum = Java.cast(this.srcMediaBean.value.getMediaEnum(), MediaEnum);
+            const mediaEnum = Java.cast(
+                getFieldValue(this, 'srcMediaBean').getMediaEnum(),
+                MediaEnum
+            );
             const mediaEnumName = mediaEnum.toString();
 
             if (!Object.prototype.hasOwnProperty.call(iconDrawables, mediaEnumName)) {
@@ -111,8 +116,9 @@ function bindViewHook() {
             }
 
             const drawable = iconDrawables[mediaEnumName];
-            const textView = this.binding.value.tvName.value;
-            const imageView = this.binding.value.ivMain.value;
+            const binding = getFieldValue(this, 'binding');
+            const textView = getFieldValue(binding, 'tvName');
+            const imageView = getFieldValue(binding, 'ivMain');
 
             textView.setText.overload('java.lang.CharSequence').call(textView, drawable.name);
             imageView.setImageDrawable
@@ -155,7 +161,7 @@ function isMediaFocusHook() {
             }
 
             const currentPackage = audioPolicyInfo.getPackageName();
-            const mediaPackage = mediaService.service.pageName.value;
+            const mediaPackage = getFieldValue(mediaService.service, 'pageName');
             return currentPackage === mediaPackage;
         } catch (e) {
             logger.error(`${ERROR.MEDIA_FOCUS_ERROR}: ${e.message}`);
@@ -178,7 +184,7 @@ function openPageHook() {
         'com.qingang.asgard.media.general.src.MediaResEnum'
     ).implementation = function (mediaResEnum) {
         try {
-            const mediaEnum = Java.cast(mediaResEnum.mediaEnum.value, MediaEnum);
+            const mediaEnum = Java.cast(getFieldValue(mediaResEnum, 'mediaEnum'), MediaEnum);
             const mediaEnumName = mediaEnum.toString();
 
             if (!Object.prototype.hasOwnProperty.call(mediaEnums, mediaEnumName)) {
@@ -196,18 +202,18 @@ function openPageHook() {
                 return;
             }
 
-            const packageName = mediaService.service.pageName.value;
-            const handler = this.handler.value;
+            const packageName = getFieldValue(mediaService.service, 'pageName');
+            const handler = getFieldValue(this, 'handler');
             handler.removeMessages.overload('int').call(handler, 1);
 
-            const context = Java.cast(ContextUtils.context.value, ContextClass);
+            const context = Java.cast(getFieldValue(ContextUtils, 'context'), ContextClass);
             const intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
             intent.addFlags(0x10000000);
 
             const starAppNamesParams = Java.array('java.lang.Class', [
                 ContextClass.class,
                 Intent.class,
-                Integer.TYPE.value,
+                getFieldValue(Integer, 'TYPE'),
             ]);
             const starAppMethod = MediaJumpUtils.class.getDeclaredMethod(
                 'starApp',
@@ -237,9 +243,9 @@ function init() {
     mediaServices = ['WECAR_FLOW', 'XMLA_MUSIC', 'RADIO_YUNTING'];
 
     mediaEnums = {
-        WECAR_FLOW: { service: MediaEnum.WECAR_FLOW.value, active: false },
-        XMLA_MUSIC: { service: MediaEnum.XMLA_MUSIC.value, active: false },
-        RADIO_YUNTING: { service: MediaEnum.RADIO_YUNTING.value, active: false },
+        WECAR_FLOW: { service: getFieldValue(MediaEnum, 'WECAR_FLOW'), active: false },
+        XMLA_MUSIC: { service: getFieldValue(MediaEnum, 'XMLA_MUSIC'), active: false },
+        RADIO_YUNTING: { service: getFieldValue(MediaEnum, 'RADIO_YUNTING'), active: false },
     };
 
     // Load language config with full parameter support

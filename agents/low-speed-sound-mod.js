@@ -1,6 +1,6 @@
 import { Logger } from '../lib/logger.js';
 import { INFO, DEBUG, ERROR } from './low-speed-sound-log.js';
-import { runAgent } from '../lib/utils.js';
+import { runAgent, getFieldValue } from '../lib/utils.js';
 
 const logger = new Logger('low-speed-sound-mod');
 
@@ -32,12 +32,12 @@ function disableLowSpeedSound() {
             }
 
             const currentState = canBusManager.getVehicleState(
-                VehicleState.HUM_VSP_FUNCTION_SW.value
+                getFieldValue(VehicleState, 'HUM_VSP_FUNCTION_SW')
             );
 
             if (currentState !== LOW_SPEED_SOUND_DISABLE) {
                 result = canBusManager.setVehicleState(
-                    VehicleState.HUM_VSP_FUNCTION_SW.value,
+                    getFieldValue(VehicleState, 'HUM_VSP_FUNCTION_SW'),
                     LOW_SPEED_SOUND_DISABLE
                 );
             } else {

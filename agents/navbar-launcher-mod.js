@@ -1,7 +1,7 @@
 import { Logger } from '../lib/logger.js';
 import { INFO, DEBUG, ERROR } from './navbar-launcher-log.js';
 
-import { APP_VIEWPORT_CONFIG_PATH, loadConfig, runAgent } from '../lib/utils.js';
+import { APP_VIEWPORT_CONFIG_PATH, loadConfig, runAgent, getFieldValue } from '../lib/utils.js';
 
 const logger = new Logger('navbar-launcher-mod');
 
@@ -24,8 +24,12 @@ function onReceiveHook() {
 
             const displayId = intent.getIntExtra('displayId', -1);
 
-            const topAppInfo = AppUtils.getTopAppInfo(this.mContext.value, displayId, 4);
-            const strArrSplit = topAppInfo.split(AccountConstantUtil.SEPARATOR.value);
+            const topAppInfo = AppUtils.getTopAppInfo(
+                getFieldValue(this, 'mContext'),
+                displayId,
+                4
+            );
+            const strArrSplit = topAppInfo.split(getFieldValue(AccountConstantUtil, 'SEPARATOR'));
 
             const packageName = strArrSplit[0];
             const applicationName = strArrSplit[1];
