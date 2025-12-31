@@ -12,7 +12,7 @@ import {
 
 const logger = new Logger('media-window-mod');
 
-let ContextUtils = null;
+let ActivityThread = null;
 let ContextClass = null;
 let MediaEnum = null;
 
@@ -65,7 +65,7 @@ function createIconDrawable() {
     const drawable = {};
 
     try {
-        const context = Java.cast(getFieldValue(ContextUtils, 'context'), ContextClass);
+        const context = ActivityThread.currentApplication().getApplicationContext();
 
         for (let serviceName of mediaServices) {
             if (!Object.prototype.hasOwnProperty.call(config.media, serviceName)) continue;
@@ -206,7 +206,7 @@ function openPageHook() {
             const handler = getFieldValue(this, 'handler');
             handler.removeMessages.overload('int').call(handler, 1);
 
-            const context = Java.cast(getFieldValue(ContextUtils, 'context'), ContextClass);
+            const context = ActivityThread.currentApplication().getApplicationContext();
             const intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
             intent.addFlags(0x10000000);
 
@@ -237,7 +237,7 @@ function openPageHook() {
 
 function init() {
     MediaEnum = Java.use('com.qinggan.media.helper.MediaEnum');
-    ContextUtils = Java.use('com.qinggan.app.service.utils.ContextUtils');
+    ActivityThread = Java.use('android.app.ActivityThread');
     ContextClass = Java.use('android.content.Context');
 
     mediaServices = ['WECAR_FLOW', 'XMLA_MUSIC', 'RADIO_YUNTING'];
