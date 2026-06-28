@@ -7,6 +7,7 @@ export const INFO = {
 
 export const DEBUG = {
     CREATING_BUTTON: 'Creating custom button',
+    LANGUAGE_CONFIG_NOT_AVAILABLE: 'Language config not available, using defaults',
 };
 
 export const ERROR = {
