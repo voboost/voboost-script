@@ -12,14 +12,50 @@ import {
 const logger = new Logger('keyboard-lock-en-mod');
 
 let ActivityThread = null;
-let dravableIcons = null;
+let drawableIcons = null;
 
 const EN_INPUT_METHOD_NAME = 'english_input_method';
 const EN_INPUT_METHOD_WHITE_NAME = 'english_input_method_white';
 
 const iconConfigNames = [EN_INPUT_METHOD_NAME, EN_INPUT_METHOD_WHITE_NAME];
 
-function createDrawableIons(configContent) {
+/**
+ * Checks if the given mode is an English input mode.
+ * @param {number} mode - The input mode to check
+ * @param {Object} englishModes - Object containing English mode constants
+ * @param {number} englishModes.lower - English lowercase mode
+ * @param {number} englishModes.upper - English uppercase mode
+ * @param {number} englishModes.first - English first letter uppercase mode
+ * @param {number} englishModes.hkb - English hardware keyboard mode
+ * @param {number} englishModes.symbol1 - English symbol mode 1
+ * @param {number} englishModes.symbol2 - English symbol mode 2
+ * @returns {boolean} True if mode is an English mode, false otherwise
+ */
+export function isEnglishMode(mode, englishModes) {
+    if (mode == null || englishModes == null) {
+        return false;
+    }
+
+    if (typeof mode !== 'number') {
+        return false;
+    }
+
+    return (
+        mode === englishModes.lower ||
+        mode === englishModes.upper ||
+        mode === englishModes.first ||
+        mode === englishModes.hkb ||
+        mode === englishModes.symbol1 ||
+        mode === englishModes.symbol2
+    );
+}
+
+/**
+ * Creates drawable icons from configuration content.
+ * @param {string} configContent - JSON string containing icon configuration
+ * @returns {Object|null} Map of icon names to drawable objects, or null on error
+ */
+function createDrawableIcons(configContent) {
     const Base64 = Java.use('android.util.Base64');
     const BitmapFactory = Java.use('android.graphics.BitmapFactory');
     const BitmapDrawable = Java.use('android.graphics.drawable.BitmapDrawable');
@@ -70,22 +106,24 @@ function resetCachedSkb() {
 function saveInputModeHook() {
     const InputModeSwitcher = Java.use('com.qinggan.app.qgime.InputModeSwitcher');
 
-    const enModeLover = getFieldValue(InputModeSwitcher, 'MODE_SKB_ENGLISH_LOWER');
+    const enModeLower = getFieldValue(InputModeSwitcher, 'MODE_SKB_ENGLISH_LOWER');
     const enModeUpper = getFieldValue(InputModeSwitcher, 'MODE_SKB_ENGLISH_UPPER');
     const enModeFirst = getFieldValue(InputModeSwitcher, 'MODE_SKB_ENGLISH_FIRST');
     const enModeHkb = getFieldValue(InputModeSwitcher, 'MODE_HKB_ENGLISH');
     const enModeSymbol1 = getFieldValue(InputModeSwitcher, 'MODE_SKB_SYMBOL1_EN');
     const enModeSymbol2 = getFieldValue(InputModeSwitcher, 'MODE_SKB_SYMBOL2_EN');
 
+    const englishModes = {
+        lower: enModeLower,
+        upper: enModeUpper,
+        first: enModeFirst,
+        hkb: enModeHkb,
+        symbol1: enModeSymbol1,
+        symbol2: enModeSymbol2,
+    };
+
     InputModeSwitcher.saveInputMode.implementation = function (mode) {
-        if (
-            mode !== enModeLover &&
-            mode !== enModeUpper &&
-            mode !== enModeFirst &&
-            mode !== enModeHkb &&
-            mode !== enModeSymbol1 &&
-            mode !== enModeSymbol2
-        ) {
+        if (!isEnglishMode(mode, englishModes)) {
             mode = enModeFirst;
         }
 
@@ -159,15 +197,15 @@ function loadKeyboardHook() {
                 if (WHITE_THEME === currentThemeTitle) {
                     if (
                         Object.prototype.hasOwnProperty.call(
-                            dravableIcons,
+                            drawableIcons,
                             EN_INPUT_METHOD_WHITE_NAME
                         )
                     ) {
-                        keyIcon = dravableIcons[EN_INPUT_METHOD_WHITE_NAME];
+                        keyIcon = drawableIcons[EN_INPUT_METHOD_WHITE_NAME];
                     }
                 } else {
-                    if (Object.prototype.hasOwnProperty.call(dravableIcons, EN_INPUT_METHOD_NAME)) {
-                        keyIcon = dravableIcons[EN_INPUT_METHOD_NAME];
+                    if (Object.prototype.hasOwnProperty.call(drawableIcons, EN_INPUT_METHOD_NAME)) {
+                        keyIcon = drawableIcons[EN_INPUT_METHOD_NAME];
                     }
                 }
 
@@ -194,7 +232,7 @@ function init() {
     const config = loadConfig(KEYBOARD_LOCK_EN_CONFIG_PATH, logger);
 
     if (config) {
-        dravableIcons = createDrawableIons(JSON.stringify(config));
+        drawableIcons = createDrawableIcons(JSON.stringify(config));
     }
 }
 
@@ -207,7 +245,7 @@ function main() {
     try {
         loadKeyboardHook();
     } catch (e) {
-        logger.error('loadKeyboardHook failed: ' + e.message);
+        logger.error(`${ERROR.LOAD_KEYBOARD_HOOK} ${e.message}`);
     }
 
     disableVoice();
