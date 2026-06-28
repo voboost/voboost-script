@@ -8,12 +8,14 @@ export const DEBUG = {
 };
 
 export const ERROR = {
-    RECONNECT: 'reconnectMedia error',
-    CHECK_CONNECTED: 'checkConnected error:',
-    BIND_VIEW: 'bindViewHook error',
-    UPDATE_TITLE: 'updateTitleUIHook error',
-    OPEN_PAGE: 'openMediaPageHook error',
-    GET_INTENT: 'getStartIntentHook error',
-    MEDIA_FOCUS: 'isMediaFocusHook error',
+    RECONNECT_ERROR: 'reconnectMedia error',
+    CHECK_CONNECTED_ERROR: 'checkConnected error',
+    BIND_VIEW_ERROR: 'bindViewHook error',
+    UPDATE_TITLE_ERROR: 'updateTitleUIHook error',
+    OPEN_PAGE_ERROR: 'openMediaPageHook error',
+    GET_INTENT_ERROR: 'getStartIntentHook error',
+    MEDIA_FOCUS_ERROR: 'isMediaFocusHook error',
     CONFIG_NOT_AVAILABLE: 'Media source config not available',
+    CONFIG_INVALID: 'Media source config is invalid',
+    MEDIA_PROPERTY_MISSING: 'Media property missing in config',
 };
