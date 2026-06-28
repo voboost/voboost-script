@@ -1,3 +1,13 @@
+/**
+ * Media Window Modification Agent
+ *
+ * This Frida agent hooks into the media window system to customize media service
+ * configurations, icons, and behavior. It allows modification of media enum properties,
+ * custom icon drawables, and control over media focus and page opening.
+ *
+ * @module media-window-mod
+ */
+
 import { Logger } from '../lib/logger.js';
 import { INFO, DEBUG, ERROR } from './media-window-log.js';
 
@@ -24,39 +34,122 @@ let config = null;
 let languageConfig = null;
 let mediaEnums = null;
 
+/**
+ * Builds media enum configuration from the provided config object and applies it to
+ * the provided MediaEnum objects. This is the single implementation shared by
+ * `changeMediaEnum()` and is written as a pure-ish function (its only side effects are
+ * mutating the passed-in `enums` entries) so it can be tested independently.
+ *
+ * For each requested service that has a non-empty `pageName` in `configData.media`,
+ * this sets `pageName` on the matching `enums[serviceName].service` object, sets the
+ * optional `servicePageName`/`serviceName`/`clientId` fields only when they are present
+ * and non-empty, and always marks the service as `enable = true`.
+ *
+ * @param {Object} configData - Configuration object containing media service settings
+ * @param {Object} configData.media - Media services configuration
+ * @param {Array<string>} services - Array of service names to configure
+ * @param {Object} enums - Media enum objects to configure. Each entry is expected to be
+ *   `{ service: Object, enable: boolean }`; `service` is mutated via `setFieldValue()`
+ *   and `enable` is set to `true` for every configured service.
+ * @returns {Object} Configuration result with success status and configured services
+ *
+ * @example
+ * const config = {
+ *   media: {
+ *     WECAR_FLOW: { pageName: 'com.example.app', serviceName: 'WeCarFlow' }
+ *   }
+ * };
+ * const services = ['WECAR_FLOW'];
+ * const enums = { WECAR_FLOW: { service: {}, enable: false } };
+ * buildMediaEnumConfig(config, services, enums);
+ */
+function buildMediaEnumConfig(configData, services, enums) {
+    if (!configData || typeof configData !== 'object') {
+        return { success: false, configured: [] };
+    }
+
+    if (!configData.media || typeof configData.media !== 'object') {
+        return { success: false, configured: [] };
+    }
+
+    if (!Array.isArray(services) || services.length === 0) {
+        return { success: false, configured: [] };
+    }
+
+    if (!enums || typeof enums !== 'object') {
+        return { success: false, configured: [] };
+    }
+
+    const configured = [];
+
+    for (let serviceName of services) {
+        if (!Object.prototype.hasOwnProperty.call(configData.media, serviceName)) {
+            continue;
+        }
+
+        const media = configData.media[serviceName];
+
+        if (!media || typeof media !== 'object') {
+            continue;
+        }
+
+        if (media.pageName === undefined || media.pageName === '') {
+            continue;
+        }
+
+        const mediaEnum = enums[serviceName];
+
+        if (!mediaEnum || !mediaEnum.service || typeof mediaEnum.service !== 'object') {
+            continue;
+        }
+
+        setFieldValue(mediaEnum.service, 'pageName', media.pageName);
+
+        if (media.servicePageName !== undefined && media.servicePageName !== '') {
+            setFieldValue(mediaEnum.service, 'servicePageName', media.servicePageName);
+        }
+
+        if (media.serviceName !== undefined && media.serviceName !== '') {
+            setFieldValue(mediaEnum.service, 'serviceName', media.serviceName);
+        }
+
+        if (media.clientId !== undefined && media.clientId !== '') {
+            setFieldValue(mediaEnum.service, 'clientId', media.clientId);
+        }
+
+        mediaEnum.enable = true;
+
+        configured.push({
+            serviceName,
+            pageName: media.pageName,
+            servicePageName: media.servicePageName,
+            serviceName_: media.serviceName,
+            clientId: media.clientId,
+        });
+    }
+
+    return { success: true, configured };
+}
+
+/**
+ * Applies media enum configuration changes to the actual MediaEnum objects.
+ * This function modifies the Java objects using the Frida API via `buildMediaEnumConfig()`.
+ */
 function changeMediaEnum() {
     try {
-        for (let serviceName of mediaServices) {
-            if (!Object.prototype.hasOwnProperty.call(config.media, serviceName)) continue;
-
-            const media = config.media[serviceName];
-
-            if (media.pageName === undefined || media.pageName === '') continue;
-
-            const mediaEnum = mediaEnums[serviceName];
-
-            setFieldValue(mediaEnum.service, 'pageName', media.pageName);
-
-            if (media.servicePageName !== undefined && media.servicePageName !== '') {
-                setFieldValue(mediaEnum.service, 'servicePageName', media.servicePageName);
-            }
-
-            if (media.serviceName !== undefined && media.serviceName !== '') {
-                setFieldValue(mediaEnum.service, 'serviceName', media.serviceName);
-            }
-
-            if (media.clientId !== undefined && media.clientId !== '') {
-                setFieldValue(mediaEnum.service, 'clientId', media.clientId);
-            }
-
-            mediaEnum.enable = true;
-        }
+        buildMediaEnumConfig(config, mediaServices, mediaEnums);
     } catch (e) {
         logger.error(`${ERROR.CHANGE_ENUM_ERROR} ${e.message}`);
         logger.error(e.stack);
     }
 }
 
+/**
+ * Creates icon drawables from base64-encoded images in the configuration.
+ * Converts base64 strings to Android Bitmap and BitmapDrawable objects.
+ *
+ * @returns {Object} Map of service names to drawable objects with icon and name
+ */
 function createIconDrawable() {
     const Base64 = Java.use('android.util.Base64');
     const BitmapFactory = Java.use('android.graphics.BitmapFactory');
@@ -65,7 +158,13 @@ function createIconDrawable() {
     const drawable = {};
 
     try {
-        const context = ActivityThread.currentApplication().getApplicationContext();
+        const application = ActivityThread.currentApplication();
+        if (!application) {
+            logger.error(ERROR.APPLICATION_NULL);
+            return drawable;
+        }
+
+        const context = application.getApplicationContext();
 
         for (let serviceName of mediaServices) {
             if (!Object.prototype.hasOwnProperty.call(config.media, serviceName)) continue;
@@ -96,6 +195,10 @@ function createIconDrawable() {
     return drawable;
 }
 
+/**
+ * Hooks into MediaSrcAdapter$MediaSrcHolder.bindView to customize media source icons and names.
+ * Replaces the default icon and name with custom values from configuration.
+ */
 function bindViewHook() {
     const MediaSrcHolder = Java.use(
         'com.qingang.asgard.media.general.src.MediaSrcAdapter$MediaSrcHolder'
@@ -131,6 +234,10 @@ function bindViewHook() {
     };
 }
 
+/**
+ * Hooks into AudioPolicyHelper.isMediaFocus to control media focus behavior.
+ * Determines if a media service should have audio focus based on the current package.
+ */
 function isMediaFocusHook() {
     const AudioPolicyHelper = Java.use('com.qinggan.media.helper.AudioPolicyHelper');
 
@@ -174,6 +281,10 @@ function isMediaFocusHook() {
     };
 }
 
+/**
+ * Hooks into SrcMediaActivity.openPage to customize how media applications are launched.
+ * Intercepts the default page opening behavior and launches configured packages instead.
+ */
 function openPageHook() {
     const SrcMediaActivity = Java.use('com.qingang.asgard.media.general.src.SrcMediaActivity');
     const MediaJumpUtils = Java.use('com.qinggan.media.helper.app.MediaJumpUtils');
@@ -206,7 +317,16 @@ function openPageHook() {
             const handler = getFieldValue(this, 'handler');
             handler.removeMessages.overload('int').call(handler, 1);
 
-            const context = ActivityThread.currentApplication().getApplicationContext();
+            const application = ActivityThread.currentApplication();
+            if (!application) {
+                logger.error(ERROR.APPLICATION_NULL);
+                this.openPage
+                    .overload('com.qingang.asgard.media.general.src.MediaResEnum')
+                    .call(this, mediaResEnum);
+                return;
+            }
+
+            const context = application.getApplicationContext();
             const intent = context.getPackageManager().getLaunchIntentForPackage(packageName);
             intent.addFlags(0x10000000);
 
@@ -235,6 +355,10 @@ function openPageHook() {
     };
 }
 
+/**
+ * Initializes the agent by loading Java classes, configurations, and setting up
+ * the media enum structure.
+ */
 function init() {
     MediaEnum = Java.use('com.qinggan.media.helper.MediaEnum');
     ActivityThread = Java.use('android.app.ActivityThread');
@@ -265,6 +389,10 @@ function init() {
     iconDrawables = createIconDrawable();
 }
 
+/**
+ * Main entry point for the media window modification agent.
+ * Initializes all hooks and applies media enum modifications.
+ */
 function main() {
     logger.info(INFO.STARTING);
 
@@ -283,3 +411,6 @@ function main() {
 }
 
 runAgent(main);
+
+// Export for testing
+export { buildMediaEnumConfig };
