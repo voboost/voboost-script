@@ -190,6 +190,20 @@ function deepClone(obj) {
 }
 
 /**
+ * Encodes the OpenWeatherMap api_key for safe interpolation into a URL
+ * query string. config.api_key is untrusted input (delivered via RPC
+ * config or read from a file), so it must be encoded before being placed
+ * in a URL: otherwise characters such as '&', '#' or spaces could inject
+ * extra query parameters or truncate the URL. See SCR-02.
+ *
+ * @param {string} apiKey - Raw api_key value from config
+ * @returns {string} URL-encoded api_key safe to interpolate into a query string
+ */
+function buildApiKeyParam(apiKey) {
+    return encodeURIComponent(apiKey);
+}
+
+/**
  * Parses URL query parameters into an object.
  *
  * @param {string} urlStr - URL string with query parameters
@@ -226,16 +240,25 @@ function fetchForecast(lat, lon) {
             cn: 'zh_cn',
         }[getUserLanguage()] || 'en';
 
-    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${config.api_key}&units=metric&lang=${lang}`;
+    const apiKey = buildApiKeyParam(config.api_key);
+    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=${lang}`;
     const client = OkHttpClient.$new();
     const request = RequestBuilder.$new().url(url).build();
     const response = client.newCall(request).execute();
 
-    if (!response.isSuccessful()) {
-        throw new Error('Forecast HTTP ' + response.code());
-    }
+    // OkHttp requires the response body to be closed, otherwise the
+    // underlying connection is not returned to the pool and leaks one
+    // connection per weather refresh (R3-SCR-02). try/finally ensures
+    // close runs on both the success and the error path.
+    try {
+        if (!response.isSuccessful()) {
+            throw new Error('Forecast HTTP ' + response.code());
+        }
 
-    return response.body().string();
+        return response.body().string();
+    } finally {
+        response.close();
+    }
 }
 
 function fetchGeocodeFromNominatim(lat, lon) {
@@ -253,24 +276,37 @@ function fetchGeocodeFromNominatim(lat, lon) {
         .build();
     const response = client.newCall(request).execute();
 
-    if (!response.isSuccessful()) {
-        throw new Error('Nominatim HTTP ' + response.code());
-    }
+    // Close the response in all paths to avoid leaking the OkHttp
+    // connection (R3-SCR-02).
+    try {
+        if (!response.isSuccessful()) {
+            throw new Error('Nominatim HTTP ' + response.code());
+        }
 
-    return response.body().string();
+        return response.body().string();
+    } finally {
+        response.close();
+    }
 }
 
 function fetchAqi(lat, lon) {
-    const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${config.api_key}`;
+    const apiKey = buildApiKeyParam(config.api_key);
+    const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`;
     const client = OkHttpClient.$new();
     const request = RequestBuilder.$new().url(url).build();
     const response = client.newCall(request).execute();
 
-    if (!response.isSuccessful()) {
-        throw new Error('AQI HTTP ' + response.code());
-    }
+    // Close the response in all paths to avoid leaking the OkHttp
+    // connection (R3-SCR-02).
+    try {
+        if (!response.isSuccessful()) {
+            throw new Error('AQI HTTP ' + response.code());
+        }
 
-    return response.body().string();
+        return response.body().string();
+    } finally {
+        response.close();
+    }
 }
 
 /**
@@ -1070,6 +1106,7 @@ runAgent(main);
 export {
     getWindPowerLevel,
     getWindDirectionName,
+    buildApiKeyParam,
     parseUrlParams,
     formatDate,
     deepClone,
