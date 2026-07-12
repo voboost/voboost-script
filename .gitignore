@@ -1,3 +1,6 @@
 .vscode
 build
 node_modules
+
+# Local planning scratch (not tracked)
+plans/
