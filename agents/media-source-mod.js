@@ -30,17 +30,134 @@ let iconDrawables = null;
 let config = null;
 let languageConfig = null;
 
+/**
+ * Builds a service name to page name map from the media configuration.
+ * Extracts pageName values from each media service configuration.
+ *
+ * Note: this is the reverse mapping direction of `media-key-mod.js`'s
+ * (unrelated, module-local) `buildPageNameMap`, which maps pageName -> entry.
+ * This function is named distinctly to avoid confusion with that one.
+ *
+ * @param {Object} mediaConfig - The media configuration object
+ * @returns {Object} Map of service names to page names
+ *
+ * @example
+ * const config = { media: { WECAR_FLOW: { pageName: 'com.example.app' } } };
+ * const map = buildServiceToPageNameMap(config);
+ * // Returns: { WECAR_FLOW: 'com.example.app' }
+ */
+export function buildServiceToPageNameMap(mediaConfig) {
+    if (!mediaConfig || typeof mediaConfig !== 'object') {
+        return {};
+    }
+
+    if (!mediaConfig.media || typeof mediaConfig.media !== 'object') {
+        return {};
+    }
+
+    const pageNameMap = {};
+
+    for (const [serviceName, serviceData] of Object.entries(mediaConfig.media)) {
+        if (serviceData && typeof serviceData === 'object' && serviceData.pageName) {
+            pageNameMap[serviceName] = serviceData.pageName;
+        }
+    }
+
+    return pageNameMap;
+}
+
+/**
+ * Builds service configuration array from media config.
+ * Creates an array of service objects with enable and autoPlay flags.
+ *
+ * @param {Object} mediaConfig - The media configuration object
+ * @param {Array} services - Array of service objects with name and media properties
+ * @returns {Array} Array with one entry per input service (same length as
+ *  `services`), each with `enable`/`autoPlay` flags set; `enable`/`autoPlay`
+ *  are `false` for every entry when `mediaConfig` is missing/invalid. Only
+ *  returns an empty array when `services` itself is not a non-empty array.
+ *
+ * @example
+ * const config = { media: { WECAR_FLOW: { pageName: 'com.app', autoPlay: true } } };
+ * const services = [{ name: 'WECAR_FLOW', media: mediaEnum }];
+ * const result = buildServiceConfig(config, services);
+ * // Returns: [{ name: 'WECAR_FLOW', media: mediaEnum, enable: true, autoPlay: true }]
+ */
+export function buildServiceConfig(mediaConfig, services) {
+    if (!Array.isArray(services)) {
+        return [];
+    }
+
+    if (!mediaConfig || typeof mediaConfig !== 'object') {
+        return services.map((service) => ({
+            ...service,
+            enable: false,
+            autoPlay: false,
+        }));
+    }
+
+    if (!mediaConfig.media || typeof mediaConfig.media !== 'object') {
+        return services.map((service) => ({
+            ...service,
+            enable: false,
+            autoPlay: false,
+        }));
+    }
+
+    return services.map((service) => {
+        const serviceData = mediaConfig.media[service.name];
+        const hasValidConfig = Boolean(
+            serviceData &&
+            typeof serviceData === 'object' &&
+            serviceData.pageName &&
+            serviceData.pageName !== ''
+        );
+
+        return {
+            ...service,
+            enable: hasValidConfig,
+            autoPlay: hasValidConfig && serviceData.autoPlay === true,
+        };
+    });
+}
+
+/**
+ * Validates the media source configuration object.
+ * Checks for required properties and structure.
+ *
+ * @param {Object} mediaConfig - The configuration object to validate
+ * @returns {boolean} True if configuration is valid, false otherwise
+ */
+function validateConfig(mediaConfig) {
+    if (!mediaConfig || typeof mediaConfig !== 'object') {
+        logger.error(ERROR.CONFIG_INVALID);
+        return false;
+    }
+
+    if (!mediaConfig.media || typeof mediaConfig.media !== 'object') {
+        logger.error(ERROR.MEDIA_PROPERTY_MISSING);
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Changes media enum properties based on configuration.
+ * Updates pageName, servicePageName, serviceName, and clientId for each configured service.
+ */
 function changeMediaEnum() {
+    const pageNameMap = buildServiceToPageNameMap(config);
+
+    mediaServices = buildServiceConfig(config, mediaServices);
+
     for (let service of mediaServices) {
-        if (!Object.prototype.hasOwnProperty.call(config.media, service.name)) continue;
+        if (!service.enable) continue;
 
         const media = config.media[service.name];
-
-        if (media.pageName === undefined || media.pageName === '') continue;
-
         const serviceMedia = service.media;
 
-        setFieldValue(serviceMedia, 'pageName', media.pageName);
+        setFieldValue(serviceMedia, 'pageName', pageNameMap[service.name]);
 
         if (media.servicePageName !== undefined && media.servicePageName !== '') {
             setFieldValue(serviceMedia, 'servicePageName', media.servicePageName);
@@ -53,12 +170,15 @@ function changeMediaEnum() {
         if (media.clientId !== undefined && media.clientId !== '') {
             setFieldValue(serviceMedia, 'clientId', media.clientId);
         }
-
-        service.enable = true;
-        service.autoPlay = media.autoPlay;
     }
 }
 
+/**
+ * Creates icon drawables from base64-encoded images in configuration.
+ * Decodes base64 icons and creates Android BitmapDrawable objects.
+ *
+ * @returns {Object} Map of service names to drawable objects with icon and name
+ */
 function createIconDrawable() {
     const Base64 = Java.use('android.util.Base64');
     const BitmapFactory = Java.use('android.graphics.BitmapFactory');
@@ -96,6 +216,10 @@ function createIconDrawable() {
     return drawable;
 }
 
+/**
+ * Reconnects media services by updating MediaControlManager instances.
+ * Stops current media browser helper, updates configuration, and restarts.
+ */
 function reconnectMedia() {
     const MediaControlManager = Java.use('com.qinggan.app.mediaCentre.manager.MediaControlManager');
     Java.choose(MediaControlManager.$className, {
@@ -137,6 +261,12 @@ function reconnectMedia() {
     });
 }
 
+/**
+ * Waits for media service connection and triggers playback when connected.
+ * Polls connection status with exponential backoff up to maxAttempts.
+ *
+ * @param {Object} instance - MediaControlManager instance to check connection status
+ */
 function waitForConnection(instance) {
     const delay = 5000;
     const maxAttempts = 5;
@@ -155,7 +285,7 @@ function waitForConnection(instance) {
                 return;
             }
 
-            // Продолжаем проверку
+            // Continue checking
             setTimeout(() => checkConnected(), delay);
         } catch (e) {
             logger.error(`${ERROR.CHECK_CONNECTED_ERROR} ${e}`);
@@ -166,6 +296,10 @@ function waitForConnection(instance) {
     checkConnected();
 }
 
+/**
+ * Changes tab icons for media services by finding MediaTabHolder instances.
+ * Updates icon and name text for configured media services.
+ */
 function changeTabIcon() {
     Java.choose(MediaTabHolder.$className, {
         onMatch: function (instance) {
@@ -197,6 +331,10 @@ function changeTabIcon() {
     });
 }
 
+/**
+ * Hooks into MediaTabHolder.bindView to customize media tab appearance.
+ * Replaces icon and name for configured media services when tabs are bound.
+ */
 function bindViewHook() {
     MediaTabHolder.bindView.implementation = function (dataIndex) {
         this.bindView.call(this, dataIndex);
@@ -224,6 +362,10 @@ function bindViewHook() {
     };
 }
 
+/**
+ * Hooks into BigMediaView97cV2.updateTitleUI to customize media title display.
+ * Updates icon and name in the big media view when title UI is refreshed.
+ */
 function updateTitleUIHook() {
     BigMediaView97cV2.updateTitleUI.implementation = function (mediaBeanInter) {
         try {
@@ -252,6 +394,10 @@ function updateTitleUIHook() {
     };
 }
 
+/**
+ * Hooks into BigMediaView97cV2.openMediaPage to customize media page launching.
+ * Launches configured package instead of default media page.
+ */
 function openMediaPageHook() {
     const AppLauncher = Java.use('com.qinggan.launcher.base.utils.AppLauncher');
 
@@ -289,6 +435,12 @@ function openMediaPageHook() {
     };
 }
 
+/**
+ * Hooks into MediaJumpUtils.getStartIntent to provide custom launch intents.
+ * Returns launch intent for configured package instead of default.
+ *
+ * @returns {Object|null} Android Intent object or null
+ */
 function getStartIntentHook() {
     const MediaJumpUtils = Java.use('com.qinggan.media.helper.app.MediaJumpUtils');
 
@@ -322,6 +474,12 @@ function getStartIntentHook() {
     };
 }
 
+/**
+ * Hooks into AudioPolicyHelper.isMediaFocus to check media focus correctly.
+ * Compares package names for configured media services.
+ *
+ * @returns {boolean} True if media has focus, false otherwise
+ */
 function isMediaFocusHook() {
     const AudioPolicyHelper = Java.use('com.qinggan.media.helper.AudioPolicyHelper');
 
@@ -355,6 +513,12 @@ function isMediaFocusHook() {
     };
 }
 
+/**
+ * Initializes Java classes, loads configuration, and prepares media services.
+ * Sets up all required Java class references and configuration objects.
+ *
+ * @returns {boolean} True if initialization succeeded and config is valid, false otherwise
+ */
 function init() {
     MediaBeanInter = Java.use('com.pateo.voyah.mediaCard.home.inter.MediaBeanInter');
     MediaTabHolder = Java.use(
@@ -384,18 +548,31 @@ function init() {
     // Config is required for this agent
     if (!config) {
         logger.error(ERROR.CONFIG_NOT_AVAILABLE);
-        return;
+        return false;
+    }
+
+    // Validate configuration structure
+    if (!validateConfig(config)) {
+        return false;
     }
 
     iconDrawables = createIconDrawable();
+
+    return true;
 }
 
+/**
+ * Main entry point for the media source modification agent.
+ * Initializes all hooks and modifications for media services.
+ */
 function main() {
     logger.info(INFO.STARTING);
 
-    init();
+    // Config validation is done inside init(); no need to validate again here.
+    if (!init()) {
+        return;
+    }
 
-    // Config validation already done in init()
     changeMediaEnum();
 
     scheduleOnMainThreadSafe(reconnectMedia, logger);
