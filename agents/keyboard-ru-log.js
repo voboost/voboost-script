@@ -12,9 +12,10 @@ export const DEBUG = {
 
 export const ERROR = {
     ICON_CONFIG: 'Error loading icon config:',
-    KEYBOARD_BUILD: 'Keyboard build error:',
+    KEYBOARD_BUILD_ERROR: 'Keyboard build error:',
     RESOLVING_RESOURCE: 'Error resolving resource',
     SKB_TEMPLATE_NOT_FOUND: 'SkbTemplate not found for',
     FAILED_TO_ADD_KEY: 'Failed to add key:',
     CONFIG_NOT_AVAILABLE: 'Keyboard config not available',
+    LOAD_KEYBOARD_HOOK_FAILED: 'loadKeyboardHook failed:',
 };
