@@ -305,6 +305,13 @@ two distinct on-disk locations. These are not interchangeable:
   It is a separate, lower-trust path used purely for local-inject testing and must not
   be used to store or substitute for production agent config.
 
+> **Deployment note.** The on-disk config path is only a fallback; the primary
+> production channel is `parameters.config` passed via `rpc.exports.init()`.
+> When rolling out updated agents, deploy the `voboost-inject` daemon in lockstep so
+> the `/data/voboost/agents/config/` zone is provisioned. An uncoordinated rollout
+> (new agents with an older daemon) falls back to `parameters.config` and otherwise
+> leaves the agent without config-driven features until the daemon is updated.
+
 ### Device Setup
 
 1. Connect to device and run `adb root`
