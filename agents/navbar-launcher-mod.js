@@ -7,6 +7,26 @@ const logger = new Logger('navbar-launcher-mod');
 
 let config = null;
 
+/**
+ * Finds a matching app configuration by package name.
+ * @param {string} packageName - The package name to search for
+ * @param {Object[]} apps - Array of app configuration objects
+ * @returns {Object|null} The matching app configuration or null if not found
+ */
+export function findMatchingApp(packageName, apps) {
+    if (!packageName || !apps || !Array.isArray(apps)) {
+        return null;
+    }
+
+    for (const app of apps) {
+        if (packageName.toString() === app.package) {
+            return app;
+        }
+    }
+
+    return null;
+}
+
 function onReceiveHook() {
     const LauncherModel = Java.use('com.qinggan.app.launcher.LauncherModel');
     const AppUtils = Java.use('com.qinggan.launcher.base.utils.AppUtils');
@@ -34,23 +54,22 @@ function onReceiveHook() {
             const packageName = strArrSplit[0];
             const applicationName = strArrSplit[1];
             // Проверяем, нужно ли принудительно показать панель
-            for (let app of config.apps) {
-                if (packageName.toString() !== app.package) continue;
+            const matchingApp = findMatchingApp(packageName, config.apps);
 
+            if (matchingApp) {
                 if (displayId == 0) {
                     this.handleUpdateMainNavigationBar(
                         packageName,
                         applicationName,
-                        app.navigation_bar
+                        matchingApp.navigation_bar
                     );
                 } else {
                     this.handleUpdateSecondNavigationBar(
                         packageName,
                         applicationName,
-                        app.navigation_bar
+                        matchingApp.navigation_bar
                     );
                 }
-                break;
             }
         } catch (e) {
             logger.error(`${ERROR.HOOK} ${e.message}`);
