@@ -1,3 +1,20 @@
+/**
+ * App Launcher Modification Agent
+ *
+ * This Frida agent modifies the Android launcher to add custom applications
+ * with custom icons and names. It hooks into the launcher's app list management
+ * to inject configured apps and replace their visual representation.
+ *
+ * Features:
+ * - Add custom apps to the launcher's all apps list
+ * - Replace app icons with custom bitmaps
+ * - Localize app names based on language configuration
+ * - Replace navigation bar icons
+ * - Handle custom click listeners for app launching
+ *
+ * @module app-launcher-mod
+ */
+
 import { Logger } from '../lib/logger.js';
 import { INFO, DEBUG, ERROR } from './app-launcher-log.js';
 
@@ -34,6 +51,74 @@ let clickAppListenerMap = {};
 let CustomClickListener = null;
 let NavClickListener = null;
 
+/**
+ * Determines the language index based on locale configuration.
+ *
+ * Maps language codes to array indices for localized app names:
+ * - 'EN': index 0 (English)
+ * - 'RU': index 1 (Russian)
+ * - Default: index 0 (English)
+ *
+ * @param {string} locale - Language locale code (e.g., 'EN', 'RU', 'EU')
+ * @returns {number} Language index (0 for EN, 1 for RU, 0 for others)
+ *
+ * @example
+ * getLanguageIndex('EN'); // returns 0
+ * getLanguageIndex('RU'); // returns 1
+ * getLanguageIndex('EU'); // returns 0
+ */
+function getLanguageIndex(locale) {
+    if (!locale) return 0;
+    if (locale === 'EN') return 0;
+    if (locale === 'RU') return 1;
+    return 0;
+}
+
+/**
+ * Filters and returns new apps that should be added to the launcher.
+ *
+ * Compares the configured apps against existing packages and returns
+ * only those apps that are not already present in the launcher.
+ *
+ * @param {Object} existingPackages - Map of existing package names (keys are package names)
+ * @param {Array<Object>} configApps - Array of app configurations to add
+ * @param {string} configApps[].package - Package name of the app
+ * @returns {Array<Object>} Array of apps that need to be added, deduplicated against
+ *   both the existing packages and earlier entries within configApps
+ *
+ * @example
+ * const existing = { 'com.example.app1': true };
+ * const config = [
+ *   { package: 'com.example.app1' },
+ *   { package: 'com.example.app2' }
+ * ];
+ * filterNewApps(existing, config); // returns [{ package: 'com.example.app2' }]
+ */
+function filterNewApps(existingPackages, configApps) {
+    if (!existingPackages || !configApps) return [];
+    if (!Array.isArray(configApps)) return [];
+
+    const seen = Object.assign({}, existingPackages);
+    const result = [];
+    configApps.forEach((app) => {
+        if (Object.prototype.hasOwnProperty.call(seen, app.package)) return;
+        seen[app.package] = true;
+        result.push(app);
+    });
+    return result;
+}
+
+/**
+ * Launches an Android application by package name.
+ *
+ * Creates a launch intent for the specified package and starts the app
+ * with the FLAG_ACTIVITY_NEW_TASK flag.
+ *
+ * @param {string} packageName - Android package name to launch
+ *
+ * @example
+ * startApp('com.example.myapp');
+ */
 function startApp(packageName) {
     const context = ActivityThread.currentApplication().getApplicationContext();
     const intent = PackageManager.getLaunchIntentForPackage(packageName);
@@ -43,6 +128,18 @@ function startApp(packageName) {
     logger.info(`${INFO.APP_LAUNCHED} ${packageName}`);
 }
 
+/**
+ * Creates a cache of custom drawable icons for configured apps.
+ *
+ * Converts bitmap images from the config into BitmapDrawable objects
+ * for both big (all apps view) and small (navigation bar) icons.
+ *
+ * @returns {Object} Map of package names to [bigDrawable, smallDrawable] arrays
+ *
+ * @example
+ * const cache = createIconCache();
+ * // cache = { 'com.example.app': [bigDrawable, smallDrawable] }
+ */
 function createIconCache() {
     let result = {};
     if (config) {
@@ -71,27 +168,38 @@ function createIconCache() {
     return result;
 }
 
+/**
+ * Adds custom applications to the launcher's app list.
+ *
+ * Collects existing packages to avoid duplicates, then adds configured apps
+ * that are installed on the device but not yet in the launcher.
+ *
+ * @param {Object} originalApps - Java ArrayList of existing AppBean objects
+ *
+ * @example
+ * addCustomApp(allAppsList);
+ */
 function addCustomApp(originalApps) {
-    // Собираем существующие пакеты
+    // Collect existing packages to avoid duplicates
     const existingPackages = {};
     for (let i = 0; i < originalApps.size(); i++) {
         const appBean = Java.cast(originalApps.get(i), AppBean);
         existingPackages[appBean.getPackageName()] = true;
     }
-    // Добавляем ваши приложения
-    config.apps.forEach((configApp) => {
+
+    // Add configured applications that aren't already present
+    const newApps = filterNewApps(existingPackages, config.apps);
+
+    newApps.forEach((configApp) => {
         try {
-            if (!Object.prototype.hasOwnProperty.call(existingPackages, configApp.package)) {
-                PackageManager.getPackageInfo(configApp.package, 0);
+            PackageManager.getPackageInfo(configApp.package, 0);
 
-                logger.debug(`${DEBUG.ADDING_TO_ALL_APPS} ${configApp.package}`);
+            logger.debug(`${DEBUG.ADDING_TO_ALL_APPS} ${configApp.package}`);
 
-                const bean = AppBean.$new(2131230851, 2131820622, configApp.package);
-                bean.setSubType(configApp.package_sub_type);
+            const bean = AppBean.$new(2131230851, 2131820622, configApp.package);
+            bean.setSubType(configApp.package_sub_type);
 
-                originalApps.add(bean);
-                existingPackages[configApp.package] = true;
-            }
+            originalApps.add(bean);
         } catch (e) {
             if (e.message?.includes('NameNotFoundException')) {
                 logger.debug(`${DEBUG.APP_NOT_INSTALLED} ${configApp.package}`);
@@ -102,6 +210,15 @@ function addCustomApp(originalApps) {
     });
 }
 
+/**
+ * Patches navigation bar icons to replace original apps with custom ones.
+ *
+ * Searches for NavigationBar instances and replaces configured apps
+ * in the navigation bar with custom packages, icons, and click listeners.
+ *
+ * @example
+ * patchNavigationIcons();
+ */
 function patchNavigationIcons() {
     Java.choose(NavigationBar.$className, {
         onMatch: function (instance) {
@@ -155,16 +272,25 @@ function patchNavigationIcons() {
     });
 }
 
+/**
+ * Updates the main apps list and notifies listeners.
+ *
+ * Modifies the launcher's main app list by adding custom apps,
+ * patching navigation icons, and triggering UI refresh.
+ *
+ * @example
+ * updateMainApps();
+ */
 function updateMainApps() {
     scheduleOnMainThreadSafe(() => {
         try {
             const instance = AllAppDataManager.getInstance();
-            const mainApps = getFieldValue(instance, 'mMainAllApps'); // ← прямой доступ к списку
+            const mainApps = getFieldValue(instance, 'mMainAllApps'); // Direct access to the list
 
             addCustomApp(mainApps);
             patchNavigationIcons();
 
-            // Уведомляем слушателей
+            // Notify listeners of the change
             const listeners = getFieldValue(instance, 'mAllAppDataListeners');
             for (let i = 0; i < listeners.size(); i++) {
                 const listenerNative = listeners.get(i);
@@ -183,15 +309,16 @@ function updateMainApps() {
     });
 }
 
-function getLanguageIndex() {
-    if (!languageConfig || !languageConfig.language) return 0;
-    if (languageConfig.language == 'EN') return 0;
-    if (languageConfig.language == 'RU') return 1;
-    return 0;
-}
-
+/**
+ * Hooks into AllAppDataManager.getAllApps to inject custom apps.
+ *
+ * Intercepts calls to getAllApps and adds configured custom apps
+ * to the returned list for screen 0 (main screen).
+ *
+ * @example
+ * getAllAppsHook();
+ */
 function getAllAppsHook() {
-    // --- Хук на AllAppDataManager.getAllApps ---
     try {
         AllAppDataManager.getAllApps.overload('int').implementation = function (screenId) {
             logger.debug(`${DEBUG.GET_ALL_APPS_CALLED} ${screenId}`);
@@ -199,7 +326,7 @@ function getAllAppsHook() {
                 .overload('int')
                 .call(AllAppDataManager, screenId);
 
-            if (screenId > 0 || !config) return originalApps; // Используем кэш
+            if (screenId > 0 || !config) return originalApps; // Use cache for other screens
             addCustomApp(originalApps);
 
             return originalApps;
@@ -210,14 +337,22 @@ function getAllAppsHook() {
     }
 }
 
+/**
+ * Hooks into AllAppAdapter.onBindViewHolder to customize app icons and names.
+ *
+ * Intercepts the view binding process to replace icons and names for
+ * configured custom apps in the all apps view.
+ *
+ * @example
+ * onBindViewHolderHook();
+ */
 function onBindViewHolderHook() {
-    // --- Хук на AllAppAdapter.onBindViewHolder (для иконок в AllAppsView) ---
     try {
         AllAppAdapter.onBindViewHolder.overload(
             'com.qinggan.launcher.base.adapter.AllAppAdapter$AppViewHolder',
             'int'
         ).implementation = function (viewHolder, position) {
-            // Сначала вызываем оригинальную реализацию
+            // Call original implementation first
             this.onBindViewHolder
                 .overload('com.qinggan.launcher.base.adapter.AllAppAdapter$AppViewHolder', 'int')
                 .call(this, viewHolder, position);
@@ -248,7 +383,9 @@ function onBindViewHolderHook() {
                         .overload('android.graphics.drawable.Drawable')
                         .call(iconView, customDrawables[packageName][0]);
 
-                    const languageIndex = getLanguageIndex();
+                    const languageIndex = getLanguageIndex(
+                        languageConfig ? languageConfig.language : null
+                    );
                     textView.setText(StringClass.$new(customApp.name[languageIndex]));
 
                     let customClickAppListener = null;
@@ -273,17 +410,24 @@ function onBindViewHolderHook() {
     }
 }
 
+/**
+ * Hooks into NavigationBar.updateTheme to patch navigation icons.
+ *
+ * Intercepts theme updates to ensure custom navigation icons
+ * are applied after theme changes.
+ *
+ * @example
+ * updateThemeHook();
+ */
 function updateThemeHook() {
-    // --- Хук на NavigationBar (для замены иконок и обработки нажатий) ---
     try {
-        // --- Хук на initScreenUpViews (для замены иконок и тегов при инициализации) ---
         NavigationBar.updateTheme.implementation = function () {
             logger.debug(DEBUG.UPDATE_THEME_CALLED);
 
-            // Сначала оригинальное поведение
+            // Call original behavior first
             this.updateTheme.call(this);
 
-            // Затем — наша замена
+            // Then apply our custom icon replacements
             patchNavigationIcons();
         };
     } catch (e) {
@@ -291,6 +435,15 @@ function updateThemeHook() {
     }
 }
 
+/**
+ * Initializes Java classes and registers custom click listeners.
+ *
+ * Sets up all required Java class references and creates custom
+ * OnClickListener implementations for app launching.
+ *
+ * @example
+ * init();
+ */
 function init() {
     AppLauncher = Java.use('com.qinggan.launcher.base.utils.AppLauncher');
     AllAppAdapter = Java.use('com.qinggan.launcher.base.adapter.AllAppAdapter');
@@ -313,7 +466,7 @@ function init() {
             methods: {
                 onClick: function (view) {
                     try {
-                        // Получаем AppBean из тега
+                        // Get AppBean from tag
                         const appBeanNative = view.getTag();
                         const appBean = Java.cast(appBeanNative, AppBean);
 
@@ -356,10 +509,13 @@ function init() {
     );
 }
 
+/**
+ * Main entry point for the app launcher modification agent.
+ * Loads configuration, initializes hooks, and starts the agent.
+ */
 function main() {
     logger.info(INFO.STARTING);
 
-    // --- Основная логика Frida ---
     init();
 
     // Load app config with full parameter support
@@ -377,16 +533,19 @@ function main() {
     // Priority: 1) params.config, 2) params.configPath, 3) LANGUAGE_CONFIG_PATH
     languageConfig = loadConfig(LANGUAGE_CONFIG_PATH, logger);
 
-    // Создаем кэш иконок при старте
+    // Create icon cache at startup
     customDrawables = createIconCache();
 
     getAllAppsHook();
     onBindViewHolderHook();
     updateThemeHook();
-    //изминение стандартного списка приложений
+    // Modify the standard app list
     updateMainApps();
 
     logger.info(INFO.STARTED);
 }
 
 runAgent(main);
+
+// Export for testing
+export { getLanguageIndex, filterNewApps };
