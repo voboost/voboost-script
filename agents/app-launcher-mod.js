@@ -83,7 +83,8 @@ function getLanguageIndex(locale) {
  * @param {Object} existingPackages - Map of existing package names (keys are package names)
  * @param {Array<Object>} configApps - Array of app configurations to add
  * @param {string} configApps[].package - Package name of the app
- * @returns {Array<Object>} Array of apps that need to be added
+ * @returns {Array<Object>} Array of apps that need to be added, deduplicated against
+ *   both the existing packages and earlier entries within configApps
  *
  * @example
  * const existing = { 'com.example.app1': true };
@@ -97,9 +98,14 @@ function filterNewApps(existingPackages, configApps) {
     if (!existingPackages || !configApps) return [];
     if (!Array.isArray(configApps)) return [];
 
-    return configApps.filter(
-        (app) => !Object.prototype.hasOwnProperty.call(existingPackages, app.package)
-    );
+    const seen = Object.assign({}, existingPackages);
+    const result = [];
+    configApps.forEach((app) => {
+        if (Object.prototype.hasOwnProperty.call(seen, app.package)) return;
+        seen[app.package] = true;
+        result.push(app);
+    });
+    return result;
 }
 
 /**

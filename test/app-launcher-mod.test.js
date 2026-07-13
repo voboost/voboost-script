@@ -177,3 +177,17 @@ test('filterNewApps performs exact package name matching', (t) => {
     t.is(result.length, 1);
     t.is(result[0].package, 'com.example.app.extra');
 });
+
+test('filterNewApps deduplicates packages repeated within configApps', (t) => {
+    const existingPackages = { 'com.example.existing': true };
+    const configApps = [
+        { package: 'com.example.dup' },
+        { package: 'com.example.new' },
+        { package: 'com.example.dup' },
+        { package: 'com.example.new' },
+    ];
+    const result = filterNewApps(existingPackages, configApps);
+    t.is(result.length, 2);
+    t.is(result[0].package, 'com.example.dup');
+    t.is(result[1].package, 'com.example.new');
+});
