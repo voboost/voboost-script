@@ -3,9 +3,16 @@ import {
     getConfig,
     loadConfig,
     parseConfig,
+    parseAppConfig,
+    runAgent,
     mockRpcForTests,
     cleanupMockRpc,
 } from '../lib/utils.js';
+
+// Mirrors the MAX_ICON_BYTES cap defined in lib/utils.js (256 KiB). It is not
+// exported since it is an internal implementation detail of parseAppConfig,
+// so tests recompute the same value here to exercise the boundary.
+const MAX_ICON_BYTES = 256 * 1024;
 
 // Store original console.log
 const originalConsoleLog = console.log;
@@ -30,6 +37,36 @@ function createMockLogger() {
     };
 }
 
+// Minimal Java bridge stub for parseAppConfig() tests. parseAppConfig() calls
+// Java.use('android.util.Base64') / Java.use('android.graphics.BitmapFactory')
+// unconditionally, so a global Java stub is required even for cases that never
+// reach Base64.decode (e.g. an icon rejected by the size cap).
+function mockJavaForTests() {
+    globalThis.Java = {
+        use(className) {
+            if (className === 'android.util.Base64') {
+                return {
+                    DEFAULT: 0,
+                    // Not a real Base64 decode - this stub only needs to return
+                    // something array-like with a plausible byte length so the
+                    // mocked BitmapFactory.decodeByteArray() below can report it.
+                    decode: (str) => new Uint8Array(Math.floor((str.length * 3) / 4)),
+                };
+            }
+            if (className === 'android.graphics.BitmapFactory') {
+                return {
+                    decodeByteArray: (bytes) => ({ decodedByteLength: bytes.length }),
+                };
+            }
+            throw new Error(`mockJavaForTests: unexpected Java.use(${className})`);
+        },
+    };
+}
+
+function cleanupMockJava() {
+    delete globalThis.Java;
+}
+
 // Mock console to prevent output during tests
 function mockConsole() {
     console.log = () => {}; // Silent mock
@@ -43,6 +80,7 @@ function restoreConsole() {
 // Clean up after each test
 test.afterEach(() => {
     clearFridaParams();
+    cleanupMockJava();
     restoreConsole();
 });
 
@@ -420,3 +458,207 @@ test.serial('missing required field scenario - weather without api_key', (t) => 
     // But api_key is missing - agent should check this
     t.falsy(config.api_key);
 });
+
+// === parseAppConfig Tests - Icon Size Cap (MAX_ICON_BYTES) ===
+
+test.serial('parseAppConfig skips icon_big exceeding the size cap but keeps the app entry', (t) => {
+    mockJavaForTests();
+
+    const oversizedIcon = 'A'.repeat(MAX_ICON_BYTES + 1);
+    const content = JSON.stringify({
+        apps: [
+            {
+                package: 'com.example.oversized',
+                name: ['App', 'App'],
+                icon_big: oversizedIcon,
+            },
+        ],
+    });
+
+    const result = parseAppConfig(content);
+
+    t.truthy(result);
+    t.is(result.apps.length, 1);
+    t.is(result.apps[0].package, 'com.example.oversized');
+    // Icon over the cap is rejected (not decoded), rest of the entry survives.
+    t.is(result.apps[0].icon_big, null);
+});
+
+test.serial(
+    'parseAppConfig skips icon_small exceeding the size cap but keeps the app entry',
+    (t) => {
+        mockJavaForTests();
+
+        const oversizedIcon = 'B'.repeat(MAX_ICON_BYTES + 1);
+        const content = JSON.stringify({
+            apps: [
+                {
+                    package: 'com.example.oversized-small',
+                    name: ['App', 'App'],
+                    icon_small: oversizedIcon,
+                },
+            ],
+        });
+
+        const result = parseAppConfig(content);
+
+        t.truthy(result);
+        t.is(result.apps.length, 1);
+        // Icon over the cap is rejected; falling back to icon_big (also unset) stays null.
+        t.is(result.apps[0].icon_small, null);
+    }
+);
+
+test.serial(
+    'parseAppConfig decodes icon_big that is exactly at the size cap (not rejected)',
+    (t) => {
+        mockJavaForTests();
+
+        const atCapIcon = 'A'.repeat(MAX_ICON_BYTES);
+        const content = JSON.stringify({
+            apps: [
+                {
+                    package: 'com.example.atcap',
+                    name: ['App', 'App'],
+                    icon_big: atCapIcon,
+                },
+            ],
+        });
+
+        const result = parseAppConfig(content);
+
+        t.truthy(result);
+        t.is(result.apps.length, 1);
+        // At the cap (not exceeding it) the icon is decoded, not skipped.
+        t.truthy(result.apps[0].icon_big);
+    }
+);
+
+test.serial('parseAppConfig decodes icon_big just under the size cap (not rejected)', (t) => {
+    mockJavaForTests();
+
+    const underCapIcon = 'A'.repeat(MAX_ICON_BYTES - 1);
+    const content = JSON.stringify({
+        apps: [
+            {
+                package: 'com.example.undercap',
+                name: ['App', 'App'],
+                icon_big: underCapIcon,
+            },
+        ],
+    });
+
+    const result = parseAppConfig(content);
+
+    t.truthy(result);
+    t.truthy(result.apps[0].icon_big);
+});
+
+// === runAgent Tests - Double-Start Guard (SCR-03) ===
+//
+// runAgent() skips all setup when NODE_ENV === 'test' (so agents never
+// auto-start during the test run). To exercise the started-flag / initTimer
+// guard itself, these tests briefly flip NODE_ENV while calling runAgent(),
+// then restore it before any async callbacks run.
+
+test.serial(
+    'runAgent double-start guard: a second rpc.exports.init() call does not re-run main()',
+    (t) => {
+        const originalEnv = process.env.NODE_ENV;
+        const originalSetTimeout = globalThis.setTimeout;
+        const originalClearTimeout = globalThis.clearTimeout;
+
+        let capturedTimeoutCallback = null;
+        let clearTimeoutCalls = 0;
+
+        // Capture the fallback timer's callback instead of waiting 2s for it,
+        // and count clearTimeout() calls to verify the timer is cancelled on
+        // first start (and not touched again on subsequent no-op starts).
+        globalThis.setTimeout = (fn, delay) => {
+            capturedTimeoutCallback = fn;
+            return originalSetTimeout(fn, delay);
+        };
+        globalThis.clearTimeout = (id) => {
+            clearTimeoutCalls += 1;
+            return originalClearTimeout(id);
+        };
+
+        let mainCallCount = 0;
+        const main = () => {
+            mainCallCount += 1;
+        };
+
+        globalThis.rpc = { exports: {} };
+
+        try {
+            process.env.NODE_ENV = 'production';
+            runAgent(main);
+        } finally {
+            process.env.NODE_ENV = originalEnv;
+        }
+
+        // Simulate frida-inject calling init() (the normal startup path).
+        globalThis.rpc.exports.init('early', { config: {} });
+        t.is(mainCallCount, 1, 'main() must run after the first init() call');
+        t.is(clearTimeoutCalls, 1, 'the fallback timer is cleared on first start');
+
+        // Simulate a duplicate init() call (e.g. frida re-invoking init()).
+        globalThis.rpc.exports.init('early', { config: {} });
+        t.is(mainCallCount, 1, 'main() must not run again on a duplicate init() call');
+        t.is(clearTimeoutCalls, 1, 'clearTimeout is not called again once already started');
+
+        // Simulate the exact SCR-03 race: the fallback timer still fires even
+        // though init() already ran and (in real usage) cleared it.
+        t.truthy(capturedTimeoutCallback, 'fallback timer callback should have been captured');
+        capturedTimeoutCallback();
+        t.is(mainCallCount, 1, 'the started guard must block a stray fallback-timer start');
+
+        globalThis.setTimeout = originalSetTimeout;
+        globalThis.clearTimeout = originalClearTimeout;
+        delete globalThis.rpc;
+    }
+);
+
+test.serial(
+    'runAgent double-start guard: fallback timer starts the agent only once when init() never fires',
+    (t) => {
+        const originalEnv = process.env.NODE_ENV;
+        const originalSetTimeout = globalThis.setTimeout;
+
+        let capturedTimeoutCallback = null;
+
+        globalThis.setTimeout = (fn, delay) => {
+            capturedTimeoutCallback = fn;
+            return originalSetTimeout(fn, delay);
+        };
+
+        let mainCallCount = 0;
+        const main = () => {
+            mainCallCount += 1;
+        };
+
+        globalThis.rpc = { exports: {} };
+
+        try {
+            process.env.NODE_ENV = 'production';
+            runAgent(main);
+        } finally {
+            process.env.NODE_ENV = originalEnv;
+        }
+
+        t.truthy(capturedTimeoutCallback);
+
+        // Fallback fires because init() was never called.
+        capturedTimeoutCallback();
+        t.is(mainCallCount, 1, 'main() runs once via the fallback timer');
+
+        // If the fallback callback were somehow invoked again (or init() fired
+        // late), the started guard must still prevent a second run.
+        capturedTimeoutCallback();
+        globalThis.rpc.exports.init('late', { config: {} });
+        t.is(mainCallCount, 1, 'main() still only ran once');
+
+        globalThis.setTimeout = originalSetTimeout;
+        delete globalThis.rpc;
+    }
+);

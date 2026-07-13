@@ -286,6 +286,32 @@ Add to PATH (example for Windows):
 $env:PATH += ";$env:LOCALAPPDATA\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\Scripts"
 ```
 
+### Config File Locations
+
+Agent config files (e.g. `apps-config.json`, `weather-config.json`) can be read from
+two distinct on-disk locations. These are not interchangeable:
+
+- **`/data/voboost/agents/config/`** - Production config zone, root-owned
+  (mode `0700`, `root:root`). It is provisioned by the `voboost-inject` daemon, which
+  writes the current config here before injecting agents, so it is not writable by
+  other apps on the device. This is what the path constants in
+  [`lib/utils.js`](lib/utils.js) (`LANGUAGE_CONFIG_PATH`, `APP_CONFIG_PATH`,
+  `WEATHER_CONFIG_PATH`, etc.) point to, and is used as the on-disk fallback when no
+  `parameters.config` / `parameters.configPath` is supplied via `rpc.exports.init()`
+  (see [`getConfig()`](lib/utils.js)).
+- **`/data/local/tmp/test/`** - Local development/testing path (mode `1777`,
+  world-writable) used only when manually copying `frida-server`, `frida-inject`, and
+  agent scripts to a device for local injection testing (see "Device Setup" below).
+  It is a separate, lower-trust path used purely for local-inject testing and must not
+  be used to store or substitute for production agent config.
+
+> **Deployment note.** The on-disk config path is only a fallback; the primary
+> production channel is `parameters.config` passed via `rpc.exports.init()`.
+> When rolling out updated agents, deploy the `voboost-inject` daemon in lockstep so
+> the `/data/voboost/agents/config/` zone is provisioned. An uncoordinated rollout
+> (new agents with an older daemon) falls back to `parameters.config` and otherwise
+> leaves the agent without config-driven features until the daemon is updated.
+
 ### Device Setup
 
 1. Connect to device and run `adb root`
