@@ -10,4 +10,5 @@ export const DEBUG = {
 export const ERROR = {
     ICON_CONFIG: 'Error loading icon config:',
     CONFIG_NOT_AVAILABLE: 'Keyboard lock config not available',
+    LOAD_KEYBOARD_HOOK: 'loadKeyboardHook failed:',
 };
