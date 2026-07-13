@@ -2,6 +2,7 @@ import test from 'ava';
 import {
     getWindPowerLevel,
     getWindDirectionName,
+    buildApiKeyParam,
     parseUrlParams,
     formatDate,
     deepClone,
@@ -60,6 +61,47 @@ test('getWindDirectionName handles null input', (t) => {
 test('getWindDirectionName handles undefined input', (t) => {
     const result = getWindDirectionName(undefined);
     t.is(result.dir, '0');
+});
+
+// === API Key Encoding Tests (SCR-02) ===
+test('buildApiKeyParam leaves plain alphanumeric keys unchanged', (t) => {
+    const result = buildApiKeyParam('abc123DEF456');
+    t.is(result, 'abc123DEF456');
+});
+
+test('buildApiKeyParam encodes ampersand', (t) => {
+    const result = buildApiKeyParam('a&b');
+    t.is(result, 'a%26b');
+});
+
+test('buildApiKeyParam encodes equals sign', (t) => {
+    const result = buildApiKeyParam('a=b');
+    t.is(result, 'a%3Db');
+});
+
+test('buildApiKeyParam encodes spaces', (t) => {
+    const result = buildApiKeyParam('a b');
+    t.is(result, 'a%20b');
+});
+
+test('buildApiKeyParam encodes hash/fragment character', (t) => {
+    const result = buildApiKeyParam('a#b');
+    t.is(result, 'a%23b');
+});
+
+test('buildApiKeyParam encodes unicode characters', (t) => {
+    const result = buildApiKeyParam('ключ');
+    t.is(result, encodeURIComponent('ключ'));
+    t.is(decodeURIComponent(result), 'ключ');
+});
+
+test('buildApiKeyParam result is safe to embed as a single query value', (t) => {
+    const malicious = 'realkey&extra=1';
+    const result = buildApiKeyParam(malicious);
+    const url = `https://api.example.com?appid=${result}&units=metric`;
+    const parsed = parseUrlParams(url);
+    t.is(parsed.appid, malicious);
+    t.is(parsed.extra, undefined);
 });
 
 // === URL Parsing Tests ===
