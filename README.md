@@ -40,11 +40,11 @@ to enable; it does not inject agents itself.
 | Path | Purpose |
 |------|---------|
 | [`agents/`](agents) | Agent source scripts (`*-mod.js`) and their log constants (`*-log.js`) |
-| [`lib/`](lib) | Shared utilities — [`Logger`](lib/logger.js), [`utils.js`](lib/utils.js), Rollup build pipeline |
-| [`test/`](test) | AVA test suite — unit tests per agent, build validation, logging-pattern compliance |
+| [`lib/`](lib) | Shared utilities — [`Logger`](lib/logger.js), [`utils.js`](lib/utils.js), [Rollup build pipeline](lib/build.mjs), [manifest generator](lib/manifest.mjs) |
+| [`test/`](test) | AVA test suite — unit tests per agent, build validation, manifest generator tests, logging-pattern compliance |
 | [`config/`](config) | Rollup, ESLint, and AVA configuration |
 | [`resource/`](resource) | Runtime config files shipped to the device (apps, keyboard, media, weather, etc.) |
-| [`build/`](build) | Built agent bundles (gitignored; produced by `npm run build`) |
+| [`build/`](build) | Built agent bundles + `manifest.json` (gitignored; produced by `npm run build`) |
 
 ## Commands
 
@@ -77,21 +77,66 @@ covered by unit tests in [`test/`](test).
 | [`media-window-mod`](agents/media-window-mod.js) | media service | Controls media window behavior |
 | [`navbar-launcher-mod`](agents/navbar-launcher-mod.js) | launcher | Controls the left navbar on main and multimedia screens |
 | [`phone-num-mod`](agents/phone-num-mod.js) | system service | Fixes phone number imports and calls |
-| [`voboost-to-menu-mod`](agents/voboost-to-menu-mod.js) | launcher | Adds a menu item to launch apps |
+| [`voboost-to-menu-mod`](agents/voboost-to-menu-mod.js) | vehicle settings | Adds a menu item to launch apps (manifest id: `settings-menu`) |
 | [`weather-widget-mod`](agents/weather-widget-mod.js) | launcher | Fixes the weather widget (requires an OpenWeatherMap API key) |
 
 ## Build System
 
-The project uses [Rollup](https://rollupjs.org/) to bundle each agent into a
-self-contained file under [`build/`](build). The build also produces log-level
-variants (`_0none`, `_1error`, `_2info`, `_3debug`) that strip logging code at
-different levels for production tuning. See [`lib/build.mjs`](lib/build.mjs)
-and [`config/config-rollup.mjs`](config/config-rollup.mjs).
+The project uses [Rollup](https://rollupjs.org/) to bundle each `agents/*-mod.js`
+into a single minified IIFE under [`build/`](build). One entry point → one
+artefact (`build/<name>.js`). The build also generates `build/manifest.json`
+(see [Manifest](#manifest) below).
+
+```bash
+npm run build      # bundle every agent + generate build/manifest.json
+```
+
+Log level is selected at **runtime** via `setLogLevel()` inside each agent's
+entry point. See [`lib/build.mjs`](lib/build.mjs) and
+[`config/config-rollup.mjs`](config/config-rollup.mjs).
 
 ```javascript
 // Inside an agent, ES6 imports are resolved and bundled by Rollup:
-import { LANGUAGE_CONFIG_PATH, LoadTextFile } from './utils.js';
+import { LANGUAGE_CONFIG_PATH, loadTextFile } from '../lib/utils.js';
 ```
+
+## Manifest
+
+[`lib/manifest.mjs`](lib/manifest.mjs) generates `build/manifest.json` — the
+contract the [`voboost-inject`](../voboost-inject) daemon loads and verifies.
+Each agent ships a static metadata block next to its code:
+
+```javascript
+// agents/<feature>-mod.js
+export const AGENT_META = {
+    id: 'weather-widget',                       // daemon agent id
+    process: 'com.qinggan.app.launcher',        // target Android process
+    boot: false,                                // inject before boot_completed?
+};
+```
+
+The generator reads every `AGENT_META` (AST-extracted, no `import()` side
+effects), hashes each **built** file (`sha256` of the minified bytes), and emits
+the daemon schema:
+
+```json
+{
+  "version": 1,
+  "agents": [
+    { "id": "...", "channel": "agents", "file": "agents/<source-stem>.js",
+      "sha256": "<hex>", "process": "...", "boot": false }
+  ]
+}
+```
+
+The daemon re-verifies each `sha256` before loading an agent
+(`voboost-inject/src/frida_controller.vala`), so the manifest is regenerated on
+every build — never hand-edited. `id` and `file` are intentionally independent:
+`id` matches the app's `FeatureFrida.agentId` vocabulary (so the daemon accepts
+the app's `inject.json` plan), while `file` mirrors the source filename
+(`agents/voboost-to-menu.js` for `voboost-to-menu-mod.js`) so the on-device path
+stays traceable to the source. The APK packaging (done by the `voboost` app)
+places `build/<name>-mod.js` at `agents/<name>.js` per the manifest's `file`.
 
 ## Usage Examples
 
@@ -114,20 +159,28 @@ frida -U -n com.qinggan.app.launcher \
 
 ## Logging
 
-Logging is handled through the `Logger` class from [`lib/logger.js`](lib/logger.js),
-which is automatically integrated into each script during the build process.
+Logging is handled through the `Logger` class from [`lib/logger.js`](lib/logger.js).
+The level is a **process-wide runtime setting** (shared by all `Logger`
+instances) — no build-time variants are needed.
 
 ### Implementation
 
-The logger is located in [`lib/logger.js`](lib/logger.js:1) and exports a
-`Logger` class with methods:
+The logger exports a `Logger` class plus a `setLogLevel()` / `getLogLevel()`
+pair:
 
-- [`error(message)`](lib/logger.js:43) — Error logging with `[-]` tag
-- [`info(message)`](lib/logger.js:51) — Important events logging with `[+]` tag
-- [`debug(message)`](lib/logger.js:59) — Technical details logging with `[*]` tag
+- [`setLogLevel('error' | 'info' | 'debug')`](lib/logger.js) — sets the
+  threshold. `error` prints only errors; `info` adds info; `debug` adds debug.
+  Unknown values fall back to `info`. Default is `info`.
+- [`error(message)`](lib/logger.js) — Error logging with `[-]` tag (always
+  printed).
+- [`info(message)`](lib/logger.js) — Important events logging with `[+]` tag.
+- [`debug(message)`](lib/logger.js) — Technical details logging with `[*]` tag.
 
 All methods automatically add timestamps in `YYYY-MM-DD HH:mm:ss.SSS` format,
-compatible with the Kotlin logger in the `ru.voboost` app.
+compatible with the Kotlin logger in the `ru.voboost` app. The log strings
+themselves stay defined as constants in `*-log.js` (see
+[Agent Structure](#agent-structure)); the level only controls whether a given
+call actually emits a line.
 
 ### Usage
 
@@ -337,8 +390,8 @@ npm test
 ```
 
 The suite includes unit tests for every agent's exported helpers, build
-validation (syntax + log-level variants), and logging-pattern compliance.
-All tests must pass before merging.
+validation (syntax + minification + manifest regeneration), manifest generator
+coverage, and logging-pattern compliance. All tests must pass before merging.
 
 ## License
 
