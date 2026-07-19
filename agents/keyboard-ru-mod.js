@@ -29,6 +29,16 @@ import {
 
 const logger = new Logger('keyboard-ru-mod');
 
+// Manifest metadata consumed by the manifest generator. `process` is the
+// Android process the daemon injects this agent into (hooks classes in
+// `com.qinggan.app.qgime`); `boot:false` = inject as soon as the target is
+// reachable.
+export const AGENT_META = {
+    id: 'keyboard-ru',
+    process: 'com.qinggan.app.qgime',
+    boot: false,
+};
+
 // Keyboard cache identifier
 const KEYBOARD_CACHE_ID = 999999;
 
@@ -1076,7 +1086,7 @@ function init() {
  * Main entry point for the agent.
  * Initializes all hooks and starts the keyboard modification agent.
  */
-function main() {
+export function main() {
     logger.info(INFO.STARTING);
 
     init();

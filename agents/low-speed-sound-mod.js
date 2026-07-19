@@ -4,6 +4,17 @@ import { runAgent, getFieldValue } from '../lib/utils.js';
 
 const logger = new Logger('low-speed-sound-mod');
 
+// Manifest metadata consumed by the manifest generator. `process` is the
+// Android process the daemon injects this agent into (hooks
+// `com.qinggan.canbus.CanBusManager` — same class family as forced-ev — in
+// `com.qinggan.systemservice`); `boot:false` = inject as soon as the target
+// is reachable.
+export const AGENT_META = {
+    id: 'pedestrian-warning',
+    process: 'com.qinggan.systemservice',
+    boot: false,
+};
+
 export const LOW_SPEED_SOUND_DISABLE = 1;
 export const VEHICLE_STATE_INVALID = -1;
 export const MAX_RETRY_ATTEMPTS = 10;
@@ -172,7 +183,7 @@ function disableLowSpeedSound() {
     activate();
 }
 
-function main() {
+export function main() {
     logger.info(INFO.STARTING);
 
     disableLowSpeedSound();

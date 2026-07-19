@@ -4,6 +4,17 @@ import { runAgent } from '../lib/utils.js';
 
 const logger = new Logger('phone-num-mod');
 
+// Manifest metadata consumed by the manifest generator. `process` is the
+// Android process the daemon injects this agent into (hooks
+// `com.qinggan.bluetoothphone.util.Util`, which lives in the BluetoothPhone
+// app `com.qinggan.bluetoothphone`); `boot:false` = inject as soon as the
+// target is reachable.
+export const AGENT_META = {
+    id: 'phone-num',
+    process: 'com.qinggan.bluetoothphone',
+    boot: false,
+};
+
 /**
  * Do nothing with phone number except trimming whitespaces.
  *
@@ -63,7 +74,7 @@ function syncContactCache() {
  * Main entry point for the phone number modification agent.
  * Initializes all hooks and triggers contact cache synchronization.
  */
-function main() {
+export function main() {
     logger.info(INFO.STARTING);
 
     hookPhoneNumberFormatter();

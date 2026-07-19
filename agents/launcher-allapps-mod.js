@@ -25,6 +25,17 @@ import { runAgent, registerClassSafe, getFieldValue } from '../lib/utils.js';
 
 const logger = new Logger('launcher-allapps-mod');
 
+// Manifest metadata consumed by the manifest generator. `process` is the
+// Android process the daemon injects this agent into; `boot:false` = inject
+// as soon as the target is reachable (spawn gating handles earliest reach;
+// no boot gate needed). Replaces app-launcher for the all-apps list; not
+// enabled at the same time as app-launcher (same hook targets).
+export const AGENT_META = {
+    id: 'launcher-allapps',
+    process: 'com.qinggan.app.launcher',
+    boot: false,
+};
+
 // Java class references (initialized in init())
 let ActivityThread = null;
 let AppBean = null;
@@ -614,7 +625,7 @@ function init() {
 /**
  * Main entry point for the launcher allapps modification agent.
  */
-function main() {
+export function main() {
     logger.info(INFO.STARTING);
 
     if (!init()) {
