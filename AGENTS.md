@@ -9,7 +9,7 @@
 - `npm run build`: Build scripts
 - `npm test`: Run test suite
 
-# Project Structure
+## Project Structure
 - Configuration: `config/`
 - Code: `agents/`
 - Tests: `test/`
