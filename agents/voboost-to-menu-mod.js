@@ -12,6 +12,20 @@ import {
 
 const logger = new Logger('voboost-to-menu-mod');
 
+// Manifest metadata consumed by the manifest generator. `process` is the
+// Android process the daemon injects this agent into (hooks
+// `com.qinggan.app.vehiclesetting.CarSettingActivity`). `id` matches the
+// `voboost` app's FeatureFridaSettingsMenu.agentId ("settings-menu") so the
+// daemon accepts the app's inject.json plan for this agent. `id` and the
+// source filename are intentionally independent: the manifest `file` field
+// mirrors this file's name (`agents/voboost-to-menu.js`), while `id` uses the
+// app's vocabulary. `boot:false` = inject as soon as the target is reachable.
+export const AGENT_META = {
+    id: 'settings-menu',
+    process: 'com.qinggan.app.vehiclesetting',
+    boot: false,
+};
+
 let ActivityAnimUtils = null;
 
 let activityClass = null;
@@ -283,7 +297,7 @@ function init() {
  * Main entry point for the voboost-to-menu agent.
  * Initializes the agent, loads language configuration, and sets up hooks.
  */
-function main() {
+export function main() {
     logger.info(INFO.STARTING);
 
     // Read parameters from frida-inject --parameters. Apply the default target

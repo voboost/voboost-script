@@ -9,7 +9,7 @@ export default [
             '**/logger.mjs',
             '**/Logger.js',
             '**/Logger.mjs',
-            '**/strip-exports.mjs',
+            '**/manifest.mjs',
         ],
         rules: {
             'no-console': 'off',

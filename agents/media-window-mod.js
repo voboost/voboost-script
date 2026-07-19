@@ -22,6 +22,17 @@ import {
 
 const logger = new Logger('media-window-mod');
 
+// Manifest metadata consumed by the manifest generator. `process` is the
+// Android process the daemon injects this agent into (hooks
+// `com.qingang.asgard.media.general.src.SrcMediaActivity`, which lives in
+// the qgmedia app `com.qinggan.media`); `boot:false` = inject as soon as the
+// target is reachable.
+export const AGENT_META = {
+    id: 'media-window',
+    process: 'com.qinggan.media',
+    boot: false,
+};
+
 let ActivityThread = null;
 let ContextClass = null;
 let MediaEnum = null;
@@ -393,7 +404,7 @@ function init() {
  * Main entry point for the media window modification agent.
  * Initializes all hooks and applies media enum modifications.
  */
-function main() {
+export function main() {
     logger.info(INFO.STARTING);
 
     init();

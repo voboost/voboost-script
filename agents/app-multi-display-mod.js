@@ -18,6 +18,16 @@ import { APP_VIEWPORT_CONFIG_PATH, loadConfig, runAgent } from '../lib/utils.js'
 
 const logger = new Logger('app-multi-display');
 
+// Manifest metadata consumed by the manifest generator. `process` is the
+// Android process the daemon injects this agent into (hooks
+// `com.qinggan.systemservice.multidisplay.MultiDisplayImpl`); `boot:false` =
+// inject as soon as the target is reachable.
+export const AGENT_META = {
+    id: 'app-multi-display',
+    process: 'com.qinggan.systemservice',
+    boot: false,
+};
+
 let config = null;
 
 /**
@@ -88,7 +98,7 @@ function hookMultiDisplayWhitelist() {
  * Main entry point for the agent.
  * Loads the viewport configuration and initializes the multi-display hook.
  */
-function main() {
+export function main() {
     logger.info(INFO.STARTING);
 
     config = loadConfig(APP_VIEWPORT_CONFIG_PATH, logger);

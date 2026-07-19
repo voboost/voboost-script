@@ -5,6 +5,16 @@ import { APP_VIEWPORT_CONFIG_PATH, loadConfig, runAgent, getFieldValue } from '.
 
 const logger = new Logger('navbar-launcher-mod');
 
+// Manifest metadata consumed by the manifest generator. `process` is the
+// Android process the daemon injects this agent into; `boot:false` = inject
+// as soon as the target is reachable (spawn gating handles earliest reach;
+// no boot gate needed).
+export const AGENT_META = {
+    id: 'navbar-launcher',
+    process: 'com.qinggan.app.launcher',
+    boot: false,
+};
+
 let config = null;
 
 /**
@@ -78,7 +88,7 @@ function onReceiveHook() {
     };
 }
 
-function main() {
+export function main() {
     logger.info(INFO.STARTING);
 
     config = loadConfig(APP_VIEWPORT_CONFIG_PATH, logger);

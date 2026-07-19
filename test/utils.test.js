@@ -556,15 +556,14 @@ test.serial('parseAppConfig decodes icon_big just under the size cap (not reject
 
 // === runAgent Tests - Double-Start Guard (SCR-03) ===
 //
-// runAgent() skips all setup when NODE_ENV === 'test' (so agents never
-// auto-start during the test run). To exercise the started-flag / initTimer
-// guard itself, these tests briefly flip NODE_ENV while calling runAgent(),
-// then restore it before any async callbacks run.
+// runAgent() skips auto-start when neither Java nor rpc are defined (plain
+// Node.js test environment). To exercise the started-flag / initTimer guard
+// itself, these tests stub globalThis.rpc so the guard lets runAgent proceed,
+// then drive the init() / fallback-timer paths.
 
 test.serial(
     'runAgent double-start guard: a second rpc.exports.init() call does not re-run main()',
     (t) => {
-        const originalEnv = process.env.NODE_ENV;
         const originalSetTimeout = globalThis.setTimeout;
         const originalClearTimeout = globalThis.clearTimeout;
 
@@ -588,14 +587,9 @@ test.serial(
             mainCallCount += 1;
         };
 
+        // rpc presence makes runAgent proceed past the no-Frida guard.
         globalThis.rpc = { exports: {} };
-
-        try {
-            process.env.NODE_ENV = 'production';
-            runAgent(main);
-        } finally {
-            process.env.NODE_ENV = originalEnv;
-        }
+        runAgent(main);
 
         // Simulate frida-inject calling init() (the normal startup path).
         globalThis.rpc.exports.init('early', { config: {} });
@@ -622,7 +616,6 @@ test.serial(
 test.serial(
     'runAgent double-start guard: fallback timer starts the agent only once when init() never fires',
     (t) => {
-        const originalEnv = process.env.NODE_ENV;
         const originalSetTimeout = globalThis.setTimeout;
 
         let capturedTimeoutCallback = null;
@@ -637,14 +630,9 @@ test.serial(
             mainCallCount += 1;
         };
 
+        // rpc presence makes runAgent proceed past the no-Frida guard.
         globalThis.rpc = { exports: {} };
-
-        try {
-            process.env.NODE_ENV = 'production';
-            runAgent(main);
-        } finally {
-            process.env.NODE_ENV = originalEnv;
-        }
+        runAgent(main);
 
         t.truthy(capturedTimeoutCallback);
 
@@ -662,3 +650,20 @@ test.serial(
         delete globalThis.rpc;
     }
 );
+
+test.serial('runAgent no-op: skips auto-start when neither Java nor rpc are present', (t) => {
+    // Plain Node.js (no Java, no rpc): runAgent must NOT call main, set up
+    // rpc.exports, or arm any timer. This is the structural replacement for
+    // the former NODE_ENV === 'test' guard.
+    let mainCallCount = 0;
+    const main = () => {
+        mainCallCount += 1;
+    };
+
+    // Confirm the precondition: neither global is defined here.
+    t.is(typeof globalThis.Java, 'undefined');
+    t.is(typeof globalThis.rpc, 'undefined');
+
+    runAgent(main);
+    t.is(mainCallCount, 0, 'main() must not run in a non-Frida environment');
+});

@@ -14,6 +14,17 @@ import {
 
 const logger = new Logger('media-source-mod');
 
+// Manifest metadata consumed by the manifest generator. Targets the media
+// card on the launcher's home screen (hooks `com.pateo.voyah.mediaCard.home.*`
+// and `com.qinggan.launcher.base.utils.AppLauncher`), so the host process is
+// `com.qinggan.app.launcher`. `boot:false` = inject as soon as the target is
+// reachable (spawn gating handles earliest reach; no boot gate needed).
+export const AGENT_META = {
+    id: 'media-source',
+    process: 'com.qinggan.app.launcher',
+    boot: false,
+};
+
 let MediaBeanInter = null;
 let MediaTabHolder = null;
 let MediaEnum = null;
@@ -565,7 +576,7 @@ function init() {
  * Main entry point for the media source modification agent.
  * Initializes all hooks and modifications for media services.
  */
-function main() {
+export function main() {
     logger.info(INFO.STARTING);
 
     // Config validation is done inside init(); no need to validate again here.

@@ -12,6 +12,16 @@ import {
 
 const logger = new Logger('app-viewport-mod');
 
+// Manifest metadata consumed by the manifest generator. `process` is the
+// Android process the daemon injects this agent into (owner of the hooked
+// class `com.android.server.wm.ActivityRecord`); `boot:false` = inject as
+// soon as the target is reachable.
+export const AGENT_META = {
+    id: 'app-viewport',
+    process: 'system_server',
+    boot: false,
+};
+
 let SystemProperties = null;
 let Rect = null;
 let ActivityRecord = null;
@@ -173,7 +183,7 @@ function init() {
     Locale = Java.use('java.util.Locale');
 }
 
-function main() {
+export function main() {
     logger.info(INFO.STARTING);
 
     init();

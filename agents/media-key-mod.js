@@ -18,6 +18,17 @@ import { MEDIA_SOURCE_CONFIG_PATH, loadConfig, runAgent } from '../lib/utils.js'
 
 const logger = new Logger('media-key-mod');
 
+// Manifest metadata consumed by the manifest generator. `process` is the
+// Android process the daemon injects this agent into (hooks
+// `com.qinggan.keymanager.service.sinks.EventListenerSink`, which lives in
+// the KeyManagerService process `com.qinggan.keymanager.service`);
+// `boot:false` = inject as soon as the target is reachable.
+export const AGENT_META = {
+    id: 'media-key',
+    process: 'com.qinggan.keymanager.service',
+    boot: false,
+};
+
 // Initialized to an empty map so handleOrientedKeyHook() stays safe even when
 // init() bails out early (e.g. the config fails to load): hasOwnProperty.call()
 // on an empty object simply misses, rather than throwing on null.
@@ -136,7 +147,7 @@ function init() {
  * Main entry point for the media key modifier agent.
  * Initializes configuration and installs the media key hook.
  */
-function main() {
+export function main() {
     logger.info(INFO.STARTING);
 
     init();

@@ -31,6 +31,17 @@ import {
 
 const logger = new Logger('app-launcher-mod');
 
+// Manifest metadata consumed by the manifest generator. `process` is the
+// Android process the daemon injects this agent into; `boot:false` = inject
+// as soon as the target is reachable (spawn gating handles earliest reach;
+// no boot gate needed). Legacy app-list injection; not enabled at the same
+// time as launcher-allapps (same hook targets).
+export const AGENT_META = {
+    id: 'app-launcher',
+    process: 'com.qinggan.app.launcher',
+    boot: false,
+};
+
 let AppLauncher = null;
 let AllAppAdapter = null;
 let StringClass = null;
@@ -513,7 +524,7 @@ function init() {
  * Main entry point for the app launcher modification agent.
  * Loads configuration, initializes hooks, and starts the agent.
  */
-function main() {
+export function main() {
     logger.info(INFO.STARTING);
 
     init();

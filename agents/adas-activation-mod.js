@@ -4,6 +4,16 @@ import { runAgent } from '../lib/utils.js';
 
 const logger = new Logger('adas-activation-mod');
 
+// Manifest metadata consumed by the manifest generator. `process` is the
+// Android process the daemon injects this agent into (owner of the hooked
+// class); `boot:false` = inject as soon as the target is reachable (spawn
+// gating handles earliest reach; no boot gate needed).
+export const AGENT_META = {
+    id: 'adas-activation',
+    process: 'com.qinggan.app.vehiclesetting',
+    boot: false,
+};
+
 let BaiduProviderUtil = null;
 
 /**
@@ -60,7 +70,7 @@ function init() {
     );
 }
 
-function main() {
+export function main() {
     logger.info(INFO.STARTING);
 
     init();

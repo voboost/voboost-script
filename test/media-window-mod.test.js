@@ -278,10 +278,10 @@ test('handles non-object or null service configuration entries', (t) => {
     const services = ['WECAR_FLOW'];
     const enums = { WECAR_FLOW: { service: {}, enable: false } };
 
-    t.deepEqual(
-        buildMediaEnumConfig({ media: { WECAR_FLOW: 'not an object' } }, services, enums),
-        { success: true, configured: [] }
-    );
+    t.deepEqual(buildMediaEnumConfig({ media: { WECAR_FLOW: 'not an object' } }, services, enums), {
+        success: true,
+        configured: [],
+    });
     t.deepEqual(buildMediaEnumConfig({ media: { WECAR_FLOW: null } }, services, enums), {
         success: true,
         configured: [],

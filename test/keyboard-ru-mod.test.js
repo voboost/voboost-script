@@ -1,5 +1,9 @@
 import test from 'ava';
-import { createQwertyToJcuken, resolveKeyChar, isRussianKeyCode } from '../agents/keyboard-ru-mod.js';
+import {
+    createQwertyToJcuken,
+    resolveKeyChar,
+    isRussianKeyCode,
+} from '../agents/keyboard-ru-mod.js';
 
 // Tests for createQwertyToJcuken
 test('createQwertyToJcuken creates mapping from template', (t) => {
